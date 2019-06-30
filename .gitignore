@@ -18,6 +18,7 @@ hs_err_pid*
 
 # gradle
 .gradle
+build
 
 # JetBrains (IntelliJ)
 .idea
