@@ -7,7 +7,6 @@ import de.topobyte.osm4j.core.model.iface.OsmNode;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
@@ -16,16 +15,17 @@ public class Main {
 
     public static void main(String[] args) throws IOException
     {
+        // Open dump file as stream
         InputStream input = null;
-        // Get dump file
-        try {
-            String dump = ClassLoader.getSystemClassLoader().getResource("./osm_data/tue.osm.pbf").getFile();
-            // Open a stream
-            input = new FileInputStream(dump);
-        } catch (NullPointerException e) {
+        try
+        {
+            input = ClassLoader.getSystemClassLoader().getResource("./osm_data/tue.osm.pbf").openStream();
+        } catch (NullPointerException e)
+        {
             System.out.println("Failed to locate map dump!");
             System.exit(1);
         }
+
         // Create a reader for PBF data
         OsmIterator iterator = new PbfIterator(input, true);
 
