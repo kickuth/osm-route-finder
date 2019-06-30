@@ -1,0 +1,6 @@
+# Folder for data dumps. Don't add to repository.
+# Ignore everything in this directory
+*
+# Except this file
+!.gitignore
+
