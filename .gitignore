@@ -22,3 +22,6 @@ build
 
 # JetBrains (IntelliJ)
 .idea
+
+# PDFs
+*.pdf
