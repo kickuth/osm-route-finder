@@ -5,6 +5,7 @@ import de.topobyte.osm4j.core.dataset.InMemoryMapDataSet;
 import de.topobyte.osm4j.core.dataset.MapDataSetLoader;
 import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
+import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
 import java.io.IOException;
@@ -31,6 +32,24 @@ public class Main {
             System.exit(1);
         }
 
+        List<List<double[]>> wayNodesList = new LinkedList<>();
+
+        for (OsmWay way : data.getWays().valueCollection())
+        {
+            List<double[]> wayNodes = new LinkedList<>();
+            for (int i=0; i < way.getNumberOfNodes(); i++) {
+                try {
+                    OsmNode wayPoint = data.getNode(way.getNodeId(i));
+                    double[] latLon = {wayPoint.getLatitude(), wayPoint.getLongitude()};
+                    wayNodes.add(latLon);
+                } catch (EntityNotFoundException e) {
+                    System.out.println("Way uses non-existing node! Ignoring.");
+                }
+            }
+            wayNodesList.add(wayNodes);
+        }
+
+
         OsmBounds mapBounds = data.getBounds();
         List<OsmNode> roadSigns = getRoadSigns(data);
 
@@ -45,8 +64,8 @@ public class Main {
             signLons[i++] = roadSign.getLongitude();
         }
 
-        eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signLats, signLons);
-        m.writeImage();
+        eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signLats, signLons, wayNodesList);
+        m.writeImage(false, true);
 
     }
 
