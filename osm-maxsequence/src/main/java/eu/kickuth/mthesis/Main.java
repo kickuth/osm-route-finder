@@ -36,6 +36,11 @@ public class Main {
 
         for (OsmWay way : data.getWays().valueCollection())
         {
+            if (way.getNumberOfNodes() < 35)  // TODO hard coded heuristic filter
+            {
+                continue;
+            }
+
             List<double[]> wayNodes = new LinkedList<>();
             for (int i=0; i < way.getNumberOfNodes(); i++) {
                 try {
