@@ -19,9 +19,8 @@ public class Map {
     private double latExtent;
     private double lonExtent;
 
-    // node locations to draw
-    private double[] lats;
-    private double[] lons;
+    // List of POI locations
+    private List<double[]> POIs;
 
     // list of ways, each way is a list of locations
     private List<List<double[]>> wayNodeList;
@@ -30,7 +29,7 @@ public class Map {
     private int imagePixelWidth = 10000;
     private int imagePixelHeight = 10000;
 
-    public Map(OsmBounds bounds, double[] lats, double[] lons, List<List<double[]>> wayNodeList)
+    public Map(OsmBounds bounds, List<double[]> POIs, List<List<double[]>> wayNodeList)
     {
         minLat = bounds.getBottom();
         minLon = bounds.getLeft();
@@ -39,14 +38,11 @@ public class Map {
         latExtent = maxLat - minLat;
         lonExtent = maxLon - minLon;
 
-
-        this.lats = lats;
-        this.lons = lons;
-
+        this.POIs = POIs;
         this.wayNodeList = wayNodeList;
     }
 
-    public void writeImage(boolean drawNodes, boolean drawLines)
+    public void writeImage(boolean drawPOIs, boolean drawLines)
     {
         try {
             BufferedImage image = new BufferedImage(imagePixelWidth,
@@ -60,28 +56,36 @@ public class Map {
             graphics.fillRect(0, 0, imagePixelWidth, imagePixelHeight);
             graphics.setColor(Color.BLACK);
 
-            int bubble_size = 10; // size of each mark in the image
+            int bubble_size = 10; // TODO hardcoded: Size of each mark in the image
 
-            if (drawNodes) {
-                // Draw each node
-                for (int i = 0; i < lats.length; i++) {
-                    int ly = latToInt(lats[i]);
-                    int lx = lonToInt(lons[i]);
+            if (drawPOIs)
+            {
+                // draw each POI
+                for (double[] POI : POIs) {
+                    int ly = latToInt(POI[0]);
+                    int lx = lonToInt(POI[1]);
 
+                    graphics.setColor(Color.RED);
                     graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
                             bubble_size, bubble_size);
+                    graphics.setColor(Color.BLACK);
                 }
             }
 
             if (drawLines)
             {
+                // draw each path
                 for (List<double[]> wayNodes : wayNodeList)
                 {
+                    if (wayNodes.isEmpty()) {
+                        // skip empty paths
+                        continue;
+                    }
                     Iterator<double[]> iter = wayNodes.iterator();
-                    double[] fst = iter.next(); // TODO check if nodes exist in this path
+                    double[] fst = iter.next();
                     while (iter.hasNext()) {
-                        double[] snd = fst; // TODO check that this copies correctly
-                        fst = iter.next(); // TODO check that this copies correctly
+                        double[] snd = fst;
+                        fst = iter.next();
 
                         int y1 = latToInt(fst[0]);
                         int x1 = lonToInt(fst[1]);
@@ -94,29 +98,35 @@ public class Map {
                 }
             }
 
+            // write image to disk
             // TODO fix temp file storage path
             ImageIO.write(image, "png", new File("/home/todd/Desktop/roads_lat_lon.png"));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-
-    private int latToInt(double lat)
-    {
-        /**
+/**
          * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
          */
+    }
+
+
+    /**
+     * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
+     */
+    private int latToInt(double lat)
+    {
         // Pixel increases downwards. Latitude increases upwards (north direction). --> inverse mapping.
         return (int) (imagePixelWidth - imagePixelWidth * (lat - minLat) / latExtent);
     }
 
+
+    /**
+     * compute graphics pixel x-position for a given longitude, knowing image size and lat/lon borders
+     */
     private int lonToInt(double lon)
     {
-        /**
-         * compute graphics pixel x-position for a given longitude, knowing image size and lat/lon borders
-         */
+
         return (int) (imagePixelWidth * (lon - minLon) / lonExtent);
     }
 }

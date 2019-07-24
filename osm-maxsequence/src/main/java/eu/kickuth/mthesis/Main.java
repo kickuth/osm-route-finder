@@ -58,19 +58,16 @@ public class Main {
         OsmBounds mapBounds = data.getBounds();
         List<OsmNode> roadSigns = getRoadSigns(data);
 
-        int signCount = roadSigns.size();
-        double[] signLats = new double[signCount];
-        double[] signLons = new double[signCount];
-        int i = 0;
+        List<double[]> signPOIs = new LinkedList<>();
 
         for (OsmNode roadSign : roadSigns)
         {
-            signLats[i] = roadSign.getLatitude();
-            signLons[i++] = roadSign.getLongitude();
+            double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
+            signPOIs.add(d);
         }
 
-        eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signLats, signLons, wayNodesList);
-        m.writeImage(false, true);
+        eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signPOIs, wayNodesList);
+        m.writeImage(true, true);
 
     }
 
