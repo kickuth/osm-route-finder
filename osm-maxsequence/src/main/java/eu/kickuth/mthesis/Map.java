@@ -62,8 +62,8 @@ public class Map {
             {
                 // draw each POI
                 for (double[] POI : POIs) {
-                    int ly = latToInt(POI[0]);
-                    int lx = lonToInt(POI[1]);
+                    int ly = latToPixel(POI[0]);
+                    int lx = lonToPixel(POI[1]);
 
                     graphics.setColor(Color.RED);
                     graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
@@ -87,11 +87,11 @@ public class Map {
                         double[] snd = fst;
                         fst = iter.next();
 
-                        int y1 = latToInt(fst[0]);
-                        int x1 = lonToInt(fst[1]);
+                        int y1 = latToPixel(fst[0]);
+                        int x1 = lonToPixel(fst[1]);
 
-                        int y2 = latToInt(snd[0]);
-                        int x2 = lonToInt(snd[1]);
+                        int y2 = latToPixel(snd[0]);
+                        int x2 = lonToPixel(snd[1]);
 
                         graphics.drawLine(x1, y1, x2, y2);
                     }
@@ -105,16 +105,13 @@ public class Map {
         } catch (IOException e) {
             e.printStackTrace();
         }
-/**
-         * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
-         */
     }
 
 
     /**
      * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
      */
-    private int latToInt(double lat)
+    private int latToPixel(double lat)
     {
         // Pixel increases downwards. Latitude increases upwards (north direction). --> inverse mapping.
         return (int) (imagePixelWidth - imagePixelWidth * (lat - minLat) / latExtent);
@@ -124,7 +121,7 @@ public class Map {
     /**
      * compute graphics pixel x-position for a given longitude, knowing image size and lat/lon borders
      */
-    private int lonToInt(double lon)
+    private int lonToPixel(double lon)
     {
 
         return (int) (imagePixelWidth * (lon - minLon) / lonExtent);
