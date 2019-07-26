@@ -7,12 +7,14 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.Multigraph;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
+import org.jgrapht.io.DOTExporter;
+import org.jgrapht.io.ExportException;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -21,6 +23,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class Main {
+
+    public static Graph<OsmNode, DefaultWeightedEdge> osmGraph;
 
     public static void main(String[] args)
     {
@@ -71,12 +75,26 @@ public class Main {
             signPOIs.add(d);
         }
 
-        eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signPOIs, wayNodesList);
-        m.writeImage(true, true);
+        //eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signPOIs, wayNodesList);
+        //m.writeImage(true, true);
 
 
 
-        Graph<OsmNode, DefaultWeightedEdge> osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
+        File f = new File("src/main/resources/osm_data/graph/current.dot");
+        if (f.isFile()) {
+            System.out.println("Loading existing file!");
+            // TODO
+            // do something
+        } else {
+            System.out.println("No existing graph found, creating new graph.");
+            createGraph(data);
+        }
+
+    }
+
+
+    private static void createGraph(InMemoryMapDataSet data) {
+        osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (OsmWay way : data.getWays().valueCollection()) {
             if (way.getNumberOfNodes() < 15) {  // TODO hard coded heuristic filter
@@ -112,6 +130,15 @@ public class Main {
                     System.out.println("Way uses non-existing node! Ignoring node.");
                 }
             }
+        }
+
+        // save graph to disc
+        DOTExporter<OsmNode, DefaultWeightedEdge> dotExporter = new DOTExporter<>();
+        try {
+            File f = new File("src/main/resources/osm_data/graph/current.dot");
+            dotExporter.exportGraph(osmGraph, f);
+        } catch (ExportException e) {
+            e.printStackTrace();
         }
     }
 
@@ -207,4 +234,14 @@ public class Main {
         }
         System.out.println(String.format("Number of nodes: %d, \nNumber of traffic signs: %d", nodeCount, trafficSignCount));
     }
+
+    // TODO remove
+//    /**
+//     * Return file located in location given by relative file path
+//     * @param relativePath path to file
+//     * @return File located at the path
+//     */
+//    private static File getFile(String relativePath) {
+//        return new File(ClassLoader.getSystemClassLoader().getResource(relativePath).getFile());
+//    }
 }
