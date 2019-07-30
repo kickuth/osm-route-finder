@@ -9,10 +9,10 @@ import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
 import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
-import org.jgrapht.io.DOTExporter;
-import org.jgrapht.io.ExportException;
+import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.io.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,26 +20,19 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class Main {
 
-    public static Graph<OsmNode, DefaultWeightedEdge> osmGraph;
-
     public static void main(String[] args)
     {
-        OsmIterator data_iterator = readData();
+        InMemoryMapDataSet data = readData();
 
-        //printStuff(data_iterator);
+        Graph<OsmNode, DefaultWeightedEdge> osmGraph = createGraph(data);
+        //createImage(data);
+    }
 
-        InMemoryMapDataSet data = null;
-        try {
-            data = MapDataSetLoader.read(data_iterator, true, true, true);
-        } catch (IOException e)
-        {
-            System.out.println("Failed to load data into memory!");
-            System.exit(1);
-        }
+
+    private static void createImage(InMemoryMapDataSet data) {
 
         List<List<double[]>> wayNodesList = new LinkedList<>();
 
@@ -75,35 +68,50 @@ public class Main {
             signPOIs.add(d);
         }
 
-        //eu.kickuth.mthesis.Map m = new eu.kickuth.mthesis.Map(mapBounds, signPOIs, wayNodesList);
-        //m.writeImage(true, true);
+        MapRenderer m = new MapRenderer(mapBounds, signPOIs, wayNodesList);
+        m.writeImage(true, true);
+    }
 
-
-
-        File f = new File("src/main/resources/osm_data/graph/current.dot");
-        if (f.isFile()) {
-            System.out.println("Loading existing file!");
-            // TODO
-            // do something
-        } else {
-            System.out.println("No existing graph found, creating new graph.");
-            createGraph(data);
-            // TODO reduceGraph();
-            exportGraph("");
+    
+    private static InMemoryMapDataSet readData() {
+        // Open dump file as stream
+        InputStream input = null;
+        try {
+            input = ClassLoader.getSystemClassLoader().getResource("./osm_data/tue.osm.pbf").openStream();
+        } catch (NullPointerException e) {
+            System.out.println("Failed to read map dump!");
+            System.exit(1);
+        } catch (IOException e) {
+            System.out.println("Failed to locate map dump!");
+            System.exit(1);
         }
 
+        // reader for PBF data
+        OsmIterator data_iterator = new PbfIterator(input, true);
+
+        try {
+            // return InMemoryMapDataSet
+            return MapDataSetLoader.read(data_iterator, true, true, true);
+        } catch (IOException e)
+        {
+            System.out.println("Failed to load data into memory!");
+            System.exit(1);
+        }
+
+        return null;
     }
 
 
-    private static void createGraph(InMemoryMapDataSet data) {
+    private static Graph<OsmNode, DefaultWeightedEdge> createGraph(InMemoryMapDataSet data) {
         System.out.println("creating new graph from data dump!");
-        osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
+        Graph<OsmNode, DefaultWeightedEdge> osmGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
+        //osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (OsmWay way : data.getWays().valueCollection()) {
             if (way.getNumberOfNodes() < 15) {  // TODO hard coded heuristic filter
                 continue;
             }
-            OsmNode wayPoint = null;
+            OsmNode wayPoint;
             try {
                 wayPoint = data.getNode(way.getNodeId(0));
                 osmGraph.addVertex(wayPoint);
@@ -118,12 +126,11 @@ public class Main {
 
                     // add edge and set the edge cost
                     DefaultWeightedEdge e = osmGraph.addEdge(wayPoint, nextWayPoint);
-                    if (e == null) {
-                        // TODO figure out why e == null; edge already exists?
+                    if (e == null) {  // edge already exists
                         continue;
                     }
                     // TODO use a more reliable weight (including e.g. allowed speed)
-                    // TODO attention: working with small numbers!
+                    // TODO attention: Potentially working with small numbers!
                     double dist = Math.sqrt(Math.pow(wayPoint.getLatitude() - nextWayPoint.getLatitude(), 2) +
                             Math.pow(wayPoint.getLongitude() - nextWayPoint.getLongitude(), 2));
                     osmGraph.setEdgeWeight(e, dist);
@@ -134,70 +141,7 @@ public class Main {
                 }
             }
         }
-    }
-
-
-    /**
-     * Reduce graph by removing nodes of degree two and connecting the two neighbours with a new edge.
-     * The new edge has a cost equal to the sum of the two previous edges.
-     */
-    private static void reduceGraph() {
-        // TODO currently completely broken.
-        System.out.println("reducing graph!");
-        LinkedList<OsmNode> toRemove = new LinkedList<>();
-        for (OsmNode node : osmGraph.vertexSet()) {
-            if (osmGraph.inDegreeOf(node) == 1 && osmGraph.outDegreeOf(node) == 1) {
-                DefaultWeightedEdge in = osmGraph.incomingEdgesOf(node).iterator().next();
-                DefaultWeightedEdge out = osmGraph.outgoingEdgesOf(node).iterator().next();
-                OsmNode prevNode = osmGraph.getEdgeSource(in);
-                OsmNode postNode = osmGraph.getEdgeTarget(out);
-                double cost = osmGraph.getEdgeWeight(in) + osmGraph.getEdgeWeight(out);
-                toRemove.add(node);
-                osmGraph.addEdge(prevNode, postNode);
-                osmGraph.setEdgeWeight(prevNode, postNode, cost);
-            }
-        }
-        for (OsmNode node : toRemove) {
-            osmGraph.removeVertex(node);
-        }
-    }
-
-
-    /**
-     * Writes the osmGraph as dot file to given path
-     * @param path The file path to write to. If empty, a default path is used.
-     */
-    private static void exportGraph(String path) {
-        if (path.equals("")) {
-            // use default path
-            path = "src/main/resources/osm_data/graph/current.dot";
-        }
-        // save graph to disc using the osm library
-        DOTExporter<OsmNode, DefaultWeightedEdge> dotExporter = new DOTExporter<>();
-        try {
-            File f = new File(path);
-            dotExporter.exportGraph(osmGraph, f);
-        } catch (ExportException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private static OsmIterator readData() {
-        // Open dump file as stream
-        InputStream input = null;
-        try {
-            input = ClassLoader.getSystemClassLoader().getResource("./osm_data/tue.osm.pbf").openStream();
-        } catch (NullPointerException e) {
-            System.out.println("Failed to read map dump!");
-            System.exit(1);
-        } catch (IOException e) {
-            System.out.println("Failed to locate map dump!");
-            System.exit(1);
-        }
-
-        // Return a reader for PBF data
-        return new PbfIterator(input, true);
+        return osmGraph;
     }
 
 
@@ -215,73 +159,4 @@ public class Main {
 
         return signs;
     }
-
-
-    private static void printStuff(OsmIterator dataIterator) {
-        // Init counters for nodes and traffic signs
-        int nodeCount = 0;
-        int trafficSignCount = 0;
-
-        // Collect types and counts of traffic signs
-        Map<String, Integer> sign_types = new TreeMap<>();
-
-        // Iterate contained entities
-        for (EntityContainer container : dataIterator) {
-            nodeCount++;
-
-            switch (container.getType()) {
-                case Node:
-                    // Get the node from the container
-                    OsmNode node = (OsmNode) container.getEntity();
-
-                    // Convert the node's tags to a map
-                    Map<String, String> tags = OsmModelUtil.getTagsAsMap(node);
-
-                    // Get the value for the 'traffic_sign' key
-                    String trafficSign = tags.get("traffic_sign");
-                    if (trafficSign != null) {
-                        trafficSignCount++;
-                        int previousCount = sign_types.getOrDefault(trafficSign, 0);
-                        sign_types.put(trafficSign, previousCount+1);
-
-                        // Print traffic sign with location
-//                        System.out.println(String.format("%s at %f, %f",
-//                                trafficSign, node.getLatitude(), node.getLongitude()
-//                        ));
-                    }
-                    break;
-                case Way:
-//                    OsmWay way = (OsmWay) container.getEntity();
-//
-//                    System.out.println(way.getId());
-//
-//                    // Print all of the way's tags
-//                    for (OsmTag tag : OsmModelUtil.getTagsAsList(way))
-//                    {
-//                        System.out.println(tag.toString());
-//                    }
-                    break;
-                case Relation:
-                    break;
-                default:
-                    System.err.println("Encountered unexpected OSM entity. Ignoring!");
-            }
-        }
-
-        // Print accumulated stats
-        for (String s : sign_types.keySet()) {
-            System.out.println(String.format("Traffic sign: %s, count: %d", s, sign_types.get(s)));
-        }
-        System.out.println(String.format("Number of nodes: %d, \nNumber of traffic signs: %d", nodeCount, trafficSignCount));
-    }
-
-    // TODO remove
-//    /**
-//     * Return file located in location given by relative file path
-//     * @param relativePath path to file
-//     * @return File located at the path
-//     */
-//    private static File getFile(String relativePath) {
-//        return new File(ClassLoader.getSystemClassLoader().getResource(relativePath).getFile());
-//    }
 }
