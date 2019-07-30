@@ -9,12 +9,9 @@ import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
 import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
-import org.jgrapht.io.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -72,7 +69,7 @@ public class Main {
         m.writeImage(true, true);
     }
 
-    
+
     private static InMemoryMapDataSet readData() {
         // Open dump file as stream
         InputStream input = null;
