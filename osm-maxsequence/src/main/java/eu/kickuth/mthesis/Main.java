@@ -88,12 +88,15 @@ public class Main {
         } else {
             System.out.println("No existing graph found, creating new graph.");
             createGraph(data);
+            // TODO reduceGraph();
+            exportGraph("");
         }
 
     }
 
 
     private static void createGraph(InMemoryMapDataSet data) {
+        System.out.println("creating new graph from data dump!");
         osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 
         for (OsmWay way : data.getWays().valueCollection()) {
@@ -131,11 +134,48 @@ public class Main {
                 }
             }
         }
+    }
 
-        // save graph to disc
+
+    /**
+     * Reduce graph by removing nodes of degree two and connecting the two neighbours with a new edge.
+     * The new edge has a cost equal to the sum of the two previous edges.
+     */
+    private static void reduceGraph() {
+        // TODO currently completely broken.
+        System.out.println("reducing graph!");
+        LinkedList<OsmNode> toRemove = new LinkedList<>();
+        for (OsmNode node : osmGraph.vertexSet()) {
+            if (osmGraph.inDegreeOf(node) == 1 && osmGraph.outDegreeOf(node) == 1) {
+                DefaultWeightedEdge in = osmGraph.incomingEdgesOf(node).iterator().next();
+                DefaultWeightedEdge out = osmGraph.outgoingEdgesOf(node).iterator().next();
+                OsmNode prevNode = osmGraph.getEdgeSource(in);
+                OsmNode postNode = osmGraph.getEdgeTarget(out);
+                double cost = osmGraph.getEdgeWeight(in) + osmGraph.getEdgeWeight(out);
+                toRemove.add(node);
+                osmGraph.addEdge(prevNode, postNode);
+                osmGraph.setEdgeWeight(prevNode, postNode, cost);
+            }
+        }
+        for (OsmNode node : toRemove) {
+            osmGraph.removeVertex(node);
+        }
+    }
+
+
+    /**
+     * Writes the osmGraph as dot file to given path
+     * @param path The file path to write to. If empty, a default path is used.
+     */
+    private static void exportGraph(String path) {
+        if (path.equals("")) {
+            // use default path
+            path = "src/main/resources/osm_data/graph/current.dot";
+        }
+        // save graph to disc using the osm library
         DOTExporter<OsmNode, DefaultWeightedEdge> dotExporter = new DOTExporter<>();
         try {
-            File f = new File("src/main/resources/osm_data/graph/current.dot");
+            File f = new File(path);
             dotExporter.exportGraph(osmGraph, f);
         } catch (ExportException e) {
             e.printStackTrace();
