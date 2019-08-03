@@ -8,10 +8,6 @@ import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
@@ -24,8 +20,8 @@ public class Main {
     {
         InMemoryMapDataSet data = readData();
 
-        Graph<OsmNode, DefaultWeightedEdge> osmGraph = createGraph(data);
-        //createImage(data);
+        Graph osmGraph = createGraph(data);
+        createImage(data);
     }
 
 
@@ -35,8 +31,14 @@ public class Main {
 
         for (OsmWay way : data.getWays().valueCollection())
         {
-            if (way.getNumberOfNodes() < 35)  // TODO hard coded heuristic filter
-            {
+            // filter for useful roads
+            Map<String, String> tags = OsmModelUtil.getTagsAsMap(way);
+            String rt = tags.get("highway");
+            String access = tags.get("access");
+            if (rt == null || (access != null && access.equals("no")) ||
+                    !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
+                            rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
+                            rt.equals("unclassified") || rt.equals("residential") )) {
                 continue;
             }
 
@@ -99,38 +101,53 @@ public class Main {
     }
 
 
-    private static Graph<OsmNode, DefaultWeightedEdge> createGraph(InMemoryMapDataSet data) {
-        System.out.println("creating new graph from data dump!");
-        Graph<OsmNode, DefaultWeightedEdge> osmGraph = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
-        //osmGraph = new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
+    private static Graph createGraph(InMemoryMapDataSet data) {
+        System.out.println("creating new graph from data dump.");
+        int nodeCount = data.getNodes().size();
+        Graph osmGraph = new Graph(nodeCount);
 
         for (OsmWay way : data.getWays().valueCollection()) {
-            if (way.getNumberOfNodes() < 15) {  // TODO hard coded heuristic filter
+
+            // filter for useful roads
+            Map<String, String> tags = OsmModelUtil.getTagsAsMap(way);
+            String rt = tags.get("highway");
+            String access = tags.get("access");
+            if (rt == null || (access != null && access.equals("no")) ||
+                    !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
+                            rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
+                            rt.equals("unclassified") || rt.equals("residential") )) {
                 continue;
             }
-            OsmNode wayPoint;
+
+            // check if the road is one way only (i.e. we shouldn't add back edges later)
+            String oneWayTag = tags.get("oneway");
+            boolean oneWay = false;
+            if (oneWayTag != null && oneWayTag.equals("yes")) {
+                oneWay = true;
+            }
+
+            Node wayPoint;
             try {
-                wayPoint = data.getNode(way.getNodeId(0));
-                osmGraph.addVertex(wayPoint);
+                // add the first node to the graph
+                OsmNode wpt = data.getNode(way.getNodeId(0));
+                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), "");
+                osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
                 continue;
             }
             for (int i = 1; i < way.getNumberOfNodes(); i++) {
                 try {
-                    OsmNode nextWayPoint = data.getNode(way.getNodeId(i));
-                    osmGraph.addVertex(nextWayPoint);
+                    // add the next node to the graph
+                    OsmNode nextWpt = data.getNode(way.getNodeId(i));
+                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), "");
+                    osmGraph.addNode(nextWayPoint);
 
-                    // add edge and set the edge cost
-                    DefaultWeightedEdge e = osmGraph.addEdge(wayPoint, nextWayPoint);
-                    if (e == null) {  // edge already exists
-                        continue;
+                    // add edge to the graph
+                    osmGraph.addEdge(wayPoint, nextWayPoint);
+                    if (!oneWay) {
+                        osmGraph.addEdge(nextWayPoint, wayPoint);
                     }
-                    // TODO use a more reliable weight (including e.g. allowed speed)
-                    // TODO attention: Potentially working with small numbers!
-                    double dist = Math.sqrt(Math.pow(wayPoint.getLatitude() - nextWayPoint.getLatitude(), 2) +
-                            Math.pow(wayPoint.getLongitude() - nextWayPoint.getLongitude(), 2));
-                    osmGraph.setEdgeWeight(e, dist);
 
                     wayPoint = nextWayPoint;
                 } catch (EntityNotFoundException e) {
