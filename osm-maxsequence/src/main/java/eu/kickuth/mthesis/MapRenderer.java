@@ -7,10 +7,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 
-public class Map {
+public class MapRenderer {
 
     private double minLon;
     private double minLat;
@@ -22,15 +21,15 @@ public class Map {
     // List of POI locations
     private List<double[]> POIs;
 
-    // list of ways, each way is a list of locations
-    private List<List<double[]>> wayNodeList;
+    // The graph to draw
+    private Graph graph;
 
     // image size
     private int imagePixelWidth = 10000;
     private int imagePixelHeight = 10000;
 
-    public Map(OsmBounds bounds, List<double[]> POIs, List<List<double[]>> wayNodeList)
-    {
+
+    public MapRenderer(OsmBounds bounds, List<double[]> POIs, Graph g) {
         minLat = bounds.getBottom();
         minLon = bounds.getLeft();
         maxLat = bounds.getTop();
@@ -39,11 +38,11 @@ public class Map {
         lonExtent = maxLon - minLon;
 
         this.POIs = POIs;
-        this.wayNodeList = wayNodeList;
+        graph = g;
     }
 
-    public void writeImage(boolean drawPOIs, boolean drawLines)
-    {
+
+    public void writeImage(boolean drawPOIs, boolean drawLines) {
         try {
             BufferedImage image = new BufferedImage(imagePixelWidth,
                     imagePixelHeight, BufferedImage.TYPE_INT_ARGB);
@@ -58,9 +57,7 @@ public class Map {
 
             int bubble_size = 10; // TODO hardcoded: Size of each mark in the image
 
-            if (drawPOIs)
-            {
-                // draw each POI
+            if (drawPOIs) {  // draw each POI
                 for (double[] POI : POIs) {
                     int ly = latToPixel(POI[0]);
                     int lx = lonToPixel(POI[1]);
@@ -72,26 +69,14 @@ public class Map {
                 }
             }
 
-            if (drawLines)
-            {
-                // draw each path
-                for (List<double[]> wayNodes : wayNodeList)
-                {
-                    if (wayNodes.isEmpty()) {
-                        // skip empty paths
-                        continue;
-                    }
-                    Iterator<double[]> iter = wayNodes.iterator();
-                    double[] fst = iter.next();
-                    while (iter.hasNext()) {
-                        double[] snd = fst;
-                        fst = iter.next();
+            if (drawLines) {  // draw each path
+                for (Node fst : graph.adjList.keySet()) {
+                    for (Node snd : graph.adjList.get(fst)) {
+                        int y1 = latToPixel(fst.getLat());
+                        int x1 = lonToPixel(fst.getLon());
 
-                        int y1 = latToPixel(fst[0]);
-                        int x1 = lonToPixel(fst[1]);
-
-                        int y2 = latToPixel(snd[0]);
-                        int x2 = lonToPixel(snd[1]);
+                        int y2 = latToPixel(snd.getLat());
+                        int x2 = lonToPixel(snd.getLon());
 
                         graphics.drawLine(x1, y1, x2, y2);
                     }
@@ -111,8 +96,7 @@ public class Map {
     /**
      * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
      */
-    private int latToPixel(double lat)
-    {
+    private int latToPixel(double lat) {
         // Pixel increases downwards. Latitude increases upwards (north direction). --> inverse mapping.
         return (int) (imagePixelWidth - imagePixelWidth * (lat - minLat) / latExtent);
     }
@@ -121,9 +105,7 @@ public class Map {
     /**
      * compute graphics pixel x-position for a given longitude, knowing image size and lat/lon borders
      */
-    private int lonToPixel(double lon)
-    {
-
+    private int lonToPixel(double lon) {
         return (int) (imagePixelWidth * (lon - minLon) / lonExtent);
     }
 }
