@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class Graph {
 
-    private Map<Node, List<Node>> adjList;
+    public Map<Node, List<Node>> adjList;
 
     public Graph() {
         adjList = new HashMap<>();
@@ -19,6 +19,7 @@ public class Graph {
 
     /**
      * Add a node to the graph.
+     *
      * @param toAdd node to add
      * @return false, iff the node already was present.
      */
@@ -33,10 +34,11 @@ public class Graph {
 
     /**
      * Add an edge to the graph
+     *
      * @param source edge source
-     * @param dest edge destination
-     * @throws IllegalArgumentException, if one of the nodes is not present in the graph
+     * @param dest   edge destination
      * @return false, iff the edge already exists.
+     * @throws IllegalArgumentException, if one of the nodes is not present in the graph
      */
     public boolean addEdge(Node source, Node dest) {
         // assure that the nodes exist in the graph
@@ -55,6 +57,7 @@ public class Graph {
 
     /**
      * Compute the euclidean distance between two nodes. The nodes need not be adjacent.
+     *
      * @param n1 first node
      * @param n2 second node
      * @return euclidean distance
@@ -62,6 +65,4 @@ public class Graph {
     public double getDistance(Node n1, Node n2) {
         return Math.sqrt(Math.pow(n1.getLat() - n2.getLat(), 2) + Math.pow(n1.getLon() - n2.getLon(), 2));
     }
-
-
 }

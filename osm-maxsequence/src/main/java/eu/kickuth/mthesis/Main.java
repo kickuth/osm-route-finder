@@ -21,42 +21,11 @@ public class Main {
         InMemoryMapDataSet data = readData();
 
         Graph osmGraph = createGraph(data);
-        createImage(data);
+        createImage(data, osmGraph);
     }
 
 
-    private static void createImage(InMemoryMapDataSet data) {
-
-        List<List<double[]>> wayNodesList = new LinkedList<>();
-
-        for (OsmWay way : data.getWays().valueCollection())
-        {
-            // filter for useful roads
-            Map<String, String> tags = OsmModelUtil.getTagsAsMap(way);
-            String rt = tags.get("highway");
-            String access = tags.get("access");
-            if (rt == null || (access != null && access.equals("no")) ||
-                    !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
-                            rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
-                            rt.equals("unclassified") || rt.equals("residential") )) {
-                continue;
-            }
-
-            List<double[]> wayNodes = new LinkedList<>();
-            for (int i = 0; i < way.getNumberOfNodes(); i++)
-            {
-                try {
-                    OsmNode wayPoint = data.getNode(way.getNodeId(i));
-                    double[] latLon = {wayPoint.getLatitude(), wayPoint.getLongitude()};
-                    wayNodes.add(latLon);
-                } catch (EntityNotFoundException e) {
-                    System.out.println("Way uses non-existing node! Ignoring.");
-                }
-            }
-            wayNodesList.add(wayNodes);
-        }
-
-
+    private static void createImage(InMemoryMapDataSet data, Graph g) {
         OsmBounds mapBounds = data.getBounds();
         List<OsmNode> roadSigns = getRoadSigns(data);
 
@@ -67,7 +36,7 @@ public class Main {
             signPOIs.add(d);
         }
 
-        MapRenderer m = new MapRenderer(mapBounds, signPOIs, wayNodesList);
+        MapRenderer m = new MapRenderer(mapBounds, signPOIs, g);
         m.writeImage(true, true);
     }
 
