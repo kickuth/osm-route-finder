@@ -55,14 +55,4 @@ public class Graph {
         return true;
     }
 
-    /**
-     * Compute the euclidean distance between two nodes. The nodes need not be adjacent.
-     *
-     * @param n1 first node
-     * @param n2 second node
-     * @return euclidean distance
-     */
-    public double getDistance(Node n1, Node n2) {
-        return Math.sqrt(Math.pow(n1.getLat() - n2.getLat(), 2) + Math.pow(n1.getLon() - n2.getLon(), 2));
-    }
 }

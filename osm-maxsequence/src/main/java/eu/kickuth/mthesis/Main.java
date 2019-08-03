@@ -21,26 +21,18 @@ public class Main {
         InMemoryMapDataSet data = readData();
 
         Graph osmGraph = createGraph(data);
-        createImage(data, osmGraph);
-    }
-
-
-    private static void createImage(InMemoryMapDataSet data, Graph g) {
         OsmBounds mapBounds = data.getBounds();
         List<OsmNode> roadSigns = getRoadSigns(data);
 
         List<double[]> signPOIs = new LinkedList<>();
-
         for (OsmNode roadSign : roadSigns) {
             double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
             signPOIs.add(d);
         }
 
-        MapRenderer m = new MapRenderer(mapBounds, signPOIs, g);
+        MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         m.writeImage(true, true);
     }
-
-
     private static InMemoryMapDataSet readData() {
         // Open dump file as stream
         InputStream input = null;

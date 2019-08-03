@@ -29,4 +29,14 @@ public class Node {
     public String getType() {
         return type;
     }
+
+    /**
+     * Compute the euclidean distance between two nodes.
+     *
+     * @param n the node to compare
+     * @return euclidean distance
+     */
+    public double getDistance(Node n) {
+        return Math.sqrt(Math.pow(getLat() - n.getLat(), 2) + Math.pow(getLon() - n.getLon(), 2));
+    }
 }
