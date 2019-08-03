@@ -1,0 +1,67 @@
+package eu.kickuth.mthesis;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+public class Graph {
+
+    private Map<Node, List<Node>> adjList;
+
+    public Graph() {
+        adjList = new HashMap<>();
+    }
+
+    public Graph(int nodeCountEstimate) {
+        adjList = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
+    }
+
+    /**
+     * Add a node to the graph.
+     * @param toAdd node to add
+     * @return false, iff the node already was present.
+     */
+    public boolean addNode(Node toAdd) {
+        if (adjList.containsKey(toAdd)) {
+            return false;
+        } else {
+            adjList.put(toAdd, new LinkedList<>());
+            return true;
+        }
+    }
+
+    /**
+     * Add an edge to the graph
+     * @param source edge source
+     * @param dest edge destination
+     * @throws IllegalArgumentException, if one of the nodes is not present in the graph
+     * @return false, iff the edge already exists.
+     */
+    public boolean addEdge(Node source, Node dest) {
+        // assure that the nodes exist in the graph
+        if (adjList.get(source) == null || adjList.get(dest) == null) {
+            throw new IllegalArgumentException("Nodes not present in graph!");
+        }
+        // check if the edge already exists
+        List<Node> sourceNeighbours = adjList.get(source);
+        if (sourceNeighbours.contains(dest)) {
+            return false;
+        }
+        // add edge
+        sourceNeighbours.add(dest);
+        return true;
+    }
+
+    /**
+     * Compute the euclidean distance between two nodes. The nodes need not be adjacent.
+     * @param n1 first node
+     * @param n2 second node
+     * @return euclidean distance
+     */
+    public double getDistance(Node n1, Node n2) {
+        return Math.sqrt(Math.pow(n1.getLat() - n2.getLat(), 2) + Math.pow(n1.getLon() - n2.getLon(), 2));
+    }
+
+
+}
