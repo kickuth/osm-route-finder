@@ -16,8 +16,7 @@ import java.util.Map;
 
 public class Main {
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         InMemoryMapDataSet data = readData();
 
         Graph osmGraph = createGraph(data);
@@ -33,6 +32,7 @@ public class Main {
         MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         m.writeImage(true, true);
     }
+
     private static InMemoryMapDataSet readData() {
         // Open dump file as stream
         InputStream input = null;
