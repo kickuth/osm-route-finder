@@ -1,7 +1,6 @@
 package eu.kickuth.mthesis;
 
 import java.util.PriorityQueue;
-import java.util.Queue;
 
 public class Dijkstra {
 
@@ -17,21 +16,32 @@ public class Dijkstra {
 
 
     public void sssp() {
+        double[] dist = new double[graph.adjList.size()];
         // add all nodes to the queue and set dist[source] to 0
         for (Node node : graph.adjList.keySet()) {
-            pqueue.add(new DijkstraNode(node, (node.equals(source) ? 0 : Integer.MAX_VALUE)));
+            dist[node.getId()] = (node.equals(source) ? 0 : Integer.MAX_VALUE);
+            pqueue.add(new DijkstraNode(node, dist[node.getId()]));
         }
 
         // main loop
         while (!pqueue.isEmpty()) {
             DijkstraNode current_min = pqueue.poll();
+            current_min.visited = true;
             for (Node neighbour : graph.adjList.get(current_min.node)) {
                 double alternativeDistance = current_min.tentativeDistanceFromSource + current_min.node.getDistance(neighbour);
-                if (alternativeDistance < 0) {// TODO replace 0 with current cost of neighbour
+                if (alternativeDistance < dist[neighbour.getId()]) {
                     pqueue.add(new DijkstraNode(neighbour, alternativeDistance));
+                    dist[neighbour.getId()] = alternativeDistance;
                 }
             }
         }
+        int counter = 0;
+        for (int i = 0; i < dist.length; i++) {
+            if (dist[i] < Integer.MAX_VALUE) {
+                counter++;
+            }
+        }
+        System.out.println(counter);
     }
 
 

@@ -39,4 +39,18 @@ public class Node {
     public double getDistance(Node n) {
         return Math.sqrt(Math.pow(getLat() - n.getLat(), 2) + Math.pow(getLon() - n.getLon(), 2));
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;
+        } else {
+            return this.id == ((Node) obj).id;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
 }

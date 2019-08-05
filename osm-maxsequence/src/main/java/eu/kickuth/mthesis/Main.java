@@ -10,9 +10,8 @@ import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.sql.Time;
+import java.util.*;
 
 public class Main {
 
@@ -29,8 +28,21 @@ public class Main {
             signPOIs.add(d);
         }
 
-        MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
-        m.writeImage(true, true);
+        //MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
+        //m.writeImage(true, true);
+
+        Random rand = new Random();
+        int index = rand.nextInt( osmGraph.adjList.keySet().size());
+        Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
+        for (int i = 0; i < index; i++) {
+            iter.next();
+            new Dijkstra(osmGraph, iter.next()).sssp();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static InMemoryMapDataSet readData() {
