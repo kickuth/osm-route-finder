@@ -2,19 +2,19 @@ package eu.kickuth.mthesis;
 
 public class Node {
 
-    private long id;
+    private int id;
     private double lat;
     private double lon;
     private String type;
 
-    public Node(long id, double lat, double lon, String type) {
+    public Node(int id, double lat, double lon, String type) {
         this.id = id;
         this.lat = lat;
         this.lon = lon;
         this.type = type;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 

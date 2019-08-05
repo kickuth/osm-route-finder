@@ -67,6 +67,7 @@ public class Main {
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 
+        int idIncrement = 0;
         for (OsmWay way : data.getWays().valueCollection()) {
 
             // filter for useful roads
@@ -91,7 +92,7 @@ public class Main {
             try {
                 // add the first node to the graph
                 OsmNode wpt = data.getNode(way.getNodeId(0));
-                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), "");
+                wayPoint = new Node(idIncrement++, wpt.getLatitude(), wpt.getLongitude(), ""); // TODO wpt.getId()
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
@@ -101,7 +102,8 @@ public class Main {
                 try {
                     // add the next node to the graph
                     OsmNode nextWpt = data.getNode(way.getNodeId(i));
-                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), "");
+                    //TODO nextWpt.getId()
+                    Node nextWayPoint = new Node(idIncrement++, nextWpt.getLatitude(), nextWpt.getLongitude(), "");
                     osmGraph.addNode(nextWayPoint);
 
                     // add edge to the graph
