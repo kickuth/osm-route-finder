@@ -27,7 +27,7 @@ public class Dijkstra {
             DijkstraNode current_min = pqueue.poll();
             for (Node neighbour : graph.adjList.get(current_min.node)) {
                 double alternativeDistance = current_min.tentativeDistanceFromSource + current_min.node.getDistance(neighbour);
-                if (alternativeDistance < 0) // TODO replace 0 with current cost of neighbour
+                if (alternativeDistance < 0) {// TODO replace 0 with current cost of neighbour
                     pqueue.add(new DijkstraNode(neighbour, alternativeDistance));
                 }
             }
