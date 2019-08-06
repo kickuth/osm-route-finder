@@ -10,7 +10,6 @@ import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Time;
 import java.util.*;
 
 public class Main {
@@ -30,7 +29,7 @@ public class Main {
 
         //MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         //m.writeImage(true, true);
-
+qq
         Random rand = new Random();
         int index = rand.nextInt( osmGraph.adjList.keySet().size());
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
@@ -86,10 +85,15 @@ public class Main {
             Map<String, String> tags = OsmModelUtil.getTagsAsMap(way);
             String rt = tags.get("highway");
             String access = tags.get("access");
-            if (rt == null || (access != null && access.equals("no")) ||
+            String area = tags.get("area");
+            if (rt == null ||  // not a road
+                    (area != null && area.equals("yes")) || // way describes an area and not a road
+                    (access != null && access.equals("no")) ||  // not accessible
+                    // filter for roads with motorised vehicles
                     !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
                             rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
-                            rt.equals("unclassified") || rt.equals("residential") )) {
+                            rt.equals("unclassified") || rt.equals("residential") )
+            ) {
                 continue;
             }
 
