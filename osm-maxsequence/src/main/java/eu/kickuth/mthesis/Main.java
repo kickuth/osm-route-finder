@@ -29,7 +29,7 @@ public class Main {
 
         //MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         //m.writeImage(true, true);
-qq
+
         Random rand = new Random();
         int index = rand.nextInt( osmGraph.adjList.keySet().size());
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
