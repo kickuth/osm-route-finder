@@ -34,26 +34,45 @@ public class Main {
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
-        Dijkstra dTest = new Dijkstra(osmGraph, iter.next());
-        for (int i = 0; i <= 999; i++) {
-            dTest.setSource(iter.next());
-            Map<Node, Double> resultSet = dTest.sssp(0.15);
-            System.out.println(resultSet.size());
+        Random rand = new Random();
+        int sourceIdx = rand.nextInt(osmGraph.adjList.size());
+        int targetIdx = rand.nextInt(osmGraph.adjList.size());
 
-            List<double[]> resultPOIs = new LinkedList<>();
-            for (Node reachable : resultSet.keySet()) {
-                double[] d = {reachable.getLat(), reachable.getLon()};
-                resultPOIs.add(d);
+        Node source = null;
+        Node target = null;
+        for (int i = 0; i < Math.max(sourceIdx, targetIdx) + 1; i++) {
+            if (i == sourceIdx) {
+                source = iter.next();
+            } else if (i == targetIdx) {
+                target = iter.next();
+            } else {
+                iter.next();
             }
-            m.setPOIs(resultPOIs);
-            String fileLoc = "/home/todd/Desktop/maps/%03d.png";
-            m.writeImage(true, true, String.format(fileLoc, i));
+        }
 
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        Dijkstra dTest = new Dijkstra(osmGraph, source);
+        double maxDistance = 0.15;
+        Map<Node, Double> reachableSet = dTest.sssp(maxDistance);
+        System.out.println("Reachable nodes with maxDistance " + maxDistance + ": " + reachableSet.size());
+
+        List<Node> shortestPath = dTest.sssp(target);
+        System.out.println("Shortest path Node count (!= length): " + shortestPath.size());
+
+        List<double[]> resultPOIs = new LinkedList<>();
+        resultPOIs.add(new double[] {source.getLat(), source.getLon()});
+        resultPOIs.add(new double[] {target.getLat(), target.getLon()});
+        //for (Node reachable : reachableSet.keySet()) {
+        for (Node onPath : shortestPath) {
+            resultPOIs.add(new double[] {onPath.getLat(), onPath.getLon()});
+        }
+        m.setPOIs(resultPOIs);
+        String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
+        m.writeImage(true, true, fileLoc);
+
+        try {
+            Thread.sleep(10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
