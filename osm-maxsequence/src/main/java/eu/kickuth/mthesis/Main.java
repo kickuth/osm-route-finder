@@ -68,12 +68,6 @@ public class Main {
         m.setPOIs(resultPOIs);
         String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
         m.writeImage(true, true, fileLoc);
-
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private static InMemoryMapDataSet readData() {
