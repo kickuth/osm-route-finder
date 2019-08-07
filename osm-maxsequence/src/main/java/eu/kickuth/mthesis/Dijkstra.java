@@ -5,49 +5,65 @@ import java.util.*;
 public class Dijkstra {
 
     private final Graph graph;
-    private final Node source;
+    private Node source;
     private final PriorityQueue<DijkstraNode> pqueue;
-    private final Map<Node, DijkstraNode> link;
-    private final List<DijkstraNode> results;
+    private final Map<Node, DijkstraNode> lookup;
 
     public Dijkstra(Graph graph, Node source) {
         this.graph = graph;
         this.source = source;
         pqueue = new PriorityQueue<>(graph.adjList.size());
-        link = new HashMap<>(graph.adjList.size());
-        results = new ArrayList<>();  // TODO size?
+        lookup = new HashMap<>(graph.adjList.size());
     }
 
 
-    public void sssp() {
-        // add all nodes to the queue and set dist[source] to 0
+    public Map<Node, Double> sssp() {
+        return sssp(Double.MAX_VALUE);
+    }
+
+    public Map<Node, Double> sssp(double maxDistance) {
+        // initialise queue with source and dist[source] = 0 and initialise lookup table
         for (Node node : graph.adjList.keySet()) {
-            DijkstraNode dNode = new DijkstraNode(node, (node.equals(source) ? 0 : Integer.MAX_VALUE));
-            pqueue.add(dNode);
-            link.put(node, dNode);
+            DijkstraNode dNode;
+            if (node.equals(source)) {
+                dNode = new DijkstraNode(node, 0);
+                pqueue.add(dNode);
+            } else {
+                dNode = new DijkstraNode(node, Double.MAX_VALUE);
+            }
+            lookup.put(node, dNode);
         }
+
+        Map<Node, Double> results = new HashMap<>();
 
         // main loop
         while (!pqueue.isEmpty()) {
-            DijkstraNode current_min = pqueue.poll();
+            DijkstraNode currentMin = pqueue.poll();
+            // check if only unreachable nodes are left and we are done
+            if (currentMin.tentativeDistanceFromSource == Double.MAX_VALUE) {
+                break;
+            }
             // check whether an updated node has already been processed
-            if (link.get(current_min.node) != current_min) {
+            if (lookup.get(currentMin.node) != currentMin) {
+                System.out.println("updated node already processed (decrease key alternative)");
                 continue;
             }
-            results.add(current_min);
-            // current_min.visited = true; TODO
-            for (Node neighbour : graph.adjList.get(current_min.node)) {
-                double alternativeDistance = current_min.tentativeDistanceFromSource + current_min.node.getDistance(neighbour);
-                if (alternativeDistance < link.get(neighbour).tentativeDistanceFromSource) {
+            results.put(currentMin.node, currentMin.tentativeDistanceFromSource);
+            for (Node neighbour : graph.adjList.get(currentMin.node)) {
+                double alternativeDistance = currentMin.tentativeDistanceFromSource + currentMin.node.getDistance(neighbour);
+                // ignore nodes outside of maxDistance
+                if (alternativeDistance > maxDistance) {
+                    continue;
+                }
+                // update node, if the new path is shorter than the previous shortest
+                if (alternativeDistance < lookup.get(neighbour).tentativeDistanceFromSource) {
                     DijkstraNode updatedNeighbour = new DijkstraNode(neighbour, alternativeDistance);
                     pqueue.add(updatedNeighbour);
-                    link.put(neighbour, updatedNeighbour);
+                    lookup.put(neighbour, updatedNeighbour);
                 }
             }
         }
-        System.out.println(results.size());
-        // TODO howto: return results;
-
+        return results;
     }
 
 
@@ -55,11 +71,14 @@ public class Dijkstra {
         return source;
     }
 
+    public void setSource(Node newSource) {
+        source = newSource;
+    }
+
 
     private class DijkstraNode implements Comparable<DijkstraNode> {
         final Node node;
         double tentativeDistanceFromSource;
-        boolean visited = false; // TODO
         DijkstraNode(Node node, double tentativeDistanceFromSource) {
             this.node = node;
             this.tentativeDistanceFromSource = tentativeDistanceFromSource;

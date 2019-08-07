@@ -30,12 +30,17 @@ public class Main {
         //MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         //m.writeImage(true, true);
 
+
+        // TODO experimental code
+        System.out.println("running Dijkstra experiments");
         Random rand = new Random();
         int index = rand.nextInt( osmGraph.adjList.keySet().size());
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
+        Dijkstra dTest = new Dijkstra(osmGraph, iter.next());
         for (int i = 0; i < index; i++) {
-            iter.next();
-            new Dijkstra(osmGraph, iter.next()).sssp();
+            dTest.setSource(iter.next());
+            Map<Node, Double> resultSet = dTest.sssp(0.01);
+            System.out.println(resultSet.size());
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -74,7 +79,7 @@ public class Main {
 
 
     private static Graph createGraph(InMemoryMapDataSet data) {
-        System.out.println("creating new graph from data dump.");
+        System.out.println("creating graph from data dump.");
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 
