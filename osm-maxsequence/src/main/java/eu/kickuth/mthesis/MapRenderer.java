@@ -25,8 +25,8 @@ public class MapRenderer {
     private Graph graph;
 
     // image size
-    private int imagePixelWidth = 10000;
-    private int imagePixelHeight = 10000;
+    private int imagePixelWidth = 5000;
+    private int imagePixelHeight = 5000;
 
 
     public MapRenderer(OsmBounds bounds, List<double[]> POIs, Graph g) {
@@ -42,7 +42,11 @@ public class MapRenderer {
     }
 
 
-    public void writeImage(boolean drawPOIs, boolean drawLines) {
+    public void writeImage(boolean drawPOIs, boolean drawLines, String fileLocation) {
+        if (fileLocation == null || fileLocation.equals("")) {
+            fileLocation = "/home/todd/Desktop/roads_lat_lon.png";
+        }
+
         try {
             BufferedImage image = new BufferedImage(imagePixelWidth,
                     imagePixelHeight, BufferedImage.TYPE_INT_ARGB);
@@ -84,12 +88,15 @@ public class MapRenderer {
             }
 
             // write image to disk
-            // TODO fix temp file storage path
-            ImageIO.write(image, "png", new File("/home/todd/Desktop/roads_lat_lon.png"));
+            ImageIO.write(image, "png", new File(fileLocation));
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setPOIs(List<double[]> POIs) {
+        this.POIs = POIs;
     }
 
 

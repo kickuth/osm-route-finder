@@ -27,20 +27,28 @@ public class Main {
             signPOIs.add(d);
         }
 
-        //MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
+        MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
         //m.writeImage(true, true);
 
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
-        Random rand = new Random();
-        int index = rand.nextInt( osmGraph.adjList.keySet().size());
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         Dijkstra dTest = new Dijkstra(osmGraph, iter.next());
-        for (int i = 0; i < index; i++) {
+        for (int i = 0; i <= 999; i++) {
             dTest.setSource(iter.next());
-            Map<Node, Double> resultSet = dTest.sssp(0.01);
+            Map<Node, Double> resultSet = dTest.sssp(0.15);
             System.out.println(resultSet.size());
+
+            List<double[]> resultPOIs = new LinkedList<>();
+            for (Node reachable : resultSet.keySet()) {
+                double[] d = {reachable.getLat(), reachable.getLon()};
+                resultPOIs.add(d);
+            }
+            m.setPOIs(resultPOIs);
+            String fileLoc = "/home/todd/Desktop/maps/%03d.png";
+            m.writeImage(true, true, String.format(fileLoc, i));
+
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -83,7 +91,7 @@ public class Main {
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 
-        int idIncrement = 0;
+        // TODO int idIncrement = 0;
         for (OsmWay way : data.getWays().valueCollection()) {
 
             // filter for useful roads
@@ -113,7 +121,7 @@ public class Main {
             try {
                 // add the first node to the graph
                 OsmNode wpt = data.getNode(way.getNodeId(0));
-                wayPoint = new Node(idIncrement++, wpt.getLatitude(), wpt.getLongitude(), ""); // TODO wpt.getId()
+                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), ""); // TODO idIncrement++
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
@@ -123,8 +131,7 @@ public class Main {
                 try {
                     // add the next node to the graph
                     OsmNode nextWpt = data.getNode(way.getNodeId(i));
-                    //TODO nextWpt.getId()
-                    Node nextWayPoint = new Node(idIncrement++, nextWpt.getLatitude(), nextWpt.getLongitude(), "");
+                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), ""); // TODO idIncrement++
                     osmGraph.addNode(nextWayPoint);
 
                     // add edge to the graph

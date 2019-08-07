@@ -45,7 +45,6 @@ public class Dijkstra {
             }
             // check whether an updated node has already been processed
             if (lookup.get(currentMin.node) != currentMin) {
-                System.out.println("updated node already processed (decrease key alternative)");
                 continue;
             }
             results.put(currentMin.node, currentMin.tentativeDistanceFromSource);
