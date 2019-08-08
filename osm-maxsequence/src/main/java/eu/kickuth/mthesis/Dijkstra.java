@@ -18,26 +18,18 @@ public class Dijkstra {
 
 
     /**
-     * Initialise queue with source and initialise lookup table
+     * Compute the single source shortest path to all reachable nodes.
+     * @return map of reachable nodes to their minimal distance from the source
      */
-    private void initDijkstra() {
-        for (Node node : graph.adjList.keySet()) {
-            DijkstraNode dNode;
-            if (node.equals(source)) {
-                dNode = new DijkstraNode(node, 0);
-                pqueue.add(dNode);
-            } else {
-                dNode = new DijkstraNode(node, Double.MAX_VALUE);
-            }
-            lookup.put(node, dNode);
-        }
-    }
-
-
     public Map<Node, Double> sssp() {
         return sssp(Double.MAX_VALUE);
     }
 
+    /**
+     * Compute the single source shortest path to all nodes within the maxDistance.
+     * @param maxDistance maximal distance from source; nodes with larger distance are ignored
+     * @return map of reachable nodes within maxDistance to their minimal distance from the source.
+     */
     public Map<Node, Double> sssp(double maxDistance) {
 
         initDijkstra();
@@ -73,6 +65,11 @@ public class Dijkstra {
         return results;
     }
 
+    /**
+     * Compute the shortest s-t-path
+     * @param target the target node.
+     * @return list of nodes from source to target, empty list if no path exists
+     */
     public List<Node> sssp(Node target) {
 
         initDijkstra();
@@ -124,15 +121,44 @@ public class Dijkstra {
     }
 
 
+    /**
+     * Initialise queue with source and initialise lookup table
+     */
+    private void initDijkstra() {
+        for (Node node : graph.adjList.keySet()) {
+            DijkstraNode dNode;
+            if (node.equals(source)) {
+                dNode = new DijkstraNode(node, 0);
+                pqueue.add(dNode);
+            } else {
+                dNode = new DijkstraNode(node, Double.MAX_VALUE);
+            }
+            lookup.put(node, dNode);
+        }
+    }
+
+
+    /**
+     * Getter for the Dijkstra source node
+     * @return source node
+     */
     public Node getSource() {
         return source;
     }
 
+    /**
+     * Setter for the Dijkstra source node
+     * @param newSource new source node
+     */
     public void setSource(Node newSource) {
         source = newSource;
     }
 
 
+    /**
+     * A wrapper class for Node that includes a distance-from-source field and implements Comparable for use in a
+     * PriorityQueue
+     */
     private class DijkstraNode implements Comparable<DijkstraNode> {
         final Node node;
         double tentativeDistanceFromSource;
