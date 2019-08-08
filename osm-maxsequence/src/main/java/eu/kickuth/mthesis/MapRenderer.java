@@ -28,7 +28,7 @@ public class MapRenderer {
     // image size
     private int imagePixelWidth = 5000;  // TODO hard-coded image size
     private int imagePixelHeight = 5000;
-    private static Color[] colours = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.CYAN, Color.PINK};
+    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE, Color.CYAN, Color.PINK};
 
 
     public MapRenderer(OsmBounds bounds, Graph g) {
@@ -96,6 +96,7 @@ public class MapRenderer {
 
             // write image to disk
             ImageIO.write(image, "png", new File(fileLocation));
+            System.out.println("Image written to " + fileLocation);
 
         } catch (IOException e) {
             e.printStackTrace();

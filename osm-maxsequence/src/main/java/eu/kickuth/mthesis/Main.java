@@ -22,17 +22,6 @@ public class Main {
         List<OsmNode> roadSigns = getRoadSigns(data);
 
 
-        MapRenderer mapExport = new MapRenderer(mapBounds, osmGraph);
-        //mapExport.writeImage(true, true);
-
-        List<double[]> signPois = new LinkedList<>();
-        for (OsmNode roadSign : roadSigns) {
-            double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
-            signPois.add(d);
-        }
-        mapExport.addPOISet(signPois);
-
-
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
@@ -53,21 +42,40 @@ public class Main {
         }
 
         Dijkstra dTest = new Dijkstra(osmGraph, source);
-        double maxDistance = 0.15;
+        double maxDistance = 0.2;
         Map<Node, Double> reachableSet = dTest.sssp(maxDistance);
+        // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
         System.out.println("Reachable nodes with maxDistance " + maxDistance + ": " + reachableSet.size());
 
         List<Node> shortestPath = dTest.sssp(target);
         System.out.println("Shortest path Node count (!= length): " + shortestPath.size());
 
-        List<double[]> resultPOIs = new LinkedList<>();
-        resultPOIs.add(new double[] {source.getLat(), source.getLon()});
-        resultPOIs.add(new double[] {target.getLat(), target.getLon()});
-        //for (Node reachable : reachableSet.keySet()) {
-        for (Node onPath : shortestPath) {
-            resultPOIs.add(new double[] {onPath.getLat(), onPath.getLon()});
+        // create a map object
+        MapRenderer mapExport = new MapRenderer(mapBounds, osmGraph);
+
+        // add reachable POIs to map
+        List<double[]> reachablePois = new LinkedList<>();
+        for (Node reachable : reachableSet.keySet()) {
+            reachablePois.add(new double[] {reachable.getLat(), reachable.getLon()});
         }
-        mapExport.addPOISet(resultPOIs);
+        mapExport.addPOISet(reachablePois);
+
+        // add s-t-path to map
+        List<double[]> shortestPathPois = new LinkedList<>();
+        for (Node onPath : shortestPath) {
+            shortestPathPois.add(new double[] {onPath.getLat(), onPath.getLon()});
+        }
+        mapExport.addPOISet(shortestPathPois);
+
+        //add roadsigns to map
+        List<double[]> signPois = new LinkedList<>();
+        for (OsmNode roadSign : roadSigns) {
+            double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
+            signPois.add(d);
+        }
+        mapExport.addPOISet(signPois);
+
+        // export map
         String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
         mapExport.writeImage(true, true, fileLoc);
     }
