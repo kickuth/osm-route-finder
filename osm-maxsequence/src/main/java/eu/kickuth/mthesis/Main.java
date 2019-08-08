@@ -21,14 +21,16 @@ public class Main {
         OsmBounds mapBounds = data.getBounds();
         List<OsmNode> roadSigns = getRoadSigns(data);
 
-        List<double[]> signPOIs = new LinkedList<>();
+
+        MapRenderer mapExport = new MapRenderer(mapBounds, osmGraph);
+        //mapExport.writeImage(true, true);
+
+        List<double[]> signPois = new LinkedList<>();
         for (OsmNode roadSign : roadSigns) {
             double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
-            signPOIs.add(d);
+            signPois.add(d);
         }
-
-        MapRenderer m = new MapRenderer(mapBounds, signPOIs, osmGraph);
-        //m.writeImage(true, true);
+        mapExport.addPOISet(signPois);
 
 
         // TODO experimental code
@@ -65,9 +67,9 @@ public class Main {
         for (Node onPath : shortestPath) {
             resultPOIs.add(new double[] {onPath.getLat(), onPath.getLon()});
         }
-        m.setPOIs(resultPOIs);
+        mapExport.addPOISet(resultPOIs);
         String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
-        m.writeImage(true, true, fileLoc);
+        mapExport.writeImage(true, true, fileLoc);
     }
 
     private static InMemoryMapDataSet readData() {

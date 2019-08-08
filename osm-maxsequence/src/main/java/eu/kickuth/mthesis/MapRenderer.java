@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 public class MapRenderer {
@@ -19,17 +20,18 @@ public class MapRenderer {
     private double lonExtent;
 
     // List of POI locations
-    private List<double[]> POIs;
+    private List<List<double[]>> poiSets;
 
     // The graph to draw
     private Graph graph;
 
     // image size
-    private int imagePixelWidth = 5000;
+    private int imagePixelWidth = 5000;  // TODO hard-coded image size
     private int imagePixelHeight = 5000;
+    private static Color[] colours = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.ORANGE, Color.CYAN, Color.PINK};
 
 
-    public MapRenderer(OsmBounds bounds, List<double[]> POIs, Graph g) {
+    public MapRenderer(OsmBounds bounds, Graph g) {
         minLat = bounds.getBottom();
         minLon = bounds.getLeft();
         maxLat = bounds.getTop();
@@ -37,14 +39,14 @@ public class MapRenderer {
         latExtent = maxLat - minLat;
         lonExtent = maxLon - minLon;
 
-        this.POIs = POIs;
+        poiSets = new LinkedList<>();
         graph = g;
     }
 
 
     public void writeImage(boolean drawPOIs, boolean drawLines, String fileLocation) {
         if (fileLocation == null || fileLocation.equals("")) {
-            fileLocation = "/home/todd/Desktop/roads_lat_lon.png";
+            fileLocation = System.getProperty("user.home") + "/Desktop/map-export.png";
         }
 
         try {
@@ -55,22 +57,27 @@ public class MapRenderer {
                     minLat, minLon, maxLat, maxLon));
 
             Graphics2D graphics = (Graphics2D) image.getGraphics();
-            graphics.setColor(Color.WHITE);
+            graphics.setColor(Color.LIGHT_GRAY);
             graphics.fillRect(0, 0, imagePixelWidth, imagePixelHeight);
             graphics.setColor(Color.BLACK);
 
-            int bubble_size = 10; // TODO hardcoded: Size of each mark in the image
+            int bubble_size = 10; // TODO hard-coded size of each POI in the image
 
             if (drawPOIs) {  // draw each POI
-                for (double[] POI : POIs) {
-                    int ly = latToPixel(POI[0]);
-                    int lx = lonToPixel(POI[1]);
+                int colourIdx = 0;
+                for (List<double[]> poiSet : poiSets) {
+                    // change colour for each POI class
+                    graphics.setColor(colours[colourIdx++ % colours.length]);
 
-                    graphics.setColor(Color.RED);
-                    graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
-                            bubble_size, bubble_size);
-                    graphics.setColor(Color.BLACK);
+                    for (double[] poi : poiSet) {
+                        int ly = latToPixel(poi[0]);
+                        int lx = lonToPixel(poi[1]);
+
+                        graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
+                                bubble_size, bubble_size);
+                    }
                 }
+                graphics.setColor(Color.BLACK);
             }
 
             if (drawLines) {  // draw each path
@@ -95,8 +102,19 @@ public class MapRenderer {
         }
     }
 
-    public void setPOIs(List<double[]> POIs) {
-        this.POIs = POIs;
+    /**
+     * Add a class of POIs
+     * @param poiSet list of POIs to add
+     */
+    public void addPOISet(List<double[]> poiSet) {
+        poiSets.add(poiSet);
+    }
+
+    /**
+     * Remove all POIs
+     */
+    public void clearPois() {
+        poiSets.clear();
     }
 
 
@@ -104,7 +122,7 @@ public class MapRenderer {
      * compute graphics pixel y-position for a given latitude, knowing image size and lat/lon borders
      */
     private int latToPixel(double lat) {
-        // Pixel increases downwards. Latitude increases upwards (north direction). --> inverse mapping.
+        // Pixel increases downwards. Latitude increases upwards (north direction).
         return (int) (imagePixelWidth - imagePixelWidth * (lat - minLat) / latExtent);
     }
 
