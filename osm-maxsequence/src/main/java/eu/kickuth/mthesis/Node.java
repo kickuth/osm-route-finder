@@ -2,9 +2,9 @@ package eu.kickuth.mthesis;
 
 public class Node {
 
-    private long id;
-    private double lat;
-    private double lon;
+    private final long id;
+    private final double lat;
+    private final double lon;
     private String type;
 
     public Node(long id, double lat, double lon, String type) {
@@ -32,13 +32,28 @@ public class Node {
     }
 
     /**
-     * Compute the euclidean distance between two nodes.
+     * Computes the correct distance between two nodes.
+     *
+     * Adapted version from
+     * https://stackoverflow.com/questions/3694380/calculating-distance-between-two-points-using-latitude-longitude
      *
      * @param n the node to compare
-     * @return euclidean distance
+     * @return the Distance in meters between the nodes.
      */
     public double getDistance(Node n) {
-        return Math.sqrt(Math.pow(getLat() - n.getLat(), 2) + Math.pow(getLon() - n.getLon(), 2));
+        final int R = 6371;  // earths radius
+
+
+        double lat2 = n.getLat();
+        double lon2 = n.getLon();
+        double latDistance = Math.toRadians(lat2 - lat);
+        double lonDistance = Math.toRadians(lon2 - lon);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c * 1000;  // converted to meters
     }
 
     @Override

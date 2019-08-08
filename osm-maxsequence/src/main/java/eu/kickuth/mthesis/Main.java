@@ -24,11 +24,12 @@ public class Main {
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
+        // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         Random rand = new Random();
-        int sourceIdx = rand.nextInt(osmGraph.adjList.size());
-        int targetIdx = rand.nextInt(osmGraph.adjList.size());
-
+        int nodeCount = osmGraph.adjList.size();
+        int sourceIdx = rand.nextInt(nodeCount);
+        int targetIdx = rand.nextInt(nodeCount);
         Node source = null;
         Node target = null;
         for (int i = 0; i < Math.max(sourceIdx, targetIdx) + 1; i++) {
@@ -42,13 +43,13 @@ public class Main {
         }
 
         Dijkstra dTest = new Dijkstra(osmGraph, source);
-        double maxDistance = 0.2;
+        int maxDistance = 20_000;  // in meters
         Map<Node, Double> reachableSet = dTest.sssp(maxDistance);
-        // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
-        System.out.println("Reachable nodes with maxDistance " + maxDistance + ": " + reachableSet.size());
+        System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
 
         List<Node> shortestPath = dTest.sssp(target);
-        System.out.println("Shortest path Node count (!= length): " + shortestPath.size());
+        // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
+        System.out.println("Shortest path node count (!= length): " + shortestPath.size());
 
         // create a map object
         MapRenderer mapExport = new MapRenderer(mapBounds, osmGraph);
@@ -67,7 +68,7 @@ public class Main {
         }
         mapExport.addPOISet(shortestPathPois);
 
-        //add roadsigns to map
+        //add road signs to map
         List<double[]> signPois = new LinkedList<>();
         for (OsmNode roadSign : roadSigns) {
             double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
@@ -75,7 +76,7 @@ public class Main {
         }
         mapExport.addPOISet(signPois);
 
-        // export map
+        // save map to disk
         String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
         mapExport.writeImage(true, true, fileLoc);
     }
