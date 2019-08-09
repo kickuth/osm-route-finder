@@ -77,7 +77,7 @@ public class Main {
         mapExport.addPOISet(signPois);
 
         // save map to disk
-        String fileLoc = "/home/todd/Desktop/maps/random-st-path.png";
+        String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/random-st-path.png";
         mapExport.writeImage(true, true, fileLoc);
     }
 
