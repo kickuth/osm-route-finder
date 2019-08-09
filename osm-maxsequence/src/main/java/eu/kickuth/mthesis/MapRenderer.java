@@ -30,7 +30,8 @@ public class MapRenderer {
     // image size
     private int imagePixelWidth = 5000;  // TODO hard-coded image size
     private int imagePixelHeight = 5000;
-    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE, Color.CYAN, Color.PINK};
+    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE,
+            Color.CYAN, Color.PINK, Color.WHITE, new Color(125, 50, 40) /* brown */};
 
 
     public MapRenderer(OsmBounds bounds, Graph g) {
@@ -51,8 +52,8 @@ public class MapRenderer {
             fileLocation = System.getProperty("user.home") + "/Desktop/map-export.png";
         }
 
-        System.out.println(String.format("Generating map wth bounds:\nminLat %f, maxLat %f\nminLon %f, maxLon %f",
-                minLat, minLon, maxLat, maxLon));
+        System.out.println(String.format("Generating map with bounds:\nLatitude (%f, %f)\nLongitude (%f, %f)",
+                minLat, maxLat, minLon, maxLon));
         try {
             // create image with background
             BufferedImage image = new BufferedImage(imagePixelWidth,
@@ -66,10 +67,10 @@ public class MapRenderer {
             int bubble_size = 10; // TODO hard-coded pixel size of each POI/Node in the image
 
             // draw each POI
-            int colourIdx = 0;
+            int colourIdx = -1;
             for (List<double[]> poiSet : poiSets) {
                 // change colour for each POI class
-                graphics.setColor(colours[colourIdx++ % colours.length]);
+                graphics.setColor(colours[++colourIdx % colours.length]);
 
                 for (double[] poi : poiSet) {
                     if (poi[0] < minLat || poi[0] > maxLat || poi[1] < minLon || poi[1] > maxLon) {
@@ -84,18 +85,16 @@ public class MapRenderer {
                             bubble_size, bubble_size);
                 }
             }
-            graphics.setColor(Color.BLACK);
 
-            //draw nodes and paths
+            // draw nodes with non-empty type/class
             Map<String, Color> uniqueTypes = new HashMap<>();
             for (Node fst : graph.adjList.keySet()) {
-                // draw nodes with non-empty type/class
                 String type = fst.getType();
                 if (type != null && !type.equals("")) {
                     Color c = uniqueTypes.get(type);
                     // add new type, colour if type not yet present
                     if (c == null) {
-                        c = colours[colourIdx++ % colours.length];
+                        c = colours[++colourIdx % colours.length];
                         uniqueTypes.put(type, c);
                     }
                     int ly = latToPixel(fst.getLat());
@@ -104,10 +103,12 @@ public class MapRenderer {
                     graphics.setColor(c);
                     graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
                             bubble_size, bubble_size);
-                    graphics.setColor(Color.BLACK);
                 }
+            }
 
-                // draw each path
+            // draw all edges
+            graphics.setColor(Color.BLACK);
+            for (Node fst : graph.adjList.keySet()) {
                 for (Node snd : graph.adjList.get(fst)) {
                     int y1 = latToPixel(fst.getLat());
                     int x1 = lonToPixel(fst.getLon());
@@ -118,6 +119,8 @@ public class MapRenderer {
                     graphics.drawLine(x1, y1, x2, y2);
                 }
             }
+
+            System.out.println("Number of colour classes: " + colourIdx);
 
             // write image to disk
             ImageIO.write(image, "png", new File(fileLocation));

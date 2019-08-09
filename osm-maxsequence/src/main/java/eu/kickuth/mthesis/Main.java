@@ -8,6 +8,8 @@ import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -19,7 +21,6 @@ public class Main {
 
         Graph osmGraph = createGraph(data);
         OsmBounds mapBounds = data.getBounds();
-        List<OsmNode> roadSigns = getRoadSigns(data);
 
 
         // TODO experimental code
@@ -42,11 +43,15 @@ public class Main {
             }
         }
 
+        // initialise Dijkstra
         Dijkstra dTest = new Dijkstra(osmGraph, source);
+
+        // run (constrained) single source shortest path
         int maxDistance = 20_000;  // in meters
         Map<Node, Double> reachableSet = dTest.sssp(maxDistance);
         System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
 
+        // run shortest s-t-path
         List<Node> shortestPath = dTest.sssp(target);
         // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
         System.out.println("Shortest path node count (!= length): " + shortestPath.size());
@@ -68,14 +73,6 @@ public class Main {
         }
         mapExport.addPOISet(shortestPathPois);
 
-        //add road signs to map
-        List<double[]> signPois = new LinkedList<>();
-        for (OsmNode roadSign : roadSigns) {
-            double[] d = {roadSign.getLatitude(), roadSign.getLongitude()};
-            signPois.add(d);
-        }
-        mapExport.addPOISet(signPois);
-
         // save map to disk
         String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/random-st-path.png";
         mapExport.writeImage(true, true, fileLoc);
@@ -85,10 +82,8 @@ public class Main {
         // Open dump file as stream
         InputStream input = null;
         try {
-            input = ClassLoader.getSystemClassLoader().getResource("./osm_data/tue.osm.pbf").openStream();
-        } catch (NullPointerException e) {
-            System.out.println("Failed to read map dump!");
-            System.exit(1);
+            File f = new File("src/main/resources/osm_data/tue.osm.pbf");
+            input = new FileInputStream(f);
         } catch (IOException e) {
             System.out.println("Failed to locate map dump!");
             System.exit(1);
@@ -115,7 +110,6 @@ public class Main {
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 
-        // TODO int idIncrement = 0;
         for (OsmWay way : data.getWays().valueCollection()) {
 
             // filter for useful roads
@@ -126,7 +120,7 @@ public class Main {
             if (rt == null ||  // not a road
                     (area != null && area.equals("yes")) || // way describes an area and not a road
                     (access != null && access.equals("no")) ||  // not accessible
-                    // filter for roads with motorised vehicles
+                    // filter for roads allowing motorised vehicles
                     !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
                             rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
                             rt.equals("unclassified") || rt.equals("residential") )
@@ -145,7 +139,7 @@ public class Main {
             try {
                 // add the first node to the graph
                 OsmNode wpt = data.getNode(way.getNodeId(0));
-                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), ""); // TODO idIncrement++
+                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), tags.get("traffic_sign"));
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
@@ -155,7 +149,7 @@ public class Main {
                 try {
                     // add the next node to the graph
                     OsmNode nextWpt = data.getNode(way.getNodeId(i));
-                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), ""); // TODO idIncrement++
+                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), tags.get("traffic_sign"));
                     osmGraph.addNode(nextWayPoint);
 
                     // add edge to the graph
@@ -170,22 +164,48 @@ public class Main {
                 }
             }
         }
-        return osmGraph;
-    }
 
-
-    private static List<OsmNode> getRoadSigns(InMemoryMapDataSet data) {
-        List<OsmNode> signs = new LinkedList<>();
-
-        for (OsmNode node : data.getNodes().valueCollection()) {
-            Map<String, String> tags = OsmModelUtil.getTagsAsMap(node);
+        // add road signs that are next to roads ( O(n^2)! )
+        for (OsmNode roadSign : data.getNodes().valueCollection()) {
+            Map<String, String> tags = OsmModelUtil.getTagsAsMap(roadSign);
 
             String trafficSign = tags.get("traffic_sign");
-            if (trafficSign != null) {
-                signs.add(node);
+            if (trafficSign == null) {
+                continue;
             }
+            Node roadNode = new Node(roadSign.getId(), roadSign.getLatitude(), roadSign.getLongitude(), trafficSign);
+            // check if sign already is part of the graph
+            if (osmGraph.adjList.containsKey(roadNode)) {
+                continue;
+            }
+            List<Node> candidates = new LinkedList<>();
+            for (Node node : osmGraph.adjList.keySet()) {
+                if (Math.abs(node.getLat() - roadSign.getLatitude()) < 0.001 &&
+                        Math.abs(node.getLon() - roadSign.getLongitude()) < 0.0006) {
+                    /* TODO hard coded direct lon/lat comparison
+                    TODO Length in meters of 1° of latitude = always 111.32 km
+                    TODO Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
+                    */
+                    candidates.add(node);
+                }
+            }
+            if (candidates.isEmpty()) {
+                // no close nodes present in graph
+                continue;
+            }
+            double currentMin = Double.MAX_VALUE;
+            Node closestNode = null;
+            for (Node node : candidates) {
+                double dist = roadNode.getDistance(node);
+                if (dist < currentMin) {
+                    currentMin = dist;
+                    closestNode = node;
+                }
+            }
+            closestNode.setType(roadNode.getType());
         }
 
-        return signs;
+
+        return osmGraph;
     }
 }

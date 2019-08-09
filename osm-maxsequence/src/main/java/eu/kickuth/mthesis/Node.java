@@ -31,6 +31,10 @@ public class Node {
         return type;
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
     /**
      * Computes the correct distance between two nodes.
      *
