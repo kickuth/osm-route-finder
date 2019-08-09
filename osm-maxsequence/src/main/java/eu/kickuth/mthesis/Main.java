@@ -113,10 +113,10 @@ public class Main {
         for (OsmWay way : data.getWays().valueCollection()) {
 
             // filter for useful roads
-            Map<String, String> tags = OsmModelUtil.getTagsAsMap(way);
-            String rt = tags.get("highway");
-            String access = tags.get("access");
-            String area = tags.get("area");
+            Map<String, String> wayTags = OsmModelUtil.getTagsAsMap(way);
+            String rt = wayTags.get("highway");
+            String access = wayTags.get("access");
+            String area = wayTags.get("area");
             if (rt == null ||  // not a road
                     (area != null && area.equals("yes")) || // way describes an area and not a road
                     (access != null && access.equals("no")) ||  // not accessible
@@ -129,17 +129,19 @@ public class Main {
             }
 
             // check if the road is one way only (i.e. we shouldn't add back edges later)
-            String oneWayTag = tags.get("oneway");
+            String oneWayTag = wayTags.get("oneway");
             boolean oneWay = false;
             if (oneWayTag != null && oneWayTag.equals("yes")) {
                 oneWay = true;
             }
 
             Node wayPoint;
+            Map<String, String> nodeTags;
             try {
                 // add the first node to the graph
                 OsmNode wpt = data.getNode(way.getNodeId(0));
-                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), tags.get("traffic_sign"));
+                nodeTags = OsmModelUtil.getTagsAsMap(wpt);
+                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), nodeTags.get("traffic_sign"));
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
@@ -149,7 +151,8 @@ public class Main {
                 try {
                     // add the next node to the graph
                     OsmNode nextWpt = data.getNode(way.getNodeId(i));
-                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), tags.get("traffic_sign"));
+                    nodeTags = OsmModelUtil.getTagsAsMap(nextWpt);
+                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), nodeTags.get("traffic_sign"));
                     osmGraph.addNode(nextWayPoint);
 
                     // add edge to the graph
@@ -166,44 +169,47 @@ public class Main {
         }
 
         // add road signs that are next to roads ( O(n^2)! )
-        for (OsmNode roadSign : data.getNodes().valueCollection()) {
-            Map<String, String> tags = OsmModelUtil.getTagsAsMap(roadSign);
-
-            String trafficSign = tags.get("traffic_sign");
-            if (trafficSign == null) {
-                continue;
-            }
-            Node roadNode = new Node(roadSign.getId(), roadSign.getLatitude(), roadSign.getLongitude(), trafficSign);
-            // check if sign already is part of the graph
-            if (osmGraph.adjList.containsKey(roadNode)) {
-                continue;
-            }
-            List<Node> candidates = new LinkedList<>();
-            for (Node node : osmGraph.adjList.keySet()) {
-                if (Math.abs(node.getLat() - roadSign.getLatitude()) < 0.001 &&
-                        Math.abs(node.getLon() - roadSign.getLongitude()) < 0.0006) {
-                    /* TODO hard coded direct lon/lat comparison
-                    TODO Length in meters of 1° of latitude = always 111.32 km
-                    TODO Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
-                    */
-                    candidates.add(node);
-                }
-            }
-            if (candidates.isEmpty()) {
-                // no close nodes present in graph
-                continue;
-            }
-            double currentMin = Double.MAX_VALUE;
-            Node closestNode = null;
-            for (Node node : candidates) {
-                double dist = roadNode.getDistance(node);
-                if (dist < currentMin) {
-                    currentMin = dist;
-                    closestNode = node;
-                }
-            }
-            closestNode.setType(roadNode.getType());
-        }
+//        int addedRoadsigns = 0; // TODO temp
+//        for (OsmNode roadSign : data.getNodes().valueCollection()) {
+//            Map<String, String> tags = OsmModelUtil.getTagsAsMap(roadSign);
+//
+//            String trafficSign = tags.get("traffic_sign");
+//            if (trafficSign == null || trafficSign.equals("")) {
+//                continue;
+//            }
+//            Node roadNode = new Node(roadSign.getId(), roadSign.getLatitude(), roadSign.getLongitude(), trafficSign);
+//            // check if sign already is part of the graph
+//            if (osmGraph.adjList.containsKey(roadNode)) {
+//                continue;
+//            }
+//            List<Node> candidates = new LinkedList<>();
+//            for (Node node : osmGraph.adjList.keySet()) {
+//                if (Math.abs(node.getLat() - roadSign.getLatitude()) < 0.001 &&
+//                        Math.abs(node.getLon() - roadSign.getLongitude()) < 0.0006) {
+//                    /* TODO hard coded direct lon/lat comparison
+//                    TODO Length in meters of 1° of latitude = always 111.32 km
+//                    TODO Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
+//                    */
+//                    candidates.add(node);
+//                }
+//            }
+//            if (candidates.isEmpty()) {
+//                // no close nodes present in graph
+//                continue;
+//            }
+//            double currentMin = Double.MAX_VALUE;
+//            Node closestNode = null;
+//            for (Node node : candidates) {
+//                double dist = roadNode.getDistance(node);
+//                if (dist < currentMin) {
+//                    currentMin = dist;
+//                    closestNode = node;
+//                }
+//            }
+//            addedRoadsigns++;
+//            closestNode.setType(roadNode.getType());
+//        }
+//        System.out.println("With a lot of effort added roadsigns: " + addedRoadsigns);
 
 
         return osmGraph;

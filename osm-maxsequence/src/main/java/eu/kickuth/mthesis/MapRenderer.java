@@ -30,8 +30,8 @@ public class MapRenderer {
     // image size
     private int imagePixelWidth = 5000;  // TODO hard-coded image size
     private int imagePixelHeight = 5000;
-    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.ORANGE,
-            Color.CYAN, Color.PINK, Color.WHITE, new Color(125, 50, 40) /* brown */};
+    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.CYAN,
+            Color.PINK, Color.WHITE, new Color(125, 50, 40) /* brown */};
 
 
     public MapRenderer(OsmBounds bounds, Graph g) {
