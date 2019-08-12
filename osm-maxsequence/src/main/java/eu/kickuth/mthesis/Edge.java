@@ -2,9 +2,9 @@ package eu.kickuth.mthesis;
 
 public class Edge {
 
-    private Node source;
-    private Node dest;
-    private double cost;
+    public final Node source;
+    public final Node dest;
+    public final double cost;
 
     /**
      * Constructs an edge. Uses euclidean distance as cost
@@ -12,8 +12,7 @@ public class Edge {
      * @param dest destination node
      */
     public Edge(Node source, Node dest) {
-        this(source, dest, Math.sqrt(
-                Math.pow(source.getLat() - dest.getLat(), 2) + Math.pow(source.getLon() - dest.getLon(), 2)));
+        this(source, dest, source.getDistance(dest));
     }
 
     /**
@@ -26,17 +25,5 @@ public class Edge {
         this.source = source;
         this.dest = dest;
         this.cost = cost;
-    }
-
-    public Node getSource() {
-        return source;
-    }
-
-    public Node getDest() {
-        return dest;
-    }
-
-    public double getCost() {
-        return cost;
     }
 }
