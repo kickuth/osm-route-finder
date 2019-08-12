@@ -34,17 +34,46 @@ public class MapRenderer {
     private static Color[] colours = {Color.RED, Color.BLUE, Color.WHITE, Color.GREEN, Color.CYAN, Color.YELLOW,
             Color.PINK, new Color(125, 50, 40) /* brown */};
 
+    public MapRenderer(Graph g) {
+        minLon = 180;
+        minLat = 90;
+        maxLon = -180;
+        maxLat = -90;
+        for (Node node : g.adjList.keySet()) {
+            double lat = node.getLat();
+            double lon = node.getLon();
+            if (minLat > lat) {
+                minLat = lat;
+            } else if (maxLat < lat) {
+                maxLat = lat;
+            }
+            if (minLon > lon) {
+                minLon = lon;
+            } else if (maxLon < lon) {
+                maxLon = lon;
+            }
+        }
+        graph = g;
 
-    public MapRenderer(OsmBounds bounds, Graph g) {
-        minLat = bounds.getBottom();
-        minLon = bounds.getLeft();
-        maxLat = bounds.getTop();
-        maxLon = bounds.getRight();
         latExtent = maxLat - minLat;
         lonExtent = maxLon - minLon;
-
         poiSets = new LinkedList<>();
+    }
+
+    public MapRenderer(Graph g, OsmBounds b) {
+        this(g, b.getBottom(), b.getLeft(), b.getTop(), b.getRight());
+    }
+
+    public MapRenderer(Graph g, double minLat, double maxLat, double minLon, double maxLon) {
+        this.minLat = minLat;
+        this.minLon = minLon;
+        this.maxLat = maxLat;
+        this.maxLon = maxLon;
         graph = g;
+
+        latExtent = maxLat - minLat;
+        lonExtent = maxLon - minLon;
+        poiSets = new LinkedList<>();
     }
 
 
@@ -66,10 +95,10 @@ public class MapRenderer {
             int bubble_size = 10; // TODO hard-coded pixel size of each POI/Node in the image
 
             // draw each POI
-            int colourIdx = -1;
+            int colourIdx = 0;
             for (List<double[]> poiSet : poiSets) {
                 // change colour for each POI class
-                graphics.setColor(colours[++colourIdx % colours.length]);
+                graphics.setColor(colours[colourIdx++ % colours.length]);
 
                 for (double[] poi : poiSet) {
                     if (poi[0] < minLat || poi[0] > maxLat || poi[1] < minLon || poi[1] > maxLon) {
@@ -87,31 +116,24 @@ public class MapRenderer {
 
             // draw nodes with non-empty type/class
             Map<String, Color> uniqueTypes = new HashMap<>();
-            Map<String, Integer> uniqueCount = new HashMap<>();
-            for (Node fst : graph.adjList.keySet()) {
-                String type = fst.getType();
-                if (type != null && !type.equals("")) {
+            for (Node node : graph.adjList.keySet()) {
+                String type = node.getType();
+                if (!StringUtils.isEmpty(type)) {
                     Color c = uniqueTypes.get(type);
-                    // add new type, colour if type not yet present
+                    // if type not yet present, add new type with colour
                     if (c == null) {
-                        c = colours[++colourIdx % colours.length];
+                        c = colours[colourIdx++ % colours.length];
                         uniqueTypes.put(type, c);
-                        uniqueCount.put(type, 1);
-                    } else {
-                        int temp = uniqueCount.get(type) + 1;
-                        uniqueCount.put(type, temp);
                     }
-                    int ly = latToPixel(fst.getLat());
-                    int lx = lonToPixel(fst.getLon());
+                    int ly = latToPixel(node.getLat());
+                    int lx = lonToPixel(node.getLon());
 
                     graphics.setColor(c);
                     graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
                             bubble_size, bubble_size);
                 }
             }
-            for (String key : uniqueCount.keySet()) {
-                System.out.println(key + " " + uniqueCount.get(key));
-            }
+            System.out.println("Number of unique node types/classes: " + uniqueTypes.size());
 
             // draw all edges
             graphics.setColor(Color.BLACK);

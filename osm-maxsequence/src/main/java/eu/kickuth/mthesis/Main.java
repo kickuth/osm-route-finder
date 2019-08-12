@@ -20,7 +20,6 @@ public class Main {
     public static void main(String[] args) {
         final InMemoryMapDataSet data = readData();
         final Graph osmGraph = createGraph(data);
-        OsmBounds mapBounds = data.getBounds();
 
 
         // TODO experimental code
@@ -29,8 +28,8 @@ public class Main {
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         Random rand = new Random();
         int nodeCount = osmGraph.adjList.size();
-        int sourceIdx = rand.nextInt(nodeCount);
-        int targetIdx = rand.nextInt(nodeCount);
+        int sourceIdx = 1200; //rand.nextInt(nodeCount);
+        int targetIdx = 9001; //rand.nextInt(nodeCount);
         Node source = null;
         Node target = null;
         for (int i = 0; i < Math.max(sourceIdx, targetIdx) + 1; i++) {
@@ -52,12 +51,12 @@ public class Main {
         System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
 
         // run shortest s-t-path
-        List<Node> shortestPath = dTest.sssp(target);
+        List<Node> shortestPath = dTest.shortestPath(target);
         // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
         System.out.println("Shortest path node count (!= length): " + shortestPath.size());
 
         // create a map object
-        MapRenderer mapExport = new MapRenderer(mapBounds, osmGraph);
+        MapRenderer mapExport = new MapRenderer(osmGraph);
 
         // add reachable POIs to map
         List<double[]> reachablePois = new LinkedList<>();
@@ -80,6 +79,7 @@ public class Main {
 
     private static InMemoryMapDataSet readData() {
         // Open dump file as stream
+        System.out.println("reading data dump");
         InputStream input = null;
         try {
             File f = new File("src/main/resources/osm_data/tue.osm.pbf");
@@ -94,7 +94,7 @@ public class Main {
 
         try {
             // return InMemoryMapDataSet
-            return MapDataSetLoader.read(data_iterator, true, true, true);
+            return MapDataSetLoader.read(data_iterator, true, true, false);
         } catch (IOException e)
         {
             System.out.println("Failed to load data into memory!");
@@ -106,7 +106,7 @@ public class Main {
 
 
     private static Graph createGraph(InMemoryMapDataSet data) {
-        System.out.println("creating graph from data dump.");
+        System.out.println("creating graph from data dump");
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 

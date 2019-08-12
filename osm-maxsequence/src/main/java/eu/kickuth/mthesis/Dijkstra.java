@@ -70,7 +70,7 @@ public class Dijkstra {
      * @param target the target node.
      * @return list of nodes from source to target, empty list if no path exists
      */
-    public List<Node> sssp(Node target) {
+    public List<Node> shortestPath(Node target) {
 
         initDijkstra();
 
