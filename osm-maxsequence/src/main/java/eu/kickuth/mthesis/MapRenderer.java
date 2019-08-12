@@ -1,6 +1,7 @@
 package eu.kickuth.mthesis;
 
 import de.topobyte.osm4j.core.model.iface.OsmBounds;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -30,8 +31,8 @@ public class MapRenderer {
     // image size
     private int imagePixelWidth = 5000;  // TODO hard-coded image size
     private int imagePixelHeight = 5000;
-    private static Color[] colours = {Color.RED, Color.BLUE, Color.YELLOW, Color.GREEN, Color.CYAN,
-            Color.PINK, Color.WHITE, new Color(125, 50, 40) /* brown */};
+    private static Color[] colours = {Color.RED, Color.BLUE, Color.WHITE, Color.GREEN, Color.CYAN, Color.YELLOW,
+            Color.PINK, new Color(125, 50, 40) /* brown */};
 
 
     public MapRenderer(OsmBounds bounds, Graph g) {
@@ -48,17 +49,15 @@ public class MapRenderer {
 
 
     public void writeImage(boolean drawPOIs, boolean drawLines, String fileLocation) {
-        if (fileLocation == null || fileLocation.equals("")) {
+        if (StringUtils.isEmpty(fileLocation)) {
             fileLocation = System.getProperty("user.home") + "/Desktop/map-export.png";
         }
-
         System.out.println(String.format("Generating map with bounds:\nLatitude (%f, %f)\nLongitude (%f, %f)",
                 minLat, maxLat, minLon, maxLon));
         try {
             // create image with background
             BufferedImage image = new BufferedImage(imagePixelWidth,
                     imagePixelHeight, BufferedImage.TYPE_INT_ARGB);
-
             Graphics2D graphics = (Graphics2D) image.getGraphics();
             graphics.setColor(Color.LIGHT_GRAY);
             graphics.fillRect(0, 0, imagePixelWidth, imagePixelHeight);
@@ -88,6 +87,7 @@ public class MapRenderer {
 
             // draw nodes with non-empty type/class
             Map<String, Color> uniqueTypes = new HashMap<>();
+            Map<String, Integer> uniqueCount = new HashMap<>();
             for (Node fst : graph.adjList.keySet()) {
                 String type = fst.getType();
                 if (type != null && !type.equals("")) {
@@ -96,6 +96,10 @@ public class MapRenderer {
                     if (c == null) {
                         c = colours[++colourIdx % colours.length];
                         uniqueTypes.put(type, c);
+                        uniqueCount.put(type, 1);
+                    } else {
+                        int temp = uniqueCount.get(type) + 1;
+                        uniqueCount.put(type, temp);
                     }
                     int ly = latToPixel(fst.getLat());
                     int lx = lonToPixel(fst.getLon());
@@ -104,6 +108,9 @@ public class MapRenderer {
                     graphics.fillOval(lx - bubble_size / 2, ly - bubble_size / 2,
                             bubble_size, bubble_size);
                 }
+            }
+            for (String key : uniqueCount.keySet()) {
+                System.out.println(key + " " + uniqueCount.get(key));
             }
 
             // draw all edges

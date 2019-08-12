@@ -7,6 +7,7 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,9 +18,8 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-        InMemoryMapDataSet data = readData();
-
-        Graph osmGraph = createGraph(data);
+        final InMemoryMapDataSet data = readData();
+        final Graph osmGraph = createGraph(data);
         OsmBounds mapBounds = data.getBounds();
 
 
@@ -141,7 +141,12 @@ public class Main {
                 // add the first node to the graph
                 OsmNode wpt = data.getNode(way.getNodeId(0));
                 nodeTags = OsmModelUtil.getTagsAsMap(wpt);
-                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), nodeTags.get("traffic_sign"));
+                String wayPointType = nodeTags.get("traffic_sign");
+                if (StringUtils.isEmpty(wayPointType)) {
+                    wayPointType = wayTags.get("traffic_sign");
+                    // TODO max speed, put in own method?
+                }
+                wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), wayPointType);
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
                 System.out.println("Way uses non-existing first node! Ignoring way.");
@@ -152,7 +157,12 @@ public class Main {
                     // add the next node to the graph
                     OsmNode nextWpt = data.getNode(way.getNodeId(i));
                     nodeTags = OsmModelUtil.getTagsAsMap(nextWpt);
-                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), nodeTags.get("traffic_sign"));
+                    String wayPointType = nodeTags.get("traffic_sign");
+                    if (StringUtils.isEmpty(wayPointType)) {
+                        wayPointType = wayTags.get("traffic_sign");
+                        // TODO max speed / see first node wayPointType
+                    }
+                    Node nextWayPoint = new Node(nextWpt.getId(), nextWpt.getLatitude(), nextWpt.getLongitude(), wayPointType);
                     osmGraph.addNode(nextWayPoint);
 
                     // add edge to the graph
@@ -174,7 +184,7 @@ public class Main {
 //            Map<String, String> tags = OsmModelUtil.getTagsAsMap(roadSign);
 //
 //            String trafficSign = tags.get("traffic_sign");
-//            if (trafficSign == null || trafficSign.equals("")) {
+//            if (StringUtils.isEmpty(trafficSign)) {
 //                continue;
 //            }
 //            Node roadNode = new Node(roadSign.getId(), roadSign.getLatitude(), roadSign.getLongitude(), trafficSign);
