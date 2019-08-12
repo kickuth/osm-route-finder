@@ -1,9 +1,6 @@
 package eu.kickuth.mthesis;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Graph {
 
@@ -53,6 +50,26 @@ public class Graph {
         // add edge
         sourceNeighbours.add(dest);
         return true;
+    }
+
+    public Graph createSubgraph(Set<Node> nodeSubset) {
+        Graph subGraph = new Graph(nodeSubset.size());
+        // populate subgraph with nodes
+        for (Node node : nodeSubset) {
+            subGraph.addNode(node);
+        }
+
+        // add edges present in both graphs
+        for (Node node : nodeSubset) {
+            List<Node> neighbours = adjList.get(node);
+            for (Node neighbour : neighbours) {
+                if (nodeSubset.contains(neighbour)) {
+                    subGraph.addEdge(node, neighbour);
+                }
+            }
+        }
+
+        return subGraph;
     }
 
 }
