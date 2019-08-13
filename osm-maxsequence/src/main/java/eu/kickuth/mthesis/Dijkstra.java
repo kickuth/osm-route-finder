@@ -5,13 +5,11 @@ import java.util.*;
 public class Dijkstra {
 
     private final Graph graph;
-    private Node source;
     private final PriorityQueue<DijkstraNode> pqueue;
     private final Map<Node, DijkstraNode> lookup;
 
-    public Dijkstra(Graph graph, Node source) {
+    public Dijkstra(Graph graph) {
         this.graph = graph;
-        this.source = source;
         pqueue = new PriorityQueue<>(graph.adjList.size());
         lookup = new HashMap<>(graph.adjList.size());
     }
@@ -19,20 +17,22 @@ public class Dijkstra {
 
     /**
      * Compute the single source shortest path to all reachable nodes.
+     * @param source the node to start with
      * @return map of reachable nodes to their minimal distance from the source
      */
-    public Map<Node, Double> sssp() {
-        return sssp(Double.MAX_VALUE);
+    public Map<Node, Double> sssp(Node source) {
+        return sssp(source, Double.MAX_VALUE);
     }
 
     /**
      * Compute the single source shortest path to all nodes within the maxDistance.
+     * @param source the node to start with
      * @param maxDistance maximal distance from source; nodes with larger distance are ignored
      * @return map of reachable nodes within maxDistance to their minimal distance from the source.
      */
-    public Map<Node, Double> sssp(double maxDistance) {
+    public Map<Node, Double> sssp(Node source, double maxDistance) {
 
-        initDijkstra();
+        initDijkstra(source);
 
         Map<Node, Double> results = new HashMap<>();
 
@@ -67,16 +67,31 @@ public class Dijkstra {
 
     /**
      * Compute the shortest s-t-path
-     * @param target the target node.
+     * @param source the source node
+     * @param target the target node
      * @return list of nodes from source to target, empty list if no path exists
      */
-    public List<Node> shortestPath(Node target) {
+    public List<Node> shortestPath(Node source, Node target) {
+        Set<Node> sources = new HashSet<>();
+        Set<Node> targets = new HashSet<>();
+        sources.add(source);
+        targets.add(target);
+        return multiShortestPath(sources, targets);
+    }
 
-        initDijkstra();
-
+    /**
+     * Compute the shortest path from any source to any target node
+     * @param sources the set of source nodes
+     * @param targets the set of target nodes
+     * @return list of nodes for the shortest s-t-path, empty list if no path exists
+     */
+    public List<Node> multiShortestPath(Set<Node> sources, Set<Node> targets) {
+        initDijkstra(sources);
         // map to backtrack shortest path
         Map<Node, Node> previousNode = new HashMap<>();
-        previousNode.put(source, null);
+
+        // the first reached node in targets
+        Node backtrack;
 
         // main loop
         while (true) {
@@ -90,7 +105,8 @@ public class Dijkstra {
                 continue;
             }
             // are we at the target yet?
-            if (currentMin.node.equals(target)) {
+            if (targets.contains(currentMin.node)) {
+                backtrack = currentMin.node;
                 break;
             }
             // check whether only unreachable nodes are left --> Target unreachable
@@ -112,7 +128,6 @@ public class Dijkstra {
         // reconstruct the path from the target
         // TODO use LinkedHashMap to also store each distance?
         List<Node> results = new LinkedList<>();
-        Node backtrack = target;
         while (backtrack != null) {
             results.add(0, backtrack);
             backtrack = previousNode.get(backtrack);
@@ -120,14 +135,22 @@ public class Dijkstra {
         return results;
     }
 
+    /**
+     * Initialise queue with single source. See <code>initDijkstra(Set<Node> sources)</code>.
+     */
+    private void initDijkstra(Node source) {
+        Set<Node> sources = new HashSet<>();
+        sources.add(source);
+        initDijkstra(sources);
+    }
 
     /**
-     * Initialise queue with source and initialise lookup table
+     * Initialise queue with multiple sources and initialise lookup table
      */
-    private void initDijkstra() {
+    private void initDijkstra(Set<Node> sources) {
         for (Node node : graph.adjList.keySet()) {
             DijkstraNode dNode;
-            if (node.equals(source)) {
+            if (sources.contains(node)) {
                 dNode = new DijkstraNode(node, 0);
                 pqueue.add(dNode);
             } else {
@@ -135,23 +158,6 @@ public class Dijkstra {
             }
             lookup.put(node, dNode);
         }
-    }
-
-
-    /**
-     * Getter for the Dijkstra source node
-     * @return source node
-     */
-    public Node getSource() {
-        return source;
-    }
-
-    /**
-     * Setter for the Dijkstra source node
-     * @param newSource new source node
-     */
-    public void setSource(Node newSource) {
-        source = newSource;
     }
 
 

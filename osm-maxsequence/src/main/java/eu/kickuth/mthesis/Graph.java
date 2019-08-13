@@ -1,10 +1,18 @@
 package eu.kickuth.mthesis;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.*;
 
 public class Graph {
 
+    // TODO make graph immutable? --> (inner) GraphBuilder class
+
     public Map<Node, List<Node>> adjList;
+
+    public Graph(Map<Node, List<Node>> adjList) {
+        this.adjList = adjList;
+    }
 
     public Graph() {
         adjList = new HashMap<>();
@@ -70,6 +78,20 @@ public class Graph {
         }
 
         return subGraph;
+    }
+
+    /**
+     * create a deep copy of the graph
+     * @return the copy
+     */
+    @Override
+    public Graph clone() {
+        Map<Node, List<Node>> copy = new HashMap<>();
+        for (Map.Entry<Node, List<Node>> entry : adjList.entrySet())
+        {
+            copy.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+        }
+        return new Graph(copy);
     }
 
 }

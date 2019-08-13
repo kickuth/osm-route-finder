@@ -24,10 +24,11 @@ public class Main {
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
+        int maxDistance = 75_000; // in metres
         // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
-        Random rand = new Random();
-        int nodeCount = osmGraph.adjList.size();
+        //Random rand = new Random();
+        //int nodeCount = osmGraph.adjList.size();
         int sourceIdx = 1200; //rand.nextInt(nodeCount);
         int targetIdx = 9001; //rand.nextInt(nodeCount);
         Node source = null;
@@ -43,45 +44,34 @@ public class Main {
         }
 
 
-        // initialise Dijkstra
-        Dijkstra osmDijkstra = new Dijkstra(osmGraph, source);
+        // initialise WayFinder
+        WayFinder finder = new WayFinder(osmGraph.clone(), source, target);
 
-        int maxDistance = 75_000;  // in meters
-        Map<Node, Double> reachableSourceSet = osmDijkstra.sssp(maxDistance);
+        // limit search space and store nodes for visualization
+        Set<Node> reducedGraphNodes = finder.limitMap(maxDistance).adjList.keySet();
 
-        osmDijkstra.setSource(target);
-        Map<Node, Double> reachableTargetSet = osmDijkstra.sssp(maxDistance);
-        Set<Node> reachableSet = new HashSet<>();
-        for (Node node : reachableSourceSet.keySet()) {
-            if (!reachableTargetSet.containsKey(node)) {
-                continue;
-            }
-            double totalDist = reachableSourceSet.get(node) + reachableTargetSet.get(node);
-            if (totalDist <= maxDistance) {
-                reachableSet.add(node);
-            }
-        }
+        // compute shortest path (for visualization) and its score
+        List<Node> shortestPath = finder.shortestPath();
+        int shortestPathCost = finder.uniqueClassScore(shortestPath);
+        System.out.println("Unique class score for shortest path: " + shortestPathCost);
 
-        Graph reachableGraph = osmGraph.createSubgraph(reachableSet);
-        Dijkstra subDijkstra = new Dijkstra(reachableGraph, source);
-
-        // run shortest s-t-path
-        List<Node> shortestPath = subDijkstra.shortestPath(target);
-
-
-        // create a map object
+        /*
+        ========================================
+        ===========  Visualization  ============
+        ========================================
+        */
+        //create a map object
         MapRenderer mapExport = new MapRenderer(osmGraph);
-        //MapRenderer mapExport = new MapRenderer(reachableGraph);
 
-        // add reachable nodes to map
-        List<double[]> reachablePois = new LinkedList<>();
-        for (Node reachable : reachableSet) {
-            reachablePois.add(new double[] {reachable.getLat(), reachable.getLon()});
+        // add reduced graph nodes to map
+        List<double[]> reducedNodeSet = new LinkedList<>();
+        for (Node node : reducedGraphNodes) {
+            reducedNodeSet.add(new double[] {node.getLat(), node.getLon()});
         }
-        mapExport.addPOISet(reachablePois);
+        mapExport.addPOISet(reducedNodeSet);
 
 
-        // add s-t-path to map
+        // add shortest path to map
         List<double[]> shortestPathPois = new LinkedList<>();
         for (Node onPath : shortestPath) {
             shortestPathPois.add(new double[] {onPath.getLat(), onPath.getLon()});
@@ -92,9 +82,8 @@ public class Main {
         String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/reduced-st-path.png";
         mapExport.writeImage(true, true, fileLoc);
 
-        // dijkstraTest(osmGraph, source, target);
 
-
+        // dijkstraTest(osmGraph, source, target);  // old test
     }
 
     private static InMemoryMapDataSet readData() {
@@ -250,15 +239,15 @@ public class Main {
 
     private static void dijkstraTest(Graph osmGraph, Node source, Node target) {
         // initialise Dijkstra
-        Dijkstra dTest = new Dijkstra(osmGraph, source);
+        Dijkstra dTest = new Dijkstra(osmGraph);
 
         // run (constrained) single source shortest path
         int maxDistance = 20_000;  // in meters
-        Map<Node, Double> reachableSet = dTest.sssp(maxDistance);
+        Map<Node, Double> reachableSet = dTest.sssp(source, maxDistance);
         System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
 
         // run shortest s-t-path
-        List<Node> shortestPath = dTest.shortestPath(target);
+        List<Node> shortestPath = dTest.shortestPath(source, target);
         // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
         System.out.println("Shortest path node count (!= length): " + shortestPath.size());
 
