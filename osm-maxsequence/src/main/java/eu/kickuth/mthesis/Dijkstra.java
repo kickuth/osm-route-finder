@@ -40,22 +40,22 @@ public class Dijkstra {
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
             // check if only unreachable nodes are left and we are done
-            if (currentMin.tentativeDistanceFromSource == Double.MAX_VALUE) {
+            if (currentMin.distanceFromSource == Double.MAX_VALUE) {
                 break;
             }
             // check whether an updated node has already been processed
             if (lookup.get(currentMin.node) != currentMin) {
                 continue;
             }
-            results.put(currentMin.node, currentMin.tentativeDistanceFromSource);
+            results.put(currentMin.node, currentMin.distanceFromSource);
             for (Node neighbour : graph.adjList.get(currentMin.node)) {
-                double alternativeDistance = currentMin.tentativeDistanceFromSource + currentMin.node.getDistance(neighbour);
+                double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // ignore nodes outside of maxDistance
                 if (alternativeDistance > maxDistance) {
                     continue;
                 }
                 // update node, if the new path is shorter than the previous shortest
-                if (alternativeDistance < lookup.get(neighbour).tentativeDistanceFromSource) {
+                if (alternativeDistance < lookup.get(neighbour).distanceFromSource) {
                     DijkstraNode updatedNeighbour = new DijkstraNode(neighbour, alternativeDistance);
                     pqueue.add(updatedNeighbour);
                     lookup.put(neighbour, updatedNeighbour);
@@ -71,7 +71,7 @@ public class Dijkstra {
      * @param target the target node
      * @return list of nodes from source to target, empty list if no path exists
      */
-    public List<Node> shortestPath(Node source, Node target) {
+    public List<DijkstraNode> shortestPath(Node source, Node target) {
         Set<Node> sources = new HashSet<>();
         Set<Node> targets = new HashSet<>();
         sources.add(source);
@@ -85,13 +85,13 @@ public class Dijkstra {
      * @param targets the set of target nodes
      * @return list of nodes for the shortest s-t-path, empty list if no path exists
      */
-    public List<Node> multiShortestPath(Set<Node> sources, Set<Node> targets) {
+    public List<DijkstraNode> multiShortestPath(Set<Node> sources, Set<Node> targets) {
         initDijkstra(sources);
         // map to backtrack shortest path
-        Map<Node, Node> previousNode = new HashMap<>();
+        Map<DijkstraNode, DijkstraNode> previousNode = new HashMap<>();
 
         // the first reached node in targets
-        Node backtrack;
+        DijkstraNode backtrack;
 
         // main loop
         while (true) {
@@ -106,28 +106,28 @@ public class Dijkstra {
             }
             // are we at the target yet?
             if (targets.contains(currentMin.node)) {
-                backtrack = currentMin.node;
+                backtrack = currentMin;
                 break;
             }
             // check whether only unreachable nodes are left --> Target unreachable
-            if (currentMin.tentativeDistanceFromSource == Double.MAX_VALUE) {
+            if (currentMin.distanceFromSource == Double.MAX_VALUE) {
                 return new LinkedList<>();
             }
             for (Node neighbour : graph.adjList.get(currentMin.node)) {
-                double alternativeDistance = currentMin.tentativeDistanceFromSource + currentMin.node.getDistance(neighbour);
+                double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // update node, if the new path is shorter than the previous shortest
-                if (alternativeDistance < lookup.get(neighbour).tentativeDistanceFromSource) {
+                if (alternativeDistance < lookup.get(neighbour).distanceFromSource) {
                     DijkstraNode updatedNeighbour = new DijkstraNode(neighbour, alternativeDistance);
                     pqueue.add(updatedNeighbour);
                     lookup.put(neighbour, updatedNeighbour);
-                    previousNode.put(neighbour, currentMin.node);
+                    previousNode.put(updatedNeighbour, currentMin);
                 }
             }
         }
 
         // reconstruct the path from the target
         // TODO use LinkedHashMap to also store each distance?
-        List<Node> results = new LinkedList<>();
+        List<DijkstraNode> results = new LinkedList<>();
         while (backtrack != null) {
             results.add(0, backtrack);
             backtrack = previousNode.get(backtrack);
@@ -157,28 +157,6 @@ public class Dijkstra {
                 dNode = new DijkstraNode(node, Double.MAX_VALUE);
             }
             lookup.put(node, dNode);
-        }
-    }
-
-
-    /**
-     * A wrapper class for Node that includes a distance-from-source field and implements Comparable for use in a
-     * PriorityQueue
-     */
-    private class DijkstraNode implements Comparable<DijkstraNode> {
-        final Node node;
-        double tentativeDistanceFromSource;
-        DijkstraNode(Node node, double tentativeDistanceFromSource) {
-            this.node = node;
-            this.tentativeDistanceFromSource = tentativeDistanceFromSource;
-        }
-
-        @Override
-        public int compareTo(DijkstraNode other) {
-            if (this.tentativeDistanceFromSource < other.tentativeDistanceFromSource) {
-                return -1;
-            }
-            return (this.tentativeDistanceFromSource == other.tentativeDistanceFromSource ? 0 : 1);
         }
     }
 }

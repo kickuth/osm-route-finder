@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -45,13 +46,14 @@ public class Main {
 
 
         // initialise WayFinder
-        WayFinder finder = new WayFinder(osmGraph.clone(), source, target);
+        WayFinder finder = new WayFinder(osmGraph.clone(), source, target, maxDistance);
 
         // limit search space and store nodes for visualization
         Set<Node> reducedGraphNodes = finder.limitMap(maxDistance).adjList.keySet();
 
         // compute shortest path (for visualization) and its score
-        List<Node> shortestPath = finder.shortestPath();
+        List<Node> shortestPath = finder.shortestPath().stream()
+                .map(DijkstraNode::getNode).collect(Collectors.toList());  // simply beautiful syntax.
         int shortestPathCost = finder.uniqueClassScore(shortestPath);
         System.out.println("Unique class score for shortest path: " + shortestPathCost);
 
@@ -247,9 +249,14 @@ public class Main {
         System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
 
         // run shortest s-t-path
-        List<Node> shortestPath = dTest.shortestPath(source, target);
-        // TODO get shortest path length? (see also LinkedHashMap comment in Dijkstra)
-        System.out.println("Shortest path node count (!= length): " + shortestPath.size());
+        List<DijkstraNode> shortestPathNodes = dTest.shortestPath(source, target);
+        int pathNodeCount = shortestPathNodes.size();
+        if (pathNodeCount == 0) {
+            System.out.println("No s-t-path found!");
+        } else {
+            System.out.println("shortest path node count: " + pathNodeCount);
+            System.out.println("shortest path length: " + shortestPathNodes.get(pathNodeCount - 1).distanceFromSource);
+        }
 
         // create a map object
         MapRenderer mapExport = new MapRenderer(osmGraph);
@@ -263,8 +270,8 @@ public class Main {
 
         // add s-t-path to map
         List<double[]> shortestPathPois = new LinkedList<>();
-        for (Node onPath : shortestPath) {
-            shortestPathPois.add(new double[] {onPath.getLat(), onPath.getLon()});
+        for (DijkstraNode onPath : shortestPathNodes) {
+            shortestPathPois.add(new double[] {onPath.node.getLat(), onPath.node.getLon()});
         }
         mapExport.addPOISet(shortestPathPois);
 
