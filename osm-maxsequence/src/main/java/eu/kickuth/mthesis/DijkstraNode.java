@@ -14,18 +14,6 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
         this.distanceFromSource = distanceFromSource;
     }
 
-    public Node getNode() {
-        return node;
-    }
-
-    public double getDistanceFromSource() {
-        return distanceFromSource;
-    }
-
-    public void setDistanceFromSource(double dist) {
-        this.distanceFromSource = dist;
-    }
-
     @Override
     public int compareTo(DijkstraNode other) {
         if (this.distanceFromSource < other.distanceFromSource) {

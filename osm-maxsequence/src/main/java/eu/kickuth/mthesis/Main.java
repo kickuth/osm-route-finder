@@ -25,7 +25,7 @@ public class Main {
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
-        int maxDistance = 75_000; // in metres
+        int maxDistance = 1000_000; // in metres
         // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         //Random rand = new Random();
@@ -48,41 +48,54 @@ public class Main {
         // initialise WayFinder
         WayFinder finder = new WayFinder(osmGraph.clone(), source, target, maxDistance);
 
-        // limit search space and store nodes for visualization
-        Set<Node> reducedGraphNodes = finder.limitMap(maxDistance).adjList.keySet();
-
         // compute shortest path (for visualization) and its score
         List<Node> shortestPath = finder.shortestPath().stream()
-                .map(DijkstraNode::getNode).collect(Collectors.toList());  // simply beautiful syntax.
-        int shortestPathCost = finder.uniqueClassScore(shortestPath);
-        System.out.println("Unique class score for shortest path: " + shortestPathCost);
+                .map(dNode -> dNode.node).collect(Collectors.toList());  // simply beautiful syntax.
+        int shortestPathScore = finder.uniqueClassScore(shortestPath);
+        System.out.println("Unique class score for shortest path: " + shortestPathScore);
+
+        // run naive greedy approach
+        List<Node> naiveGreedyPath = finder.naiveGreedyOptimizer();
+        int naiveGreedyPathScore = finder.uniqueClassScore(naiveGreedyPath);
+        System.out.println("Unique class score for naive greedy path: " + naiveGreedyPathScore);
+
 
         /*
         ========================================
         ===========  Visualization  ============
         ========================================
         */
-        //create a map object
-        MapRenderer mapExport = new MapRenderer(osmGraph);
+        {
+            //create a map object
+            MapRenderer mapExport = new MapRenderer(osmGraph);
 
-        // add reduced graph nodes to map
-        List<double[]> reducedNodeSet = new LinkedList<>();
-        for (Node node : reducedGraphNodes) {
-            reducedNodeSet.add(new double[] {node.getLat(), node.getLon()});
+            // add reduced graph (search space) nodes to map
+            Set<Node> reducedGraphNodes = finder.getGraph().adjList.keySet();
+            List<double[]> reducedNodeSet = new LinkedList<>();
+            for (Node node : reducedGraphNodes) {
+                reducedNodeSet.add(new double[]{node.getLat(), node.getLon()});
+            }
+            mapExport.addPOISet(reducedNodeSet);
+
+
+            // add naive greedy path to map
+            List<double[]> naiveGreedyPathPois = new LinkedList<>();
+            for (Node onPath : naiveGreedyPath) {
+                naiveGreedyPathPois.add(new double[]{onPath.getLat(), onPath.getLon()});
+            }
+            mapExport.addPOISet(naiveGreedyPathPois);
+
+            // add shortest path to map
+            List<double[]> shortestPathPois = new LinkedList<>();
+            for (Node onPath : shortestPath) {
+                shortestPathPois.add(new double[]{onPath.getLat(), onPath.getLon()});
+            }
+            mapExport.addPOISet(shortestPathPois);
+
+            // save map to disk
+            String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/reduced-st-path.png";
+            mapExport.writeImage(true, true, fileLoc);
         }
-        mapExport.addPOISet(reducedNodeSet);
-
-
-        // add shortest path to map
-        List<double[]> shortestPathPois = new LinkedList<>();
-        for (Node onPath : shortestPath) {
-            shortestPathPois.add(new double[] {onPath.getLat(), onPath.getLon()});
-        }
-        mapExport.addPOISet(shortestPathPois);
-
-        // save map to disk
-        String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/reduced-st-path.png";
-        mapExport.writeImage(true, true, fileLoc);
 
 
         // dijkstraTest(osmGraph, source, target);  // old test

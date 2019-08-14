@@ -1,5 +1,7 @@
 package eu.kickuth.mthesis;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 
 public class Dijkstra {
@@ -20,7 +22,7 @@ public class Dijkstra {
      * @param source the node to start with
      * @return map of reachable nodes to their minimal distance from the source
      */
-    public Map<Node, Double> sssp(Node source) {
+    public Map<Node, Double> sssp(final Node source) {
         return sssp(source, Double.MAX_VALUE);
     }
 
@@ -30,7 +32,7 @@ public class Dijkstra {
      * @param maxDistance maximal distance from source; nodes with larger distance are ignored
      * @return map of reachable nodes within maxDistance to their minimal distance from the source.
      */
-    public Map<Node, Double> sssp(Node source, double maxDistance) {
+    public Map<Node, Double> sssp(final Node source, final double maxDistance) {
 
         initDijkstra(source);
 
@@ -66,17 +68,30 @@ public class Dijkstra {
     }
 
     /**
+     * Compute a single source shortest path to the closest target node
+     * @param source the node to start with
+     * @param targets set of target nodes
+     * @return path from source to closest target
+     */
+    public List<DijkstraNode> shortestPath(final Node source, final Set<Node> targets) {
+        Set<Node> sources = new HashSet<>();
+        sources.add(source);
+        return shortestPath(sources, targets);
+
+    }
+
+    /**
      * Compute the shortest s-t-path
      * @param source the source node
      * @param target the target node
      * @return list of nodes from source to target, empty list if no path exists
      */
-    public List<DijkstraNode> shortestPath(Node source, Node target) {
+    public List<DijkstraNode> shortestPath(final Node source, final Node target) {
         Set<Node> sources = new HashSet<>();
         Set<Node> targets = new HashSet<>();
         sources.add(source);
         targets.add(target);
-        return multiShortestPath(sources, targets);
+        return shortestPath(sources, targets);
     }
 
     /**
@@ -85,7 +100,7 @@ public class Dijkstra {
      * @param targets the set of target nodes
      * @return list of nodes for the shortest s-t-path, empty list if no path exists
      */
-    public List<DijkstraNode> multiShortestPath(Set<Node> sources, Set<Node> targets) {
+    public List<DijkstraNode> shortestPath(final Set<Node> sources, final Set<Node> targets) {
         initDijkstra(sources);
         // map to backtrack shortest path
         Map<DijkstraNode, DijkstraNode> previousNode = new HashMap<>();
@@ -148,6 +163,7 @@ public class Dijkstra {
      * Initialise queue with multiple sources and initialise lookup table
      */
     private void initDijkstra(Set<Node> sources) {
+        pqueue.clear();
         for (Node node : graph.adjList.keySet()) {
             DijkstraNode dNode;
             if (sources.contains(node)) {

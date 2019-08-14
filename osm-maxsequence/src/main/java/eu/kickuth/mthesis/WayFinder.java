@@ -3,10 +3,13 @@ package eu.kickuth.mthesis;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WayFinder {
 
-    private Graph graph;
+    public Graph getGraph() {
+        return graph;
+    }
 
     public Node getSource() {
         return source;
@@ -32,6 +35,7 @@ public class WayFinder {
         this.maxDistance = maxDistance;
     }
 
+    private Graph graph;
     private Node source;
     private Node target;
     private double maxDistance;
@@ -45,9 +49,10 @@ public class WayFinder {
         this.maxDistance = maxDistance;
 
         dijkstra = new Dijkstra(g);
+        limitMap(maxDistance);
     }
 
-    public Graph limitMap(double maxDistance) {
+    private void limitMap(double maxDistance) {
         Map<Node, Double> reachableSourceSet = dijkstra.sssp(source, maxDistance);
         Map<Node, Double> reachableTargetSet = dijkstra.sssp(target, maxDistance);
         Set<Node> reachableSet = new HashSet<>();
@@ -62,7 +67,6 @@ public class WayFinder {
         }
 
         graph = graph.createSubgraph(reachableSet);
-        return graph;
     }
 
 
@@ -77,15 +81,96 @@ public class WayFinder {
             System.out.println("Target is not reachable!");
             return new LinkedList<>();
         }
-        // List<> currentUniquePois
 
-        double currentPathLength = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
-        while (currentPathLength < maxDistance) {
-            // TODO compute st path to and from
-            continue;
+        // Find out which classes we have visited and which nodes have a class
+        Set<String> currentUniquePois = new HashSet<>();
+        Set<Node> sources = new HashSet<>();
+        for (DijkstraNode site : shortestPath) {
+            String type = site.node.getType();
+            if (!StringUtils.isEmpty(type)) {
+                currentUniquePois.add(type);
+                sources.add(site.node);
+            }
         }
-        return null;
+
+        // find all nodes with classes we haven't visited yet
+        Set<Node> targets = new HashSet<>();
+        for (Node node : graph.adjList.keySet()) {
+            String type = node.getType();
+            if (!StringUtils.isEmpty(type) && !currentUniquePois.contains(type)) {
+                targets.add(node);
+            }
+        }
+
+        // keep adding shortest paths to new classes until we run over the maximal distance
+        while (shortestPath.get(shortestPath.size() - 1).distanceFromSource < maxDistance && !targets.isEmpty()) {
+            System.out.println("current path length: " + shortestPath.get(shortestPath.size() - 1).distanceFromSource);
+            System.out.println("available targets: " + targets.size());
+            List<DijkstraNode> pathToNewPoi = dijkstra.shortestPath(sources, targets);
+            Node newPoi = pathToNewPoi.get(pathToNewPoi.size()-1).node;
+            System.out.println("Adding node type: " + newPoi.getType());
+            //find shortest way back
+            List<DijkstraNode> backPath = dijkstra.shortestPath(newPoi, pathToNewPoi.get(0).node);
+            // remove possible targets with the same class as the new node
+            targets.removeIf(node -> node.getType().equals(newPoi.getType()));
+            // insert the detour into the previous path
+            appendPath(pathToNewPoi, backPath);
+            // find index for insertion
+            Iterator<DijkstraNode> iter = shortestPath.iterator();
+            int insertIndex = 0;
+            DijkstraNode lookingFor = pathToNewPoi.get(0);
+            while (iter.hasNext()) {
+                DijkstraNode dNode = iter.next();
+                if (dNode.node.equals(lookingFor.node)) {
+                    break;
+                }
+                insertIndex++;
+            }
+
+            insertPath(shortestPath, pathToNewPoi, insertIndex);
+        }
+        return shortestPath.stream().map(dNode -> dNode.node).collect(Collectors.toList());
     }
+
+    private static void appendPath(List<DijkstraNode> toUpdate, List<DijkstraNode> toAppend) {
+        DijkstraNode lastNode = toUpdate.get(toUpdate.size()-1);
+        // if end and starting node are equal, only keep one
+        if (lastNode.node.equals(toAppend.get(0).node)) {
+            toAppend.remove(0);
+        }
+        toAppend.forEach(dNode -> dNode.distanceFromSource += lastNode.distanceFromSource);
+        toUpdate.addAll(toAppend);
+    }
+
+    /**
+     * Merge two paths. More specifically merges the second path into the first path, adjusting node costs.
+     * Requires first and last node of the inserted list to be present in both lists.
+     * @param toUpdate the list that we merge into
+     * @param toInsert the list we want to add. Must be a circle, i.e. start and end node are equal.
+     * @param insertAtIndex the position after which the second list is inserted
+     */
+    private static void insertPath(List<DijkstraNode> toUpdate, List<DijkstraNode> toInsert, int insertAtIndex) {
+        if (!toInsert.get(toInsert.size()-1).node.equals(toInsert.get(0).node)) {
+            throw new IllegalArgumentException("Inserted path is not a circle.");
+        }
+
+        // remove duplicate node
+        toInsert.remove(0);
+
+        // update the costs of nodes following the inserted part
+        double costOfInsertion = toInsert.get(toInsert.size()-1).distanceFromSource;
+        for (int i = insertAtIndex+1; i < toUpdate.size(); i++) {
+            toUpdate.get(i).distanceFromSource += costOfInsertion;
+        }
+
+        // update the costs for the path that we will insert
+        double costAtInsertion = toUpdate.get(insertAtIndex).distanceFromSource;
+        toInsert.forEach((dNode)->{dNode.distanceFromSource += costAtInsertion;});
+
+        // insert nodes
+        toUpdate.addAll(insertAtIndex+1, toInsert);
+    }
+
 
     // TODO code stored for reference only; full of bugs and eye cancer
 //    // TODO comment/fix/redo. Note, this might be weird if nodes are visited multiple times
@@ -159,6 +244,7 @@ public class WayFinder {
     public int uniqueClassScore(List<Node> path) {
         // check if the path nodes are valid
         if (!graph.adjList.keySet().containsAll(path) || path.isEmpty()) {
+            System.err.println("Path contains invalid nodes!");
             return -1;
         }
         // check if the path edges are valid
@@ -168,6 +254,7 @@ public class WayFinder {
             Node next = iter.next();
             if (!graph.adjList.get(current).contains(next)) {
                 // edge does not exist
+                System.err.println("Path contains non-existing edges!");
                 return -1;
             }
             current = next;
