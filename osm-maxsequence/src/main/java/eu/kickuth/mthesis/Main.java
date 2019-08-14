@@ -25,7 +25,7 @@ public class Main {
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
-        int maxDistance = 1000_000; // in metres
+        int maxDistance = 125_000; // in metres
         // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         //Random rand = new Random();

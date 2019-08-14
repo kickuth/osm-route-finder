@@ -1,5 +1,7 @@
 package eu.kickuth.mthesis;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class Node {
 
     private final long id;
@@ -65,12 +67,16 @@ public class Node {
         if((obj == null) || (obj.getClass() != this.getClass())) {
             return false;
         } else {
-            return this.id == ((Node) obj).id;
+            return this.id == ((Node) obj).id && StringUtils.equals(this.type, ((Node) obj).type);
         }
     }
 
     @Override
     public int hashCode() {
-        return (int) (id % Integer.MAX_VALUE);
+        if (type == null) {
+            return (int) (id % Integer.MAX_VALUE);
+        } else {
+            return (int) ((id + type.hashCode()) % Integer.MAX_VALUE);
+        }
     }
 }

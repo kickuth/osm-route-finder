@@ -103,12 +103,11 @@ public class WayFinder {
         }
 
         // keep adding shortest paths to new classes until we run over the maximal distance
-        while (shortestPath.get(shortestPath.size() - 1).distanceFromSource < maxDistance && !targets.isEmpty()) {
-            System.out.println("current path length: " + shortestPath.get(shortestPath.size() - 1).distanceFromSource);
-            System.out.println("available targets: " + targets.size());
+        // TODO will currently overshoot maximal distance
+        double currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
+        while (currentDistance < maxDistance && !targets.isEmpty()) {
             List<DijkstraNode> pathToNewPoi = dijkstra.shortestPath(sources, targets);
             Node newPoi = pathToNewPoi.get(pathToNewPoi.size()-1).node;
-            System.out.println("Adding node type: " + newPoi.getType());
             //find shortest way back
             List<DijkstraNode> backPath = dijkstra.shortestPath(newPoi, pathToNewPoi.get(0).node);
             // remove possible targets with the same class as the new node
@@ -128,6 +127,9 @@ public class WayFinder {
             }
 
             insertPath(shortestPath, pathToNewPoi, insertIndex);
+            // print estimated progress
+            currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
+            System.out.println(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
         }
         return shortestPath.stream().map(dNode -> dNode.node).collect(Collectors.toList());
     }
