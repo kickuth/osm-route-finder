@@ -7,6 +7,7 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
+import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -25,7 +26,7 @@ public class Main {
 
         // TODO experimental code
         System.out.println("running Dijkstra experiments");
-        int maxDistance = 125_000; // in metres
+        int maxDistance = 125_000; // in meters
         // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
         //Random rand = new Random();
@@ -94,7 +95,12 @@ public class Main {
 
             // save map to disk
             String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/reduced-st-path.png";
-            mapExport.writeImage(true, true, fileLoc);
+            //mapExport.writeImage(true, true, fileLoc);
+
+
+            GeoJSONObject json = new GeoJSONObject();
+            json.addPath(shortestPathPois);
+            Webserver.start(json.getJSONString());
         }
 
 

@@ -1,0 +1,50 @@
+#**
+@author Marvin Kickuth
+*#
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>mthesis map</title>
+    <!-- External Stylesheets -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+
+</head>
+<body>
+<div id="map" style="width: 90vw; height: 90vh"></div>
+
+
+##<!-- Add the jQuery JavaScript library -->
+##<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- Add the Leaflet JavaScript library -->
+<script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+<script>
+    // Create variable to hold map element, give initial settings to map
+    var map = L.map('map',{ center: [48, 9.4], zoom: 10});
+    // Add OpenStreetMap tile layer to map
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
+    ## TODO add json content directly without saving to and loading from file first
+    ## $.getJSON("$JSONName",function(data){
+    ##     // add GeoJSON layer to the map once the file is loaded
+    ##     L.geoJson(data,{
+    ##         onEachFeature: function (feature, layer) {
+    ##             layer.bindPopup(feature.properties.name);
+    ##         }
+    ##     }).addTo(map);
+    ## });
+
+    var geoJSON = $JSONString;
+
+    var lineStyle = {
+        "color": "#ff7800",
+        "weight": 5,
+        "opacity": 0.75
+    };
+
+    L.geoJSON(geoJSON, {
+        style: lineStyle
+    }).addTo(map);
+
+</script>
+</body>
+</html>
