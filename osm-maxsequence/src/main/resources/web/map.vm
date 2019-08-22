@@ -13,9 +13,6 @@
 <body>
 <div id="map" style="width: 90vw; height: 90vh"></div>
 
-
-##<!-- Add the jQuery JavaScript library -->
-##<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!-- Add the Leaflet JavaScript library -->
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
 <script>
@@ -34,6 +31,7 @@
     ## });
 
     var geoJSON = $JSONString;
+    var POIJSON = $POIString;
 
     var lineStyle = {
         "color": "#ff7800",
@@ -41,9 +39,28 @@
         "opacity": 0.75
     };
 
-    L.geoJSON(geoJSON, {
-        style: lineStyle
-    }).addTo(map);
+    var geoJSONLayer = L.geoJSON(geoJSON, {style: lineStyle}).addTo(map);
+    var POILayer = L.geoJSON(POIJSON);
+
+
+    var visible;
+    // Attach map zoom handler
+    map.on('zoomend', function (e) {
+        // Check zoom level
+        if (map.getZoom() > 14) {
+            // Check if not already shown
+            if (!visible) {
+                map.addLayer(POILayer);
+                visible = true;
+            }
+        } else {
+            // Check if not already hidden
+            if (visible) {
+                map.removeLayer(POILayer);
+                visible = false;
+            }
+        }
+    });
 
 </script>
 </body>

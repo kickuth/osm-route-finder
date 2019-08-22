@@ -7,6 +7,7 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
+import eu.kickuth.mthesis.web.GeoJSONObject;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
 
@@ -98,9 +99,14 @@ public class Main {
             //mapExport.writeImage(true, true, fileLoc);
 
 
-            GeoJSONObject json = new GeoJSONObject();
-            json.addPath(shortestPathPois);
-            Webserver.start(json.getJSONString());
+            GeoJSONObject pathJSON = new GeoJSONObject();
+            pathJSON.addPath(shortestPathPois);
+            GeoJSONObject poiJSON = new GeoJSONObject();
+            Set<Node> poiNodes = osmGraph.adjList.keySet();
+            poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
+            poiJSON.addPois(poiNodes);
+
+            Webserver.start(pathJSON.getJSONString(), poiJSON.getJSONString());
         }
 
 
@@ -296,6 +302,6 @@ public class Main {
 
         // save map to disk
         String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/random-st-path.png";
-        mapExport.writeImage(true, true, fileLoc);
+        mapExport.writeImage(fileLoc);
     }
 }

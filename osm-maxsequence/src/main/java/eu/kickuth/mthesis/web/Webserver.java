@@ -12,7 +12,7 @@ import static spark.Spark.*;
 
 public class Webserver {
 
-    public static void start(String geoJSON) {
+    public static void start(String geoJSON, String poiJSON) {
 //        staticFiles.location("/web");  // Static files
 //        staticFiles.expireTime(600); // cache static files for ten minutes
 
@@ -29,6 +29,7 @@ public class Webserver {
         VelocityContext htmlContext = new VelocityContext();
 
         htmlContext.put("JSONString", geoJSON);
+        htmlContext.put("POIString", poiJSON);
 
         // render template
         StringWriter writer = new StringWriter();

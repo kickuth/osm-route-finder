@@ -77,7 +77,7 @@ public class MapRenderer {
     }
 
 
-    public void writeImage(boolean drawPOIs, boolean drawLines, String fileLocation) {
+    public void writeImage(String fileLocation) {
         if (StringUtils.isEmpty(fileLocation)) {
             fileLocation = System.getProperty("user.home") + "/Desktop/map-export.png";
         }

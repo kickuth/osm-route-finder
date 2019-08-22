@@ -1,5 +1,6 @@
-package eu.kickuth.mthesis;
+package eu.kickuth.mthesis.web;
 
+import eu.kickuth.mthesis.Node;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +20,7 @@ public class GeoJSONObject {
      * Add POIs to the feature object
      * @param pois list of points to add
      */
-    public void addPois(List<Node> pois) {
+    public void addPois(Collection<Node> pois) {
         try {
             for (Node node : pois) {
                 JSONObject geometry = new JSONObject();
