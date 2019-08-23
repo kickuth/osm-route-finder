@@ -1,11 +1,15 @@
 package eu.kickuth.mthesis;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class WayFinder {
+
+    static final Logger logger = LogManager.getLogger(WayFinder.class.getName());
 
     public Graph getGraph() {
         return graph;
@@ -129,7 +133,7 @@ public class WayFinder {
             insertPath(shortestPath, pathToNewPoi, insertIndex);
             // print estimated progress
             currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
-            System.out.println(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
+            logger.debug(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
         }
         return shortestPath.stream().map(dNode -> dNode.node).collect(Collectors.toList());
     }
@@ -256,7 +260,7 @@ public class WayFinder {
             Node next = iter.next();
             if (!graph.adjList.get(current).contains(next)) {
                 // edge does not exist
-                System.err.println("Path contains non-existing edges!");
+                logger.error("Path to score contains non-existing edges!");
                 return -1;
             }
             current = next;

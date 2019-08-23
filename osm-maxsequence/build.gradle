@@ -18,35 +18,29 @@ repositories {
 }
 
 dependencies {
+    // OSM import
     compile 'de.topobyte:osm4j-xml:0.1.2'
     compile 'de.topobyte:osm4j-pbf:0.1.1'
     compile 'de.topobyte:osm4j-tbo:0.1.0'
     compile 'de.topobyte:osm4j-geometry:0.1.0'
 
-    compile 'de.topobyte:adt-geo:0.0.4'
-    compile 'de.topobyte:jts2awt:0.0.1'
-    compile 'de.topobyte:mercator-image:0.0.2'
+//    compile 'de.topobyte:adt-geo:0.0.4'
+//    compile 'de.topobyte:jts2awt:0.0.1'
+//    compile 'de.topobyte:mercator-image:0.0.2'
 
-    //compile 'org.wololo:jts2geojson:0.6.0'
     compile 'org.apache.commons:commons-compress:1.8'
 
+    // json
     compile 'org.json:json:20190722'
 
-    compile 'com.sparkjava:spark-core:2.8.0'
+    // web
+    compile 'com.sparkjava:spark-core:2.9.1'
     compile 'com.sparkjava:spark-template-velocity:2.7.1'
 
-    //compile 'org.jgrapht:jgrapht-core:1.3.1'
-
-    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-ext
-    //compile 'org.jgrapht:jgrapht-ext:1.3.1'
-    // https://mvnrepository.com/artifact/org.jgrapht/jgrapht-io
-    //compile group: 'org.jgrapht', name: 'jgrapht-io', version: '1.3.1'
-
-
-    // https://mvnrepository.com/artifact/jgraph/jgraph
-    //compile group: 'jgraph', name: 'jgraph', version: '5.13.0.0'
-
-    //compile 'com.github.vlsi.mxgraph:jgraphx:4.0.0'
+    // logging
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.12.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-web', version: '2.12.1'
 
 
     compile 'org.slf4j:slf4j-api:1.6.1'

@@ -10,6 +10,8 @@ import de.topobyte.osm4j.pbf.seq.PbfIterator;
 import eu.kickuth.mthesis.web.GeoJSONObject;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,13 +22,16 @@ import java.util.stream.Collectors;
 
 public class Main {
 
+    private static final Logger logger = LogManager.getLogger(Main.class);
+
     public static void main(String[] args) {
+        logger.trace("Starting application.");
         final InMemoryMapDataSet data = readData();
         final Graph osmGraph = createGraph(data);
 
 
         // TODO experimental code
-        System.out.println("running Dijkstra experiments");
+        logger.info("running Dijkstra experiments");
         int maxDistance = 125_000; // in meters
         // pick a random source and target node
         Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
@@ -54,12 +59,12 @@ public class Main {
         List<Node> shortestPath = finder.shortestPath().stream()
                 .map(dNode -> dNode.node).collect(Collectors.toList());  // simply beautiful syntax.
         int shortestPathScore = finder.uniqueClassScore(shortestPath);
-        System.out.println("Unique class score for shortest path: " + shortestPathScore);
+        logger.info("Unique class score for shortest path: " + shortestPathScore);
 
         // run naive greedy approach
         List<Node> naiveGreedyPath = finder.naiveGreedyOptimizer();
         int naiveGreedyPathScore = finder.uniqueClassScore(naiveGreedyPath);
-        System.out.println("Unique class score for naive greedy path: " + naiveGreedyPathScore);
+        logger.info("Unique class score for naive greedy path: " + naiveGreedyPathScore);
 
 
         /*
@@ -115,13 +120,13 @@ public class Main {
 
     private static InMemoryMapDataSet readData() {
         // Open dump file as stream
-        System.out.println("reading data dump");
+        logger.debug("reading data dump");
         InputStream input = null;
         try {
             File f = new File("src/main/resources/osm_data/tue.osm.pbf");
             input = new FileInputStream(f);
         } catch (IOException e) {
-            System.out.println("Failed to locate map dump!");
+            logger.fatal("Failed to locate map dump!");
             System.exit(1);
         }
 
@@ -133,7 +138,7 @@ public class Main {
             return MapDataSetLoader.read(data_iterator, true, true, false);
         } catch (IOException e)
         {
-            System.out.println("Failed to load data into memory!");
+            logger.fatal("Failed to load data into memory!");
             System.exit(1);
         }
 
@@ -142,7 +147,7 @@ public class Main {
 
 
     private static Graph createGraph(InMemoryMapDataSet data) {
-        System.out.println("creating graph from data dump");
+        logger.trace("creating graph from data dump");
         int nodeCount = data.getNodes().size();
         Graph osmGraph = new Graph(nodeCount);
 
@@ -185,7 +190,7 @@ public class Main {
                 wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), wayPointType);
                 osmGraph.addNode(wayPoint);
             } catch (EntityNotFoundException e) {
-                System.out.println("Way uses non-existing first node! Ignoring way.");
+                logger.warn("Way uses non-existing first node! Ignoring way.");
                 continue;
             }
             for (int i = 1; i < way.getNumberOfNodes(); i++) {
@@ -209,7 +214,7 @@ public class Main {
 
                     wayPoint = nextWayPoint;
                 } catch (EntityNotFoundException e) {
-                    System.out.println("Way uses non-existing node! Ignoring node.");
+                    logger.warn("Way uses non-existing node! Ignoring node.");
                 }
             }
         }
