@@ -29,7 +29,7 @@ public class Webserver {
         VelocityContext htmlContext = new VelocityContext();
 
         htmlContext.put("JSONString", geoJSON);
-        htmlContext.put("POIString", poiJSON);
+        htmlContext.put("poiString", poiJSON);
 
         // render template
         StringWriter writer = new StringWriter();

@@ -9,29 +9,69 @@
     <!-- External Stylesheets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
 
+    <style>
+        html {
+            min-height: 100%;
+        }
+
+        body {
+            font-family: "Lato", sans-serif;
+            background: -webkit-linear-gradient(#666666, #333333);
+            background: -o-linear-gradient(#666666, #333333);
+            background: -moz-linear-gradient(#666666, #333333);
+            background: linear-gradient(#666666, #333333);
+            background-color: #666666;
+        }
+
+        .sidenav {
+            height: 100%;
+            width: 160px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, .95);
+            overflow-x: hidden;
+            padding-top: 20px;
+        }
+
+        .sidenav a {
+            padding: 6px 8px 6px 16px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #a1a1a1;
+            display: block;
+        }
+
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+    </style>
+
 </head>
 <body>
-<div id="map" style="width: 90vw; height: 90vh"></div>
+
+<div class="sidenav">
+    <a href="#about">About</a>
+    <a href="#services">Services</a>
+    <a href="#clients">Clients</a>
+    <a href="#contact">Contact</a>
+</div>
+
+<div class="main" style="width: 100%; height: 95vh; top: 0; left: 0" id="map"></div>
 
 <!-- Add the Leaflet JavaScript library -->
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+
 <script>
     // Create variable to hold map element, give initial settings to map
     var map = L.map('map',{ center: [48, 9.4], zoom: 10});
     // Add OpenStreetMap tile layer to map
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
-    ## TODO add json content directly without saving to and loading from file first
-    ## $.getJSON("$JSONName",function(data){
-    ##     // add GeoJSON layer to the map once the file is loaded
-    ##     L.geoJson(data,{
-    ##         onEachFeature: function (feature, layer) {
-    ##             layer.bindPopup(feature.properties.name);
-    ##         }
-    ##     }).addTo(map);
-    ## });
+    var canvasRenderer = L.canvas({ padding: 0.5 });  ## renderer that draws everything onto a single canvas
 
     var geoJSON = $JSONString;
-    var POIJSON = $POIString;
+    var poiJSON = $poiString;
 
     var lineStyle = {
         "color": "#ff7800",
@@ -39,28 +79,45 @@
         "opacity": 0.75
     };
 
+    var poiStyle = {
+        radius: 6,
+        fillColor: "#00cc55",
+        color: "#000",
+        weight: 1,
+        opacity: 0.5,
+        fillOpacity: 0.8
+    };
+
     var geoJSONLayer = L.geoJSON(geoJSON, {style: lineStyle}).addTo(map);
-    var POILayer = L.geoJSON(POIJSON);
-
-
-    var visible;
-    // Attach map zoom handler
-    map.on('zoomend', function (e) {
-        // Check zoom level
-        if (map.getZoom() > 14) {
-            // Check if not already shown
-            if (!visible) {
-                map.addLayer(POILayer);
-                visible = true;
-            }
-        } else {
-            // Check if not already hidden
-            if (visible) {
-                map.removeLayer(POILayer);
-                visible = false;
-            }
+    var poiLayer = L.geoJSON(poiJSON, {
+        renderer: canvasRenderer,
+        onEachFeature: function (feature, layer) {
+            layer.bindPopup(feature.properties.name);
+        },
+        pointToLayer: function (feature, latlon) {
+            return L.circleMarker(latlon, poiStyle);
         }
-    });
+    }).addTo(map);
+
+
+    // var visible;
+    // // Attach map zoom handler
+    // map.on('zoomend', function (e) {
+    //     // Check zoom level
+    //     if (map.getZoom() > 13) {
+    //         // Check if not already shown
+    //         if (!visible) {
+    //             map.addLayer(poiLayer);
+    //             visible = true;
+    //         }
+    //     } else {
+    //         // Check if not already hidden
+    //         if (visible) {
+    //             map.removeLayer(poiLayer);
+    //             visible = false;
+    //         }
+    //     }
+    // });
 
 </script>
 </body>
