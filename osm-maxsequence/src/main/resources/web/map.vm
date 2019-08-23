@@ -27,10 +27,10 @@
             height: 100%;
             width: 160px;
             position: fixed;
-            z-index: 1;
+            z-index: 1001;
             top: 0;
             right: 0;
-            background-color: rgba(0, 0, 0, .95);
+            background-color: rgba(0,0,0, .7);
             overflow-x: hidden;
             padding-top: 20px;
         }
@@ -46,13 +46,26 @@
         .sidenav a:hover {
             color: #f1f1f1;
         }
+        .sidenav button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            border-radius: 12px;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
     </style>
 
 </head>
 <body>
 
 <div class="sidenav">
-    <a href="#about">About</a>
+    <form action="" method="post">
+        <button name="update" value="reload">Reload</button>
+    </form>
     <a href="#services">Services</a>
     <a href="#clients">Clients</a>
     <a href="#contact">Contact</a>
