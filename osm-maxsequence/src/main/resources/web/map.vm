@@ -16,6 +16,7 @@
 
         body {
             font-family: "Lato", sans-serif;
+            color: #f1f1f1;
             background: -webkit-linear-gradient(#666666, #333333);
             background: -o-linear-gradient(#666666, #333333);
             background: -moz-linear-gradient(#666666, #333333);
@@ -56,6 +57,9 @@
             text-decoration: none;
             display: inline-block;
             font-size: 16px;
+            cursor: pointer;
+            position: absolute;
+            left: 5px;
         }
     </style>
 
@@ -63,12 +67,18 @@
 <body>
 
 <div class="sidenav">
+##    <form action="" method="post">
+##        <button name="update" value="reload">Reload</button>
+##    </form>
     <form action="" method="post">
-        <button name="update" value="reload">Reload</button>
+        <input id="algo_sp" type="radio" name="algo" value="shortest path" checked><label for="algo_sp">shortest path</label><br>
+        <input id="algo_ng" type="radio" name="algo" value="naive greedy"><label for="algo_ng">naive greedy</label><br>
+        <input id="algo_ot" type="radio" name="algo" value="other"><label for="algo_ot">other</label><br><br>
+        Start/end node IDs:<br>
+        <input type="number" style="width: 40%;" name="startNode" value="1">
+        <input type="number" style="width: 40%;" name="endNode" value="1000"><br><br>
+        <button name="submit" value="submit">Go!</button>
     </form>
-    <a href="#services">Services</a>
-    <a href="#clients">Clients</a>
-    <a href="#contact">Contact</a>
 </div>
 
 <div class="main" style="width: 100%; height: 95vh; top: 0; left: 0" id="map"></div>
