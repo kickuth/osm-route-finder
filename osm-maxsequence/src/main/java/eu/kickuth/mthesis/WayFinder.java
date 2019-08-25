@@ -9,10 +9,10 @@ import java.util.stream.Collectors;
 
 public class WayFinder {
 
-    static final Logger logger = LogManager.getLogger(WayFinder.class.getName());
+    private static final Logger logger = LogManager.getLogger(WayFinder.class.getName());
 
-    public Graph getGraph() {
-        return graph;
+    public Graph getSearchGraph() {
+        return searchGraph;
     }
 
     public Node getSource() {
@@ -39,7 +39,7 @@ public class WayFinder {
         this.maxDistance = maxDistance;
     }
 
-    private Graph graph;
+    private Graph searchGraph;
     private Node source;
     private Node target;
     private double maxDistance;
@@ -47,7 +47,7 @@ public class WayFinder {
     private final Dijkstra dijkstra;
 
     public WayFinder(Graph g, Node source, Node target, double maxDistance) {
-        graph = g;
+        searchGraph = g;
         this.source = source;
         this.target = target;
         this.maxDistance = maxDistance;
@@ -70,7 +70,7 @@ public class WayFinder {
             }
         }
 
-        graph = graph.createSubgraph(reachableSet);
+        searchGraph = searchGraph.createSubgraph(reachableSet);
     }
 
 
@@ -99,7 +99,7 @@ public class WayFinder {
 
         // find all nodes with classes we haven't visited yet
         Set<Node> targets = new HashSet<>();
-        for (Node node : graph.adjList.keySet()) {
+        for (Node node : searchGraph.adjList.keySet()) {
             String type = node.getType();
             if (!StringUtils.isEmpty(type) && !currentUniquePois.contains(type)) {
                 targets.add(node);
@@ -249,7 +249,7 @@ public class WayFinder {
      */
     public int uniqueClassScore(List<Node> path) {
         // check if the path nodes are valid
-        if (!graph.adjList.keySet().containsAll(path) || path.isEmpty()) {
+        if (!searchGraph.adjList.keySet().containsAll(path) || path.isEmpty()) {
             System.err.println("Path contains invalid nodes!");
             return -1;
         }
@@ -258,7 +258,7 @@ public class WayFinder {
         Node current = iter.next();
         while (iter.hasNext()) {
             Node next = iter.next();
-            if (!graph.adjList.get(current).contains(next)) {
+            if (!searchGraph.adjList.get(current).contains(next)) {
                 // edge does not exist
                 logger.error("Path to score contains non-existing edges!");
                 return -1;

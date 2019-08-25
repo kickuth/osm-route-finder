@@ -6,9 +6,10 @@ package eu.kickuth.mthesis;
  * PriorityQueue
  */
 public class DijkstraNode implements Comparable<DijkstraNode> {
-    final Node node;
 
-    double distanceFromSource;
+    public final Node node;
+    public double distanceFromSource;
+
     DijkstraNode(Node node, double distanceFromSource) {
         this.node = node;
         this.distanceFromSource = distanceFromSource;

@@ -69,7 +69,8 @@ public class GeoJSONObject {
         }
     }
 
-    public String getJSONString() {
+    @Override
+    public String toString() {
         return features.toString();
     }
 

@@ -77,7 +77,7 @@ public class Main {
             MapRenderer mapExport = new MapRenderer(osmGraph);
 
             // add reduced graph (search space) nodes to map
-            Set<Node> reducedGraphNodes = finder.getGraph().adjList.keySet();
+            Set<Node> reducedGraphNodes = finder.getSearchGraph().adjList.keySet();
             List<double[]> reducedNodeSet = new LinkedList<>();
             for (Node node : reducedGraphNodes) {
                 reducedNodeSet.add(new double[]{node.getLat(), node.getLon()});
@@ -111,7 +111,8 @@ public class Main {
             poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
             poiJSON.addPois(poiNodes);
 
-            Webserver.start(pathJSON.getJSONString(), poiJSON.getJSONString());
+//            Webserver.start(pathJSON.getJSONString(), poiJSON.getJSONString());
+            Webserver web = new Webserver(osmGraph, finder);
         }
 
 
