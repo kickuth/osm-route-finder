@@ -5,7 +5,7 @@ plugins {
 group 'eu.kickuth.mthesis'
 version '0.1'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.11
 
 repositories {
     maven {
