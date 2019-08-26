@@ -7,7 +7,9 @@ import de.topobyte.osm4j.core.model.iface.*;
 import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
-import eu.kickuth.mthesis.web.GeoJSONObject;
+import eu.kickuth.mthesis.solvers.NaiveSolver;
+import eu.kickuth.mthesis.utils.Graph;
+import eu.kickuth.mthesis.utils.Node;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -52,71 +54,21 @@ public class Main {
         }
 
 
-        // initialise WayFinder
-        WayFinder finder = new WayFinder(osmGraph.clone(), source, target, maxDistance);
+        // initialise solver
+        NaiveSolver naiveSolver = new NaiveSolver(osmGraph.clone(), source, target, maxDistance);
 
-        // compute shortest path (for visualization) and its score
-        List<Node> shortestPath = finder.shortestPath().stream()
-                .map(dNode -> dNode.node).collect(Collectors.toList());  // simply beautiful syntax.
-        int shortestPathScore = finder.uniqueClassScore(shortestPath);
+        // compute shortest path and its score
+        List<Node> shortestPath = naiveSolver.shortestPath();  // simply beautiful syntax.
+        int shortestPathScore = naiveSolver.uniqueClassScore(shortestPath);
         logger.info("Unique class score for shortest path: " + shortestPathScore);
 
         // run naive greedy approach
-        List<Node> naiveGreedyPath = finder.naiveGreedyOptimizer();
-        int naiveGreedyPathScore = finder.uniqueClassScore(naiveGreedyPath);
+        List<Node> naiveGreedyPath = naiveSolver.solve();
+        int naiveGreedyPathScore = naiveSolver.uniqueClassScore(naiveGreedyPath);
         logger.info("Unique class score for naive greedy path: " + naiveGreedyPathScore);
 
-
-        /*
-        ========================================
-        ===========  Visualization  ============
-        ========================================
-        */
-        {
-            //create a map object
-            MapRenderer mapExport = new MapRenderer(osmGraph);
-
-            // add reduced graph (search space) nodes to map
-            Set<Node> reducedGraphNodes = finder.getSearchGraph().adjList.keySet();
-            List<double[]> reducedNodeSet = new LinkedList<>();
-            for (Node node : reducedGraphNodes) {
-                reducedNodeSet.add(new double[]{node.getLat(), node.getLon()});
-            }
-            mapExport.addPOISet(reducedNodeSet);
-
-
-            // add naive greedy path to map
-            List<double[]> naiveGreedyPathPois = new LinkedList<>();
-            for (Node onPath : naiveGreedyPath) {
-                naiveGreedyPathPois.add(new double[]{onPath.getLat(), onPath.getLon()});
-            }
-            mapExport.addPOISet(naiveGreedyPathPois);
-
-            // add shortest path to map
-            List<double[]> shortestPathPois = new LinkedList<>();
-            for (Node onPath : shortestPath) {
-                shortestPathPois.add(new double[]{onPath.getLat(), onPath.getLon()});
-            }
-            mapExport.addPOISet(shortestPathPois);
-
-            // save map to disk
-            String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/reduced-st-path.png";
-            //mapExport.writeImage(true, true, fileLoc);
-
-
-            GeoJSONObject pathJSON = new GeoJSONObject();
-            pathJSON.addPath(shortestPathPois);
-            GeoJSONObject poiJSON = new GeoJSONObject();
-            Set<Node> poiNodes = osmGraph.adjList.keySet();
-            poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
-            poiJSON.addPois(poiNodes);
-
-//            Webserver.start(pathJSON.getJSONString(), poiJSON.getJSONString());
-            Webserver web = new Webserver(osmGraph, finder);
-        }
-
-
-        // dijkstraTest(osmGraph, source, target);  // old test
+        // start interactive web visualization
+        new Webserver(osmGraph, naiveSolver);
     }
 
     private static InMemoryMapDataSet readData() {
@@ -265,49 +217,5 @@ public class Main {
 
 
         return osmGraph;
-    }
-
-
-
-
-    private static void dijkstraTest(Graph osmGraph, Node source, Node target) {
-        // initialise Dijkstra
-        Dijkstra dTest = new Dijkstra(osmGraph);
-
-        // run (constrained) single source shortest path
-        int maxDistance = 20_000;  // in meters
-        Map<Node, Double> reachableSet = dTest.sssp(source, maxDistance);
-        System.out.println(String.format("Reachable nodes within %dkm: %d", maxDistance / 1000, reachableSet.size()));
-
-        // run shortest s-t-path
-        List<DijkstraNode> shortestPathNodes = dTest.shortestPath(source, target);
-        int pathNodeCount = shortestPathNodes.size();
-        if (pathNodeCount == 0) {
-            System.out.println("No s-t-path found!");
-        } else {
-            System.out.println("shortest path node count: " + pathNodeCount);
-            System.out.println("shortest path length: " + shortestPathNodes.get(pathNodeCount - 1).distanceFromSource);
-        }
-
-        // create a map object
-        MapRenderer mapExport = new MapRenderer(osmGraph);
-
-        // add reachable POIs to map
-        List<double[]> reachablePois = new LinkedList<>();
-        for (Node reachable : reachableSet.keySet()) {
-            reachablePois.add(new double[] {reachable.getLat(), reachable.getLon()});
-        }
-        mapExport.addPOISet(reachablePois);
-
-        // add s-t-path to map
-        List<double[]> shortestPathPois = new LinkedList<>();
-        for (DijkstraNode onPath : shortestPathNodes) {
-            shortestPathPois.add(new double[] {onPath.node.getLat(), onPath.node.getLon()});
-        }
-        mapExport.addPOISet(shortestPathPois);
-
-        // save map to disk
-        String fileLoc = "/home/todd/Dropbox/uni/mthesis/maps/random-st-path.png";
-        mapExport.writeImage(fileLoc);
     }
 }

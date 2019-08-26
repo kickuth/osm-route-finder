@@ -1,6 +1,6 @@
 package eu.kickuth.mthesis.web;
 
-import eu.kickuth.mthesis.Node;
+import eu.kickuth.mthesis.utils.Node;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,12 +48,12 @@ public class GeoJSONObject {
      * Add a path to the JSON object.
      * @param path List of coordinates in lat,lon format
      */
-    public void addPath(List<double[]> path) {
+    public void addPath(List<Node> path) {
         try {
             JSONArray coordinates = new JSONArray();
-            for (double[] coord : path) {
-                // reverse array, because geoJSON works with lon,lat
-                double[] lonLat = new double[] {coord[1], coord[0]};
+            for (Node node : path) {
+                // ! geoJSON works with lon,lat !
+                double[] lonLat = new double[] {node.getLon(), node.getLat()};
                 // add coordinate
                 JSONArray coordinate = new JSONArray(lonLat);
                 coordinates.put(coordinate);

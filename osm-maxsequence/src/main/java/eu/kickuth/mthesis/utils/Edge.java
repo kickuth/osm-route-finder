@@ -1,4 +1,4 @@
-package eu.kickuth.mthesis;
+package eu.kickuth.mthesis.utils;
 
 public class Edge {
 

@@ -1,4 +1,4 @@
-package eu.kickuth.mthesis;
+package eu.kickuth.mthesis.utils;
 
 import de.topobyte.osm4j.core.model.iface.OsmBounds;
 import org.apache.commons.lang3.StringUtils;

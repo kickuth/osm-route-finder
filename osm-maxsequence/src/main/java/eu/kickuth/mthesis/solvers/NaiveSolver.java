@@ -1,5 +1,9 @@
-package eu.kickuth.mthesis;
+package eu.kickuth.mthesis.solvers;
 
+import eu.kickuth.mthesis.utils.Dijkstra;
+import eu.kickuth.mthesis.utils.DijkstraNode;
+import eu.kickuth.mthesis.utils.Graph;
+import eu.kickuth.mthesis.utils.Node;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -7,9 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class WayFinder {
+public class NaiveSolver implements Solver {
 
-    private static final Logger logger = LogManager.getLogger(WayFinder.class.getName());
+    private static final Logger logger = LogManager.getLogger(NaiveSolver.class.getName());
 
     public Graph getSearchGraph() {
         return searchGraph;
@@ -46,7 +50,7 @@ public class WayFinder {
 
     private final Dijkstra dijkstra;
 
-    public WayFinder(Graph g, Node source, Node target, double maxDistance) {
+    public NaiveSolver(Graph g, Node source, Node target, double maxDistance) {
         searchGraph = g;
         this.source = source;
         this.target = target;
@@ -73,13 +77,13 @@ public class WayFinder {
         searchGraph = searchGraph.createSubgraph(reachableSet);
     }
 
-
-    public List<DijkstraNode> shortestPath() {
-        return dijkstra.shortestPath(source, target);
+    public List<Node> shortestPath() {
+        return dijkstra.shortestPath(source, target).stream()
+                .map(dNode -> dNode.node).collect(Collectors.toList());
     }
 
     // TODO comment
-    public List<Node> naiveGreedyOptimizer() {
+    public List<Node> solve() {
         List<DijkstraNode> shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.get(shortestPath.size() - 1).distanceFromSource > maxDistance) {
             System.out.println("Target is not reachable!");
@@ -176,71 +180,6 @@ public class WayFinder {
         // insert nodes
         toUpdate.addAll(insertAtIndex+1, toInsert);
     }
-
-
-    // TODO code stored for reference only; full of bugs and eye cancer
-//    // TODO comment/fix/redo. Note, this might be weird if nodes are visited multiple times
-//    private List<DijkstraNode> insertPath(List<DijkstraNode> current, List<DijkstraNode> toInsert) {
-//        if (current.isEmpty()) {
-//            return toInsert;
-//        }
-//        if (toInsert.isEmpty()) {
-//            return current;
-//        }
-//        DijkstraNode insertFirst = toInsert.get(0);
-//        int insertSize = toInsert.size();
-//        DijkstraNode insertLast = toInsert.get(insertSize-1);
-//        double insertStartCost = 0;
-//        double insertCost = insertLast.distanceFromSource;
-//        toInsert.remove(0);
-//
-//        List<DijkstraNode> result = new LinkedList<>();
-//
-//        Iterator<DijkstraNode> iter = current.iterator();
-//
-//        while (iter.hasNext()) {
-//            DijkstraNode curr = iter.next();
-//            if (!curr.node.equals(insertFirst.node)) {
-//                result.add(curr);
-//            } else {
-//                double ic = curr.distanceFromSource;
-//                insertStartCost = ic;
-//                toInsert.forEach((dNode)->{dNode.distanceFromSource += ic;});
-//                result.addAll(toInsert);
-//                break;
-//            }
-//        }
-//        insertCost -= insertStartCost;
-//        while (iter.hasNext()) {
-//            DijkstraNode curr = iter.next();
-//            if (curr.node.equals(insertLast.node)) {
-//                while (iter.hasNext()) {
-//                    DijkstraNode insertMe = iter.next();
-//                    insertMe.distanceFromSource += insertCost;
-//                    result.add(insertMe);
-//                }
-//            }
-//        }
-//        return result;
-//    }
-//
-//    private List<DijkstraNode> mergePaths(List<DijkstraNode> current, List<DijkstraNode> toAppend) {
-//        if (current.isEmpty()) {
-//            return toAppend;
-//        }
-//        if (toAppend.isEmpty()) {
-//            return current;
-//        }
-//        DijkstraNode currentEnd = current.get(current.size()-1);
-//        if (!currentEnd.node.equals(toAppend.get(0).node)) {
-//            throw new IllegalArgumentException("Paths can not be merged!");
-//        }
-//        toAppend.remove(0);
-//        toAppend.forEach((dNode)->{dNode.distanceFromSource += currentEnd.distanceFromSource;});
-//        current.addAll(toAppend);
-//
-//        return current;
-//    }
 
     /**
      * Simple scoring for a path, that computes the number of unique classes visited

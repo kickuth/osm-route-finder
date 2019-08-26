@@ -90,9 +90,9 @@
 
 <div class="sidenav">
     <form action="" method="post">
-        <input id="algo_sp" type="radio" name="algo" value="shortest path" checked><label for="algo_sp">shortest path</label><br>
-        <input id="algo_ng" type="radio" name="algo" value="naive greedy"><label for="algo_ng">naive greedy</label><br>
-        <input id="algo_ot" type="radio" name="algo" value="other"><label for="algo_ot">other</label><br><br>
+        <input id="algo_sp" type="checkbox" name="algo_sp" value="shortest path"><label for="algo_sp">shortest path</label><br>
+        <input id="algo_ng" type="checkbox" name="algo_ng" value="naive greedy"><label for="algo_ng">naive greedy</label><br>
+        <input id="algo_ot" type="checkbox" name="algo_ot" value="other"><label for="algo_ot">other</label><br><br>
         <label>
             <input type="number" min="0" style="width: 30%;" name="source" value="1">
             Source ID
@@ -117,10 +117,7 @@
     var map = L.map('map',{ center: [48, 9.5], zoom: 10});
     // Add OpenStreetMap tile layer to map
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
-    var canvasRenderer = L.canvas({ padding: 0.5 });  ## renderer that draws everything onto a single canvas
 
-    var geoJSON = $JSONString;
-    var poiJSON = $poiString;
 
     var lineStyle = {
         "color": "#ff7800",
@@ -128,6 +125,12 @@
         "opacity": 0.75
     };
 
+    L.geoJSON($pathGeoJSON.toString(), {style: lineStyle}).addTo(map);
+
+
+
+    // POIs
+    ## TODO Colour depending on class
     var poiStyle = {
         radius: 6,
         fillColor: "#00cc55",
@@ -137,8 +140,9 @@
         fillOpacity: 0.8
     };
 
-    var geoJSONLayer = L.geoJSON(geoJSON, {style: lineStyle}).addTo(map);
-    var poiLayer = L.geoJSON(poiJSON, {
+    var canvasRenderer = L.canvas({ padding: 0.5 });  ## renderer that draws everything onto a single canvas
+
+    var poiLayer = L.geoJSON($poiGeoJSON.toString(), {
         renderer: canvasRenderer,
         onEachFeature: function (feature, layer) {
             layer.bindPopup(feature.properties.name);
@@ -148,7 +152,7 @@
         }
     }).addTo(map);
 
-
+    // Toggle: Display/hide POIs
     function togglePois(obj) {
         if (obj.checked) {
             map.addLayer(poiLayer);

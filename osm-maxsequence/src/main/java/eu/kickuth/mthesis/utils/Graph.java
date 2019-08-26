@@ -1,6 +1,4 @@
-package eu.kickuth.mthesis;
-
-import org.apache.commons.lang3.ArrayUtils;
+package eu.kickuth.mthesis.utils;
 
 import java.util.*;
 
