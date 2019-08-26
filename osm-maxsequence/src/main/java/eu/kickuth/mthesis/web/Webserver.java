@@ -2,8 +2,8 @@ package eu.kickuth.mthesis.web;
 
 import eu.kickuth.mthesis.*;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
-import eu.kickuth.mthesis.utils.Graph;
-import eu.kickuth.mthesis.utils.Node;
+import eu.kickuth.mthesis.graph.Graph;
+import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,11 +16,8 @@ import spark.Request;
 import spark.Response;
 
 import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 

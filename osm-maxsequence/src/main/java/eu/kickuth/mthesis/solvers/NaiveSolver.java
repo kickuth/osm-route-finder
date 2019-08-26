@@ -1,9 +1,9 @@
 package eu.kickuth.mthesis.solvers;
 
-import eu.kickuth.mthesis.utils.Dijkstra;
-import eu.kickuth.mthesis.utils.DijkstraNode;
-import eu.kickuth.mthesis.utils.Graph;
-import eu.kickuth.mthesis.utils.Node;
+import eu.kickuth.mthesis.graph.Dijkstra;
+import eu.kickuth.mthesis.graph.DijkstraNode;
+import eu.kickuth.mthesis.graph.Graph;
+import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;

@@ -8,8 +8,8 @@ import de.topobyte.osm4j.core.model.util.OsmModelUtil;
 import de.topobyte.osm4j.core.resolve.EntityNotFoundException;
 import de.topobyte.osm4j.pbf.seq.PbfIterator;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
-import eu.kickuth.mthesis.utils.Graph;
-import eu.kickuth.mthesis.utils.Node;
+import eu.kickuth.mthesis.graph.Graph;
+import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -20,7 +20,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Main {
 

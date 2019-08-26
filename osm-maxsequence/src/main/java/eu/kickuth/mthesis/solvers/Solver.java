@@ -1,6 +1,6 @@
 package eu.kickuth.mthesis.solvers;
 
-import eu.kickuth.mthesis.utils.Node;
+import eu.kickuth.mthesis.graph.Node;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

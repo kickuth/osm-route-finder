@@ -1,4 +1,4 @@
-package eu.kickuth.mthesis.utils;
+package eu.kickuth.mthesis.graph;
 
 import org.apache.commons.lang3.StringUtils;
 

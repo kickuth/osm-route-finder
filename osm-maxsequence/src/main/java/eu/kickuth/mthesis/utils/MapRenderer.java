@@ -1,6 +1,8 @@
 package eu.kickuth.mthesis.utils;
 
 import de.topobyte.osm4j.core.model.iface.OsmBounds;
+import eu.kickuth.mthesis.graph.Graph;
+import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.imageio.ImageIO;

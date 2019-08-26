@@ -1,6 +1,6 @@
 package eu.kickuth.mthesis.web;
 
-import eu.kickuth.mthesis.utils.Node;
+import eu.kickuth.mthesis.graph.Node;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
