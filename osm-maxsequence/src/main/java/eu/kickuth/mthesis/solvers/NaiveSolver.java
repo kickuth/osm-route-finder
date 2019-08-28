@@ -82,7 +82,7 @@ public class NaiveSolver implements Solver {
                 .map(dNode -> dNode.node).collect(Collectors.toList());
     }
 
-    // TODO comment
+    // TODO improve/rewrite, comment
     public List<Node> solve() {
         List<DijkstraNode> shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.get(shortestPath.size() - 1).distanceFromSource > maxDistance) {

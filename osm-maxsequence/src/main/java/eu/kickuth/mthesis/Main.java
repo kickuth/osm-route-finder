@@ -100,8 +100,7 @@ public class Main {
 
     private static Graph createGraph(InMemoryMapDataSet data) {
         logger.trace("creating graph from data dump");
-        int nodeCount = data.getNodes().size();
-        Graph osmGraph = new Graph(nodeCount);
+        Graph osmGraph = new Graph(data.getNodes().size());
 
         for (OsmWay way : data.getWays().valueCollection()) {
 

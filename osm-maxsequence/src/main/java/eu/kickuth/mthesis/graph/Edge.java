@@ -26,4 +26,19 @@ public class Edge {
         this.dest = dest;
         this.cost = cost;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;
+        } else {
+            return source.equals(((Edge) obj).source) && dest.equals(((Edge) obj).dest);
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return  (int) ((source.hashCode() * 3 + dest.hashCode()) % Integer.MAX_VALUE);
+    }
+
 }
