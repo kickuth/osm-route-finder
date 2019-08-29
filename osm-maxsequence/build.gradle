@@ -6,10 +6,14 @@ group 'eu.kickuth.mthesis'
 version '0.1'
 
 sourceCompatibility = 1.11
+println "Running gradle version $gradle.gradleVersion for java $sourceCompatibility"
 
 repositories {
     maven {
         url 'http://mvn.topobyte.de'
+    }
+    maven {
+        url 'http://mvn.slimjars.com'
     }
     mavenCentral()
 }
@@ -20,6 +24,10 @@ dependencies {
     compile 'de.topobyte:osm4j-pbf:0.1.1'
     compile 'de.topobyte:osm4j-tbo:0.1.0'
     compile 'de.topobyte:osm4j-geometry:0.1.0'
+
+    compile 'de.topobyte:adt-geo:0.0.4'
+    compile 'de.topobyte:jts2awt:0.0.1'
+    compile 'de.topobyte:mercator-image:0.0.2'
 
     compile 'org.apache.commons:commons-compress:1.8'
 
@@ -41,7 +49,7 @@ dependencies {
     runtime 'org.slf4j:slf4j-log4j12:1.6.1'
     runtime 'log4j:log4j:1.2.16'
 
-    // testing
+    // testingosm4j'
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
 
