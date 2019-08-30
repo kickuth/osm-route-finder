@@ -3,7 +3,9 @@ install: true
 
 os: linux
 dist: bionic
-jdk: oraclejdk11
+
+jdk:
+  - oraclejdk9
 
 env:
   - CI=true
