@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'eu.kickuth.mthesis'
-version '0.1'
+version '1.0-SNAPSHOT'
 
 sourceCompatibility = 1.11
 println "Running gradle version $gradle.gradleVersion for java $sourceCompatibility"
