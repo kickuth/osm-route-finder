@@ -2,7 +2,7 @@ language: java
 install: true
 
 os: linux
-dist: Bionic
+dist: bionic
 jdk: oraclejdk11
 
 before_cache:
