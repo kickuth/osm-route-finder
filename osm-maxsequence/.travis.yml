@@ -5,7 +5,8 @@ os: linux
 dist: bionic
 
 jdk:
-  - oraclejdk9
+  - oraclejdk8
+  - oraclejdk11
 
 env:
   - CI=true
