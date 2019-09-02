@@ -137,7 +137,7 @@ public class NaiveSolver implements Solver {
             insertPath(shortestPath, pathToNewPoi, insertIndex);
             // print estimated progress
             currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
-            logger.debug(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
+            logger.trace(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
         }
         return shortestPath.stream().map(dNode -> dNode.node).collect(Collectors.toList());
     }
