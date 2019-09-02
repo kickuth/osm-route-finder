@@ -31,6 +31,7 @@ public class GeoJSONObject {
 
                 JSONObject properties = new JSONObject();
                 properties.put("name", node.getType());
+                properties.put("id", node.getId());
 
                 JSONObject poi = new JSONObject();
                 poi.put("type", "Feature");
