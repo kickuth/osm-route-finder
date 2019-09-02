@@ -4,6 +4,10 @@ plugins {
 }
 
 buildScan {
+    if (System.getenv('CI')) {
+        publishAlways()
+        tag 'CI'
+    }
     termsOfServiceUrl = 'https://gradle.com/terms-of-service'
     termsOfServiceAgree = 'yes'
 }
@@ -55,7 +59,7 @@ dependencies {
     runtime 'org.slf4j:slf4j-log4j12:1.6.1'
     runtime 'log4j:log4j:1.2.16'
 
-    // testingosm4j'
+    // testing
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
 
