@@ -13,7 +13,7 @@ public class Graph {
     }
 
     public Graph() {
-        adjList = new HashMap<>();
+        this(10000);
     }
 
     public Graph(int nodeCountEstimate) {
