@@ -4,11 +4,11 @@ import java.util.*;
 
 public class Graph {
 
-    // TODO make graph immutable? --> (inner) GraphBuilder class
+    public Map<Node, Set<Node>> adjList;
+    private Map<Long, Node> nodes;
 
-    public Map<Node, List<Node>> adjList;
-
-    public Graph(Map<Node, List<Node>> adjList) {
+    public Graph(Map<Long, Node> nodes, Map<Node, Set<Node>> adjList) {
+        this.nodes = nodes;
         this.adjList = adjList;
     }
 
@@ -18,6 +18,7 @@ public class Graph {
 
     public Graph(int nodeCountEstimate) {
         adjList = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
+        nodes = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
     }
 
     /**
@@ -30,7 +31,8 @@ public class Graph {
         if (adjList.containsKey(toAdd)) {
             return false;
         } else {
-            adjList.put(toAdd, new LinkedList<>());
+            adjList.put(toAdd, new HashSet<>());
+            nodes.put(toAdd.getId(), toAdd);
             return true;
         }
     }
@@ -49,13 +51,17 @@ public class Graph {
             throw new IllegalArgumentException("Nodes not present in graph!");
         }
         // check if the edge already exists
-        List<Node> sourceNeighbours = adjList.get(source);
+        Set<Node> sourceNeighbours = adjList.get(source);
         if (sourceNeighbours.contains(dest)) {
             return false;
         }
         // add edge
         sourceNeighbours.add(dest);
         return true;
+    }
+
+    public Node getNode(long id) {
+        return nodes.get(id);
     }
 
     public Graph createSubgraph(Set<Node> nodeSubset) {
@@ -67,7 +73,7 @@ public class Graph {
 
         // add edges present in both graphs
         for (Node node : nodeSubset) {
-            List<Node> neighbours = adjList.get(node);
+            Set<Node> neighbours = adjList.get(node);
             for (Node neighbour : neighbours) {
                 if (nodeSubset.contains(neighbour)) {
                     subGraph.addEdge(node, neighbour);
@@ -84,12 +90,17 @@ public class Graph {
      */
     @Override
     public Graph clone() {
-        Map<Node, List<Node>> copy = new HashMap<>();
-        for (Map.Entry<Node, List<Node>> entry : adjList.entrySet())
+        Map<Node, Set<Node>> adjListCopy = new HashMap<>();
+        for (Map.Entry<Node, Set<Node>> entry : adjList.entrySet())
         {
-            copy.put(entry.getKey(), new LinkedList<>(entry.getValue()));
+            adjListCopy.put(entry.getKey(), new HashSet<>(entry.getValue()));
         }
-        return new Graph(copy);
+        Map<Long, Node> nodesCopy = new HashMap<>();
+        for (Map.Entry<Long, Node> entry : nodes.entrySet())
+        {
+            nodesCopy.put(entry.getKey(), entry.getValue());
+        }
+        return new Graph(nodesCopy, adjListCopy);
     }
 
 }
