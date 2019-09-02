@@ -45,7 +45,7 @@ public class Path {
         }
         // check trivial case
         if (toInsert.nodes.size() <= 1) {
-            // TODO reduce this.nodes according to start/end point
+            // TODO reduce (or extend) this.nodes according to start/end points
             return this;
         }
 
@@ -71,7 +71,7 @@ public class Path {
             ListIterator<DijkstraNode> iter = nodes.listIterator(start);
             for (int i = start; i < end; i++) {
                 iter.remove();
-                // TODO iter.next();
+                // TODO iter.next(); required?
             }
 
             // insert path
@@ -94,5 +94,19 @@ public class Path {
 
     public LinkedList<Node> getNodes() {
         return nodes.stream().map(dNode -> dNode.node).collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder("Path: ");
+        if (nodes.size() < 15) {
+            for (DijkstraNode dNode : nodes) {
+                s.append(dNode.node.getId()).append(", ");
+            }
+        } else {
+            s.append("Number of Nodes on path: ").append(nodes.size());
+        }
+        s.append("Total length: ").append(pathCost);
+        return s.toString();
     }
 }
