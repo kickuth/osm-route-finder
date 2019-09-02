@@ -1,6 +1,8 @@
 package eu.kickuth.mthesis;
 
 import eu.kickuth.mthesis.graph.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GraphTest {
 
+    private static final Logger logger = LogManager.getLogger(Main.class);
 
     private final Graph graph = new Graph();
     private Dijkstra dijkstra;
@@ -52,21 +55,33 @@ public class GraphTest {
 
     @Test
     void simplePathTest() {
-        Path p = new Path(graph);
+        logger.trace("Running simplePathTest");
+
+        Path p = new Path((LinkedList<DijkstraNode>)dijkstra.shortestPath(graph.getNode(3), graph.getNode(7)), graph);
+        Path q = new Path((LinkedList<DijkstraNode>)dijkstra.shortestPath(graph.getNode(0), graph.getNode(3)), graph);
+
         assertThrows(IllegalArgumentException.class, () -> {
-            p.insert(p, 0, 0);
+            p.append(p);
         });
 
-        // TODO redo test after refactor
-        Path q = new Path((LinkedList<DijkstraNode>)dijkstra.shortestPath(graph.getNode(0), graph.getNode(3)), graph);
         LinkedList<Node> qNodesTest = new LinkedList<>();
         qNodesTest.add(graph.getNode(0));
         qNodesTest.add(graph.getNode(1));
         qNodesTest.add(graph.getNode(7));
         qNodesTest.add(graph.getNode(3));
+
         assertEquals(q.getNodes(), qNodesTest);
-        System.out.println(q.toString());
-        //q.insert()
-        // TODO
+
+        double addedCost = q.getPathCost() + p.getPathCost();
+        q.append(p);
+
+        assertEquals(q.getPathCost(), addedCost);
+
+        LinkedList<Node> pNodes = p.getNodes();
+        pNodes.removeFirst();
+        qNodesTest.addAll(pNodes);
+        assertEquals(q.getNodes(), qNodesTest);
+
+        logger.trace("Testpath after concatination: {}", q.toString());
     }
 }
