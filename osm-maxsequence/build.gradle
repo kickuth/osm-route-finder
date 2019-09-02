@@ -18,6 +18,15 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.11
 println "Running gradle version $gradle.gradleVersion for java $sourceCompatibility"
 
+test {
+    useJUnitPlatform()
+    maxHeapSize = '1G'
+
+    if (System.getenv('CI')) {
+        failFast = true;
+    }
+}
+
 repositories {
     maven {
         url 'http://mvn.topobyte.de'
