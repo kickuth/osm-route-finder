@@ -89,16 +89,16 @@
 <body>
 
 <div class="sidenav">
-    <form action="" method="post">
-        <input id="algo_sp" type="checkbox" name="algo_sp" value="shortest path"><label for="algo_sp">shortest path</label><br>
-        <input id="algo_ng" type="checkbox" name="algo_ng" value="naive greedy"><label for="algo_ng">naive greedy</label><br>
+    <form action=""><!-- method="post"> -->
+        <input id="algo_sp" type="checkbox" name="algo_sp" value="shortest path" checked><label for="algo_sp">shortest path</label><br>
+        <input id="algo_ng" type="checkbox" name="algo_ng" value="naive greedy" checked><label for="algo_ng">naive greedy</label><br>
         <input id="algo_ot" type="checkbox" name="algo_ot" value="other"><label for="algo_ot">other</label><br><br>
         <label>
-            <input type="number" min="0" style="width: 30%;" name="source" value="1">
+            <input type="number" min="0" style="width: 30%;" name="source" value="$startNode.id">
             Source ID
         </label>
         <label>
-            <input type="number" min="0" style="width: 30%;" name="sink" value="1000">
+            <input type="number" min="0" style="width: 30%;" name="sink" value="$targetNode.id">
             Sink ID
         </label><br><br>
         <button class="button" name="submit" value="submit"><span>Go!</span></button><br><br><br> ## TODO fix awful layout
@@ -119,13 +119,19 @@
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
 
 
+    // Paths
+    var colors = ['#ff0000', '#00ff00', '#0000ff', '#ff7800']
+    var col_idx = 0;
     var lineStyle = {
-        "color": "#ff7800",
+        "color": colors[col_idx],
         "weight": 5,
         "opacity": 0.75
     };
 
-    L.geoJSON($pathGeoJSON.toString(), {style: lineStyle}).addTo(map);
+    #foreach ($path in $pathJSONs)
+        L.geoJSON($path.toString(), {style: lineStyle}).addTo(map);
+        lineStyle.color = colors[++col_idx%colors.length];
+    #end
 
 
 
@@ -145,7 +151,7 @@
     var poiLayer = L.geoJSON($poiGeoJSON.toString(), {
         renderer: canvasRenderer,
         onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.name);
+            layer.bindPopup(feature.properties.name + " - " + feature.properties.id);
         },
         pointToLayer: function (feature, latlon) {
             return L.circleMarker(latlon, poiStyle);

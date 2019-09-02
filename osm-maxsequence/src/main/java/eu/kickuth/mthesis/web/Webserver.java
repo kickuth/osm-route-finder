@@ -16,6 +16,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.StringWriter;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -58,21 +59,45 @@ public class Webserver {
         // create context to add data
         VelocityContext htmlContext = new VelocityContext();
 
+
         // TODO experimental code. Put in own function
-        GeoJSONObject pathJSON = new GeoJSONObject();
-        if (req.queryParams("algo_sp") != null) {
-            logger.trace("Computing shortest path");
-            List<Node> path = solver.shortestPath();
-            pathJSON.addPath(path);
+        String reqSource = req.queryParams("source");
+        String reqTarget = req.queryParams("sink");
+        if (reqSource != null && reqTarget != null) {
+            long newSourceId = Long.parseLong(reqSource);
+            long newTargetId = Long.parseLong(reqTarget);
+            logger.debug("Setting source to {} and sink/target to {}", newSourceId, newTargetId);
+            Node newSource = graph.getNode(newSourceId);
+            Node newTarget = graph.getNode(newTargetId);
+            if (newSource == null || newTarget == null) {
+                logger.error("Invalid source or sink/target requested!");
+            } else {
+                solver.setSource(newSource);
+                solver.setTarget(newTarget);
+            }
         }
+        List<GeoJSONObject> paths = new LinkedList<>();
         if (req.queryParams("algo_ng") != null) {
-            logger.trace("Computing naive greedy path");
+            logger.debug("Computing naive greedy path");
+            GeoJSONObject pathJSON = new GeoJSONObject();
             List<Node> path = solver.solve();
             pathJSON.addPath(path);
+            paths.add(pathJSON);
+        }
+        if (req.queryParams("algo_sp") != null) {
+            logger.debug("Computing shortest path");
+            GeoJSONObject pathJSON = new GeoJSONObject();
+            List<Node> path = solver.shortestPath();
+            pathJSON.addPath(path);
+            paths.add(pathJSON);
         }
 
-        htmlContext.put("pathGeoJSON", pathJSON);
+        // populate html template fields
+        htmlContext.put("pathJSONs", paths);
         htmlContext.put("poiGeoJSON", poiJSON);
+        htmlContext.put("startNode", solver.getSource());
+        htmlContext.put("targetNode", solver.getTarget());
+
 
         // render template
         StringWriter writer = new StringWriter();
