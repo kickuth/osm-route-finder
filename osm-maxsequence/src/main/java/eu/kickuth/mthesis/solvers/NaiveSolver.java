@@ -111,10 +111,8 @@ public class NaiveSolver implements Solver {
 
         // keep adding shortest paths to new classes until we run over the maximal distance
         // TODO will currently overshoot maximal distance
-        double currentDistance = shortestPath.getPathCost();
-        while (currentDistance < maxDistance && !targets.isEmpty()) {
+        while (shortestPath.getPathCost() < maxDistance && !targets.isEmpty()) {
             Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
-            System.out.println(pathToNewPoi);
             Node newPoi = pathToNewPoi.getNodes().getLast();
             //find shortest way back
             Path backPath = dijkstra.shortestPath(newPoi, sources);
@@ -130,8 +128,7 @@ public class NaiveSolver implements Solver {
             shortestPath = shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
-            currentDistance = shortestPath.getPathCost();
-            logger.trace(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
+            logger.trace(String.format("Naive greedy: %.2f%%", shortestPath.getPathCost()*100/maxDistance));
         }
         return shortestPath.getNodes();
     }
