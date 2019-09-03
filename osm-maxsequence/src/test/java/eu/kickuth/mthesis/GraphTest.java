@@ -19,6 +19,8 @@ public class GraphTest {
     private final Graph g = new Graph();
     private Dijkstra dijkstra;
 
+    private final double EPSILON = 10e-6;
+
     @BeforeEach
     void setUp() {
         Node n0 = new Node(0, 30, 30, "Origin");
@@ -71,17 +73,17 @@ public class GraphTest {
         qNodesTest.add(g.getNode(7));
         qNodesTest.add(g.getNode(3));
 
-        assertEquals(q.getNodes(), qNodesTest);
+        assertEquals(qNodesTest, q.getNodes());
 
         double addedCost = q.getPathCost() + p.getPathCost();
         q.append(p);
 
-        assertEquals(q.getPathCost(), addedCost);
+        assertEquals(addedCost, q.getPathCost());
 
         LinkedList<Node> pNodes = p.getNodes();
         pNodes.removeFirst();
         qNodesTest.addAll(pNodes);
-        assertEquals(q.getNodes(), qNodesTest);
+        assertEquals(qNodesTest, q.getNodes());
 
         logger.trace("Testpath after concatination: {}", q.toString());
     }
@@ -92,7 +94,9 @@ public class GraphTest {
         Path q = getShortestPath(4, 7);
         System.out.println(p.toString());
         System.out.println(q.toString());
+        double costBeforeInsert = p.getPathCost();
         p.insert(q, 1, 3);
+        assertEquals(costBeforeInsert, p.getPathCost(), EPSILON);
         System.out.println(p.toString());
     }
 
