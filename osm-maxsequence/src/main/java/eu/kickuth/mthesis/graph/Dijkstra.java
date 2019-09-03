@@ -1,6 +1,7 @@
 package eu.kickuth.mthesis.graph;
 
 import java.util.*;
+import eu.kickuth.mthesis.graph.Graph.Path;
 
 public class Dijkstra {
 
@@ -71,7 +72,7 @@ public class Dijkstra {
      * @param targets set of target nodes
      * @return path from source to closest target
      */
-    public List<DijkstraNode> shortestPath(final Node source, final Set<Node> targets) {
+    public Path shortestPath(final Node source, final Set<Node> targets) {
         Set<Node> sources = new HashSet<>();
         sources.add(source);
         return shortestPath(sources, targets);
@@ -82,9 +83,9 @@ public class Dijkstra {
      * Compute the shortest s-t-path
      * @param source the source node
      * @param target the target node
-     * @return list of nodes from source to target, empty list if no path exists
+     * @return Path of nodes from source to target, empty Path if no path exists
      */
-    public List<DijkstraNode> shortestPath(final Node source, final Node target) {
+    public Path shortestPath(final Node source, final Node target) {
         Set<Node> sources = new HashSet<>();
         Set<Node> targets = new HashSet<>();
         sources.add(source);
@@ -96,9 +97,9 @@ public class Dijkstra {
      * Compute the shortest path from any source to any target node
      * @param sources the set of source nodes
      * @param targets the set of target nodes
-     * @return list of nodes for the shortest s-t-path, empty list if no path exists
+     * @return Path of nodes for the shortest s-t-path, empty Path if no path exists
      */
-    public List<DijkstraNode> shortestPath(final Set<Node> sources, final Set<Node> targets) {
+    public Path shortestPath(final Set<Node> sources, final Set<Node> targets) {
         initDijkstra(sources);
         // map to backtrack shortest path
         Map<DijkstraNode, DijkstraNode> previousNode = new HashMap<>();
@@ -110,7 +111,7 @@ public class Dijkstra {
         while (true) {
             // if the queue is empty, we didn't find the target
             if (pqueue.isEmpty()) {
-                return new LinkedList<>();
+                return graph.new Path();
             }
             DijkstraNode currentMin = pqueue.poll();
             // check whether an updated node has already been processed
@@ -124,7 +125,7 @@ public class Dijkstra {
             }
             // check whether only unreachable nodes are left --> Target unreachable
             if (currentMin.distanceFromSource == Double.MAX_VALUE) {
-                return new LinkedList<>();
+                return graph.new Path();
             }
             for (Node neighbour : graph.adjList.get(currentMin.node)) {
                 double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
@@ -140,12 +141,12 @@ public class Dijkstra {
 
         // reconstruct the path from the target
         // TODO use LinkedHashMap to also store each distance?
-        List<DijkstraNode> results = new LinkedList<>();
+        LinkedList<DijkstraNode> results = new LinkedList<>();
         while (backtrack != null) {
             results.add(0, backtrack);
             backtrack = previousNode.get(backtrack);
         }
-        return results;
+        return graph.new Path(results);
     }
 
     /**

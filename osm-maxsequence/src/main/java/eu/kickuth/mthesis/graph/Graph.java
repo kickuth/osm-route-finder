@@ -163,6 +163,10 @@ public class Graph {
             return pathCost;
         }
 
+        public boolean isEmpty() {
+            return dNodes.isEmpty();
+        }
+
         @Override
         public String toString() {
             StringBuilder s = new StringBuilder("Path: ");
@@ -171,7 +175,8 @@ public class Graph {
                     s.append(dNode.node.getId()).append(", ");
                 }
             } else {
-                s.append("Number of Nodes on path: ").append(dNodes.size());
+                s.append(String.format("%d, %d, [%d nodes], %d, ", dNodes.getFirst().node.getId(),
+                        dNodes.get(1).node.getId(), dNodes.size()-3, dNodes.getLast().node.getId()));
             }
             s.append("Total length: ").append(pathCost);
             return s.toString();

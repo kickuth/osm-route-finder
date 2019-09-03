@@ -1,7 +1,6 @@
 package eu.kickuth.mthesis.solvers;
 
 import eu.kickuth.mthesis.graph.Dijkstra;
-import eu.kickuth.mthesis.graph.DijkstraNode;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
@@ -9,7 +8,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
+import eu.kickuth.mthesis.graph.Graph.Path;
 
 public class NaiveSolver implements Solver {
 
@@ -78,14 +78,13 @@ public class NaiveSolver implements Solver {
     }
 
     public List<Node> shortestPath() {
-        return dijkstra.shortestPath(source, target).stream()
-                .map(dNode -> dNode.node).collect(Collectors.toList());
+        return dijkstra.shortestPath(source, target).getNodes();
     }
 
     // TODO improve/rewrite, comment
     public List<Node> solve() {
-        List<DijkstraNode> shortestPath = dijkstra.shortestPath(source, target);
-        if (shortestPath.isEmpty() || shortestPath.get(shortestPath.size() - 1).distanceFromSource > maxDistance) {
+        Path shortestPath = dijkstra.shortestPath(source, target);
+        if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
             System.out.println("Target is not reachable!");
             return new LinkedList<>();
         }
@@ -93,11 +92,11 @@ public class NaiveSolver implements Solver {
         // Find out which classes we have visited and which nodes have a class
         Set<String> currentUniquePois = new HashSet<>();
         Set<Node> sources = new HashSet<>();
-        for (DijkstraNode site : shortestPath) {
-            String type = site.node.getType();
+        for (Node site : shortestPath.getNodes()) {
+            String type = site.getType();
             if (!StringUtils.isEmpty(type)) {
                 currentUniquePois.add(type);
-                sources.add(site.node);
+                sources.add(site);
             }
         }
 
@@ -112,73 +111,29 @@ public class NaiveSolver implements Solver {
 
         // keep adding shortest paths to new classes until we run over the maximal distance
         // TODO will currently overshoot maximal distance
-        double currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
+        double currentDistance = shortestPath.getPathCost();
         while (currentDistance < maxDistance && !targets.isEmpty()) {
-            List<DijkstraNode> pathToNewPoi = dijkstra.shortestPath(sources, targets);
-            Node newPoi = pathToNewPoi.get(pathToNewPoi.size()-1).node;
+            Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
+            System.out.println(pathToNewPoi);
+            Node newPoi = pathToNewPoi.getNodes().getLast();
             //find shortest way back
-            List<DijkstraNode> backPath = dijkstra.shortestPath(newPoi, pathToNewPoi.get(0).node);
+            Path backPath = dijkstra.shortestPath(newPoi, sources);
             // remove possible targets with the same class as the new node
             targets.removeIf(node -> node.getType().equals(newPoi.getType()));
             // insert the detour into the previous path
-            appendPath(pathToNewPoi, backPath);
+            pathToNewPoi.append(backPath);
             // find index for insertion
-            Iterator<DijkstraNode> iter = shortestPath.iterator();
-            int insertIndex = 0;
-            DijkstraNode lookingFor = pathToNewPoi.get(0);
-            while (iter.hasNext()) {
-                DijkstraNode dNode = iter.next();
-                if (dNode.node.equals(lookingFor.node)) {
-                    break;
-                }
-                insertIndex++;
-            }
+            int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getNodes().getFirst());
+            int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getNodes().getLast());
 
-            insertPath(shortestPath, pathToNewPoi, insertIndex);
+            // TODO fix this in Path.insert
+            shortestPath = shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
+
             // print estimated progress
-            currentDistance = shortestPath.get(shortestPath.size() - 1).distanceFromSource;
+            currentDistance = shortestPath.getPathCost();
             logger.trace(String.format("Naive greedy: %.2f%%", currentDistance*100/maxDistance));
         }
-        return shortestPath.stream().map(dNode -> dNode.node).collect(Collectors.toList());
-    }
-
-    private static void appendPath(List<DijkstraNode> toUpdate, List<DijkstraNode> toAppend) {
-        DijkstraNode lastNode = toUpdate.get(toUpdate.size()-1);
-        // if end and starting node are equal, only keep one
-        if (lastNode.node.equals(toAppend.get(0).node)) {
-            toAppend.remove(0);
-        }
-        toAppend.forEach(dNode -> dNode.distanceFromSource += lastNode.distanceFromSource);
-        toUpdate.addAll(toAppend);
-    }
-
-    /**
-     * Merge two paths. More specifically merges the second path into the first path, adjusting node costs.
-     * Requires first and last node of the inserted list to be present in both lists.
-     * @param toUpdate the list that we merge into
-     * @param toInsert the list we want to add. Must be a circle, i.e. start and end node are equal.
-     * @param insertAtIndex the position after which the second list is inserted
-     */
-    private static void insertPath(List<DijkstraNode> toUpdate, List<DijkstraNode> toInsert, int insertAtIndex) {
-        if (!toInsert.get(toInsert.size()-1).node.equals(toInsert.get(0).node)) {
-            throw new IllegalArgumentException("Inserted path is not a circle.");
-        }
-
-        // remove duplicate node
-        toInsert.remove(0);
-
-        // update the costs of nodes following the inserted part
-        double costOfInsertion = toInsert.get(toInsert.size()-1).distanceFromSource;
-        for (int i = insertAtIndex+1; i < toUpdate.size(); i++) {
-            toUpdate.get(i).distanceFromSource += costOfInsertion;
-        }
-
-        // update the costs for the path that we will insert
-        double costAtInsertion = toUpdate.get(insertAtIndex).distanceFromSource;
-        toInsert.forEach((dNode)->{dNode.distanceFromSource += costAtInsertion;});
-
-        // insert nodes
-        toUpdate.addAll(insertAtIndex+1, toInsert);
+        return shortestPath.getNodes();
     }
 
     /**
