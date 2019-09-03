@@ -23,17 +23,23 @@ public class Path {
     }
 
     public Path append(Path toAppend) {
+        if (toAppend.dNodes.isEmpty()) {
+            // do nothing
+            return this;
+        }
         if (dNodes.isEmpty()) {
+            // copy everything from toAppend
             dNodes.addAll(toAppend.dNodes);
             pathCost = toAppend.pathCost;
-        } else if (toAppend.dNodes.isEmpty() || !dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
-            throw new IllegalArgumentException("Appended path does not start with end node of previous path!");
-        } else {
-                toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
-                dNodes.removeLast();
-                dNodes.addAll(toAppend.dNodes);
-                pathCost = dNodes.getLast().distanceFromSource;
+            return this;
         }
+        if(!dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
+            throw new IllegalArgumentException("Appended path does not start with end node of previous path!");
+        }
+        toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
+        dNodes.removeLast();
+        dNodes.addAll(toAppend.dNodes);
+        pathCost = dNodes.getLast().distanceFromSource;
         return this;
     }
 
@@ -42,54 +48,15 @@ public class Path {
         if (dNodes.size() <= Math.max(start, end) || Math.min(start, end) < 0) {
             throw new IllegalArgumentException("Insertion points are out of bounds!");
         }
-        // check trivial case
-        if (toInsert.dNodes.size() <= 1) {
-            // TODO reduce (or extend) this.nodes according to start/end points
-            return this;
-        }
 
-        if (start == end) {
-            return insertAt(toInsert, start);
-        }
-        if (start < end) {
-            double costAtInsert = dNodes.get(start).distanceFromSource;
-            double replacedCost = dNodes.get(end).distanceFromSource - costAtInsert;
-            double costOfInsert = toInsert.pathCost;
-            // prepare inserted path
-            Node startNode = toInsert.dNodes.pop().node; // remove first node
-            if (!startNode.equals(dNodes.get(start).node)) {
-                throw new IllegalArgumentException("Paths can not be joined!");
-            }
-            toInsert.dNodes.forEach(dNode -> dNode.distanceFromSource += costAtInsert);
-            toInsert.pathCost += costAtInsert;
+        Path front = new Path(new LinkedList<>(dNodes.subList(0, start+1)), graph);
+        LinkedList<DijkstraNode> backList = new LinkedList<>(dNodes.subList(end, dNodes.size()));
+        double reducedCost = backList.getFirst().distanceFromSource;
+        backList.forEach(dNode -> dNode.distanceFromSource -= reducedCost);
+        Path back = new Path(backList, graph);
 
-            // adjust nodes following after inserted path TODO end+1?
-            dNodes.listIterator(end).forEachRemaining(dNode -> dNode.distanceFromSource += (costOfInsert - replacedCost));
-
-            //remove to be replaced nodes
-            ListIterator<DijkstraNode> iter = dNodes.listIterator(start);
-            for (int i = start; i < end; i++) {
-                iter.remove();
-                // TODO iter.next(); required?
-            }
-
-            // insert path
-            dNodes.addAll(start, toInsert.dNodes);
-            pathCost = dNodes.getLast().distanceFromSource;
-
-            return this;
-        }
-
-        // start > end
-        // TODO
-        return null;
+        return front.append(toInsert).append(back);
     }
-
-    private Path insertAt(Path toInsert, int start) {
-        //TODO
-        return null;
-    }
-
 
     public LinkedList<Node> getNodes() {
         return dNodes.stream().map(dNode -> dNode.node).collect(Collectors.toCollection(LinkedList::new));
