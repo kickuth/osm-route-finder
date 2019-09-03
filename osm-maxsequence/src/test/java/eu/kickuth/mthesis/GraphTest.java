@@ -101,7 +101,6 @@ public class GraphTest {
     }
 
     Path getShortestPath(long sourceId, long targetId) {
-        return g.new Path((LinkedList<DijkstraNode>)
-                dijkstra.shortestPath(g.getNode(sourceId), g.getNode(targetId)));
+        return dijkstra.shortestPath(g.getNode(sourceId), g.getNode(targetId));
     }
 }
