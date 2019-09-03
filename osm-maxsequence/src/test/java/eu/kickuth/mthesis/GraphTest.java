@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
+import eu.kickuth.mthesis.graph.Graph.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,7 +16,7 @@ public class GraphTest {
 
     private static final Logger logger = LogManager.getLogger(Main.class);
 
-    private final Graph graph = new Graph();
+    private final Graph g = new Graph();
     private Dijkstra dijkstra;
 
     @BeforeEach
@@ -28,47 +29,47 @@ public class GraphTest {
         // Node n5 = new Node(5, 32, 30, "20");
         Node n6 = new Node(6, 32, 32, "22");
         Node n7 = new Node(7, 30.5, 30.5, "01");
-        graph.addNode(n0);
-        graph.addNode(n1);
-        graph.addNode(n2);
-        graph.addNode(n3);
-        graph.addNode(n4);
+        g.addNode(n0);
+        g.addNode(n1);
+        g.addNode(n2);
+        g.addNode(n3);
+        g.addNode(n4);
         // graph.addNode(n5);
-        graph.addNode(n6);
-        graph.addNode(n7);
+        g.addNode(n6);
+        g.addNode(n7);
 
-        graph.addEdge(n0, n1);
-        graph.addEdge(n0, n2);
-        graph.addEdge(n1, n0);
-        graph.addEdge(n1, n4);
-        graph.addEdge(n1, n7);
-        graph.addEdge(n2, n0);
-        graph.addEdge(n3, n2);
-        graph.addEdge(n3, n6);
-        graph.addEdge(n4, n1);
-        graph.addEdge(n4, n6);
-        graph.addEdge(n6, n4);
-        graph.addEdge(n7, n3);
+        g.addEdge(n0, n1);
+        g.addEdge(n0, n2);
+        g.addEdge(n1, n0);
+        g.addEdge(n1, n4);
+        g.addEdge(n1, n7);
+        g.addEdge(n2, n0);
+        g.addEdge(n3, n2);
+        g.addEdge(n3, n6);
+        g.addEdge(n4, n1);
+        g.addEdge(n4, n6);
+        g.addEdge(n6, n4);
+        g.addEdge(n7, n3);
 
-        dijkstra = new Dijkstra(graph);
+        dijkstra = new Dijkstra(g);
     }
 
     @Test
-    void simplePathTest() {
+    void simpleAppendTest() {
         logger.trace("Running simplePathTest");
 
-        Path p = new Path((LinkedList<DijkstraNode>)dijkstra.shortestPath(graph.getNode(3), graph.getNode(7)), graph);
-        Path q = new Path((LinkedList<DijkstraNode>)dijkstra.shortestPath(graph.getNode(0), graph.getNode(3)), graph);
+        Path p = getShortestPath(3, 7);
+        Path q = getShortestPath(0, 3);
 
         assertThrows(IllegalArgumentException.class, () -> {
             p.append(p);
-        });
+        }); // TODO move to own test for edge cases
 
         LinkedList<Node> qNodesTest = new LinkedList<>();
-        qNodesTest.add(graph.getNode(0));
-        qNodesTest.add(graph.getNode(1));
-        qNodesTest.add(graph.getNode(7));
-        qNodesTest.add(graph.getNode(3));
+        qNodesTest.add(g.getNode(0));
+        qNodesTest.add(g.getNode(1));
+        qNodesTest.add(g.getNode(7));
+        qNodesTest.add(g.getNode(3));
 
         assertEquals(q.getNodes(), qNodesTest);
 
@@ -83,5 +84,20 @@ public class GraphTest {
         assertEquals(q.getNodes(), qNodesTest);
 
         logger.trace("Testpath after concatination: {}", q.toString());
+    }
+
+    @Test
+    void simpleInsertTest() {
+        Path p = getShortestPath(6, 3);
+        Path q = getShortestPath(4, 7);
+        System.out.println(p.toString());
+        System.out.println(q.toString());
+        p.insert(q, 1, 3);
+        System.out.println(p.toString());
+    }
+
+    Path getShortestPath(long sourceId, long targetId) {
+        return g.new Path((LinkedList<DijkstraNode>)
+                dijkstra.shortestPath(g.getNode(sourceId), g.getNode(targetId)));
     }
 }
