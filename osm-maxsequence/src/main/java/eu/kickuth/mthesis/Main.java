@@ -135,7 +135,13 @@ public class Main {
                 nodeTags = OsmModelUtil.getTagsAsMap(wpt);
                 String wayPointType = nodeTags.get("traffic_sign");
                 if (StringUtils.isEmpty(wayPointType)) {
-                    wayPointType = wayTags.get("traffic_sign");
+                    // get way class
+                    //wayPointType = wayTags.get("traffic_sign");
+                    // assign some fake classes
+                    Random r = new Random(wpt.getId());
+                    if (r.nextDouble() < 0.004) {
+                        wayPointType = "FC " + (char) (65 + r.nextInt(20));
+                    }
                     // TODO max speed, put in own method?
                 }
                 wayPoint = new Node(wpt.getId(), wpt.getLatitude(), wpt.getLongitude(), wayPointType);
@@ -169,50 +175,6 @@ public class Main {
                 }
             }
         }
-
-        // add road signs that are next to roads ( O(n^2)! )
-//        int addedRoadsigns = 0; // TODO temp
-//        for (OsmNode roadSign : data.getNodes().valueCollection()) {
-//            Map<String, String> tags = OsmModelUtil.getTagsAsMap(roadSign);
-//
-//            String trafficSign = tags.get("traffic_sign");
-//            if (StringUtils.isEmpty(trafficSign)) {
-//                continue;
-//            }
-//            Node roadNode = new Node(roadSign.getId(), roadSign.getLatitude(), roadSign.getLongitude(), trafficSign);
-//            // check if sign already is part of the graph
-//            if (osmGraph.adjList.containsKey(roadNode)) {
-//                continue;
-//            }
-//            List<Node> candidates = new LinkedList<>();
-//            for (Node node : osmGraph.adjList.keySet()) {
-//                if (Math.abs(node.getLat() - roadSign.getLatitude()) < 0.001 &&
-//                        Math.abs(node.getLon() - roadSign.getLongitude()) < 0.0006) {
-//                    /* TODO hard coded direct lon/lat comparison
-//                    TODO Length in meters of 1° of latitude = always 111.32 km
-//                    TODO Length in meters of 1° of longitude = 40075 km * cos( latitude ) / 360
-//                    */
-//                    candidates.add(node);
-//                }
-//            }
-//            if (candidates.isEmpty()) {
-//                // no close nodes present in graph
-//                continue;
-//            }
-//            double currentMin = Double.MAX_VALUE;
-//            Node closestNode = null;
-//            for (Node node : candidates) {
-//                double dist = roadNode.getDistance(node);
-//                if (dist < currentMin) {
-//                    currentMin = dist;
-//                    closestNode = node;
-//                }
-//            }
-//            addedRoadsigns++;
-//            closestNode.setType(roadNode.getType());
-//        }
-//        System.out.println("With a lot of effort added roadsigns: " + addedRoadsigns);
-
 
         return osmGraph;
     }
