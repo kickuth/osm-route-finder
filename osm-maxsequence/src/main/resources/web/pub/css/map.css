@@ -1,0 +1,73 @@
+html {
+    min-height: 100%;
+}
+
+body {
+    font-family: "Lato", sans-serif;
+    color: #f1f1f1;
+    background: -webkit-linear-gradient(#666666, #333333);
+    background: -o-linear-gradient(#666666, #333333);
+    background: -moz-linear-gradient(#666666, #333333);
+    background: linear-gradient(#666666, #333333);
+    background-color: #666666;
+}
+
+.sidenav {
+    height: 100%;
+    width: 160px;
+    position: fixed;
+    z-index: 1001;
+    top: 0;
+    right: 0;
+    background-color: rgba(0,0,0, .7);
+    overflow-x: hidden;
+    padding-top: 20px;
+}
+
+.sidenav a {
+    padding: 6px 8px 6px 16px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #a1a1a1;
+    display: block;
+}
+
+.sidenav a:hover {
+    color: #f1f1f1;
+}
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    border-radius: 12px;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.5s;
+    position: absolute;
+    margin: 5px;
+    width: 90%;
+}
+.button span {
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    transition: 0.5s;
+}
+.button span:after {
+    content: '\00bb';
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    right: -20px;
+    transition: 0.5s;
+}
+.button:hover span {
+    padding-right: 25px;
+}
+.button:hover span:after {
+    opacity: 1;
+    right: 0;
+}
