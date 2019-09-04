@@ -133,8 +133,8 @@ public class Graph {
             if(!dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
                 throw new IllegalArgumentException("Appended path does not start with end node of previous path!");
             }
-            toAppend.dNodes.removeFirst();
             toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
+            dNodes.removeLast();
             dNodes.addAll(toAppend.dNodes);
             pathCost = dNodes.getLast().distanceFromSource;
             return this;

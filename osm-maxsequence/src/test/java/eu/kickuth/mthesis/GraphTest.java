@@ -60,8 +60,8 @@ public class GraphTest {
     void simpleAppendTest() {
         logger.trace("Running simplePathTest");
 
-        Path p = getShortestPath(3, 7);
-        Path q = getShortestPath(0, 3);
+        Path p = getShortestPath(3, 7); // 3, 2, 0, 1, 7
+        Path q = getShortestPath(0, 3); // 0, 1, 7, 3
 
         assertThrows(IllegalArgumentException.class, () -> {
             p.append(p);
@@ -77,12 +77,12 @@ public class GraphTest {
 
         double addedCost = q.getPathCost() + p.getPathCost();
         q.append(p);
-
-        assertEquals(addedCost, q.getPathCost());
+        assertEquals(addedCost, q.getPathCost(), EPSILON);
 
         LinkedList<Node> pNodes = p.getNodes();
         pNodes.removeFirst();
         qNodesTest.addAll(pNodes);
+
         assertEquals(qNodesTest, q.getNodes());
 
         logger.trace("Testpath after concatination: {}", q.toString());
@@ -92,12 +92,19 @@ public class GraphTest {
     void simpleInsertTest() {
         Path p = getShortestPath(6, 3);
         Path q = getShortestPath(4, 7);
-        System.out.println(p.toString());
-        System.out.println(q.toString());
         double costBeforeInsert = p.getPathCost();
         p.insert(q, 1, 3);
         assertEquals(costBeforeInsert, p.getPathCost(), EPSILON);
-        System.out.println(p.toString());
+
+        Path a = getShortestPath(1, 6);
+        Path b = getShortestPath(6, 1);
+        a.append(b);
+        Path c = getShortestPath(1, 2);
+        Path d = getShortestPath(2, 1);
+        c.append(d);
+        a.insert(c, 5, 5);
+
+        logger.trace("Testpath after insert: {}", a);
     }
 
     Path getShortestPath(long sourceId, long targetId) {

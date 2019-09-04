@@ -79,4 +79,9 @@ public class Node {
             return (int) ((id + type.hashCode()) % Integer.MAX_VALUE);
         }
     }
+
+    @Override
+    public String toString() {
+        return String.format("Node %d: %s", id, type);
+    }
 }
