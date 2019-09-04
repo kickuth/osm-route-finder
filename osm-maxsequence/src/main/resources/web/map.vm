@@ -14,18 +14,22 @@
 
 <div class="sidenav">
     <form action=""><!-- method="post"> -->
-        <input id="algo_sp" type="checkbox" name="algo_sp" value="shortest path" checked><label for="algo_sp">shortest path</label><br>
-        <input id="algo_ng" type="checkbox" name="algo_ng" value="naive greedy" checked><label for="algo_ng">naive greedy</label><br>
-        <input id="algo_ot" type="checkbox" name="algo_ot" value="other"><label for="algo_ot">other</label><br><br>
+        <input id="algo_sp" type="checkbox" name="algo_sp" value="sp" checked><label for="algo_sp">shortest path</label><br>
+        <input id="algo_ng" type="checkbox" name="algo_ng" value="ng" checked><label for="algo_ng">naive greedy</label><br>
+        <input id="algo_ot" type="checkbox" name="algo_ot" value="ot"><label for="algo_ot">other</label><br>
         <label>
-            <input type="number" min="0" style="width: 30%;" name="source" value="$startNode.id">
+            max distance:<br>
+            <input id="max_dist" type="number" min="0" style="width: 40%;" name="max_dist" value="150000"> meters
+        </label><br><br>
+        <label>
+            <input type="number" min="0" style="width: 35%;" name="source" value="$startNode.id">
             Source ID
         </label>
         <label>
-            <input type="number" min="0" style="width: 30%;" name="sink" value="$targetNode.id">
+            <input type="number" min="0" style="width: 35%;" name="sink" value="$targetNode.id">
             Sink ID
         </label><br><br>
-        <button class="button" name="submit" value="submit"><span>Go!</span></button><br><br><br> ## TODO fix awful layout
+        <button class="button"><span>Go!</span></button><br><br><br> ## TODO fix awful layout
     </form>
 
     <input type="checkbox" id="poiToggle" onchange="togglePois(this)" checked/><label for="poiToggle">Show POIs</label>

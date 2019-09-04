@@ -34,7 +34,7 @@ public class Main {
         // TODO experimental code
         Node source = osmGraph.getNode(1409294970);
         Node target = osmGraph.getNode(251878779);
-        int maxDistance = 250_000; // in meters
+        int maxDistance = 150_000; // in meters
 
         // initialise solver
         NaiveSolver naiveSolver = new NaiveSolver(osmGraph, source, target, maxDistance);
