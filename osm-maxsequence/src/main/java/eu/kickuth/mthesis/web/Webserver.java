@@ -38,10 +38,16 @@ public class Webserver {
         Set<Node> poiNodes = graph.adjList.keySet();
         poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
         poiJSON.addPois(poiNodes);
-        start();
+        start(4567);
     }
 
-    public void start() {
+    public void start(int port) {
+        logger.trace("Starting web-server on port {}", port);
+        // Configure Spark
+        port(port);
+        staticFiles.location("/web/pub");
+        staticFiles.expireTime(600);
+
         // initialize engine
         ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());

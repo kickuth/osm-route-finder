@@ -113,7 +113,7 @@ public class NaiveSolver implements Solver {
         // TODO will currently overshoot maximal distance
         while (shortestPath.getPathCost() < maxDistance && !targets.isEmpty()) {
             Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
-            Node newPoi = pathToNewPoi.getNodes().getLast();
+            Node newPoi = pathToNewPoi.getLast();
             //find shortest way back
             Path backPath = dijkstra.shortestPath(newPoi, sources);
             // remove possible targets with the same class as the new node
@@ -121,11 +121,10 @@ public class NaiveSolver implements Solver {
             // insert the detour into the previous path
             pathToNewPoi.append(backPath);
             // find index for insertion
-            int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getNodes().getFirst());
-            int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getNodes().getLast());
+            int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getFirst());
+            int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
 
-            // TODO fix this in Path.insert
-            shortestPath = shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
+            shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
             logger.trace(String.format("Naive greedy: %.2f%%", shortestPath.getPathCost()*100/maxDistance));

@@ -139,7 +139,7 @@ public class Main {
                     //wayPointType = wayTags.get("traffic_sign");
                     // assign some fake classes
                     Random r = new Random(wpt.getId());
-                    if (r.nextDouble() < 0.004) {
+                    if (r.nextDouble() < 0.005) {
                         wayPointType = "FC " + (char) (65 + r.nextInt(20));
                     }
                     // TODO max speed, put in own method?

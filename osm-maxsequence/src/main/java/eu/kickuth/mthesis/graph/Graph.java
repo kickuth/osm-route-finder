@@ -133,8 +133,8 @@ public class Graph {
             if(!dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
                 throw new IllegalArgumentException("Appended path does not start with end node of previous path!");
             }
+            toAppend.dNodes.removeFirst();
             toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
-            dNodes.removeLast();
             dNodes.addAll(toAppend.dNodes);
             pathCost = dNodes.getLast().distanceFromSource;
             return this;
@@ -146,21 +146,37 @@ public class Graph {
                 throw new IllegalArgumentException("Insertion points are out of bounds!");
             }
 
-            Path front = new Path(new LinkedList<>(dNodes.subList(0, start+1)));
+            //Path front = new Path(new LinkedList<>(dNodes.subList(0, start+1)));
             LinkedList<DijkstraNode> backList = new LinkedList<>(dNodes.subList(end, dNodes.size()));
             double reducedCost = backList.getFirst().distanceFromSource;
             backList.forEach(dNode -> dNode.distanceFromSource -= reducedCost);
             Path back = new Path(backList);
 
-            return front.append(toInsert).append(back);
+            dNodes.subList(start+1, dNodes.size()).clear();
+            // if start == end, backList's first node is our last node.
+            pathCost = (start == end ? reducedCost : dNodes.getLast().distanceFromSource);
+
+            return append(toInsert).append(back);
+        }
+
+        public double getPathCost() {
+            return pathCost;
         }
 
         public LinkedList<Node> getNodes() {
             return dNodes.stream().map(dNode -> dNode.node).collect(Collectors.toCollection(LinkedList::new));
         }
 
-        public double getPathCost() {
-            return pathCost;
+        public Node get(int index) {
+            return dNodes.get(index).node;
+        }
+
+        public Node getFirst() {
+            return dNodes.getFirst().node;
+        }
+
+        public Node getLast() {
+            return dNodes.getLast().node;
         }
 
         public boolean isEmpty() {
