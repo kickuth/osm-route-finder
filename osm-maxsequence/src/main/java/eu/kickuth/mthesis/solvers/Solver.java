@@ -10,7 +10,7 @@ public interface Solver {
 
     Logger logger = LogManager.getLogger(Solver.class.getName());
 
-    public List<Node> solve();
+    List<Node> solve();
 
     // TODO refactor
 

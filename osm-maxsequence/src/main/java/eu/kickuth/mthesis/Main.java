@@ -32,42 +32,16 @@ public class Main {
 
 
         // TODO experimental code
-        logger.info("running Dijkstra experiments");
-        int maxDistance = 125_000; // in meters
-        // pick a random source and target node
-        Iterator<Node> iter = osmGraph.adjList.keySet().iterator();
-        //Random rand = new Random();
-        //int nodeCount = osmGraph.adjList.size();
-        int sourceIdx = 1200; //rand.nextInt(nodeCount);
-        int targetIdx = 9001; //rand.nextInt(nodeCount);
-        Node source = null;
-        Node target = null;
-        for (int i = 0; i < Math.max(sourceIdx, targetIdx) + 1; i++) {
-            if (i == sourceIdx) {
-                source = iter.next();
-            } else if (i == targetIdx) {
-                target = iter.next();
-            } else {
-                iter.next();
-            }
-        }
-
+        Node source = osmGraph.getNode(1409294970);
+        Node target = osmGraph.getNode(251878779);
+        int maxDistance = 250_000; // in meters
 
         // initialise solver
-        NaiveSolver naiveSolver = new NaiveSolver(osmGraph.clone(), source, target, maxDistance);
-
-        // compute shortest path and its score
-        List<Node> shortestPath = naiveSolver.shortestPath();  // simply beautiful syntax.
-        int shortestPathScore = naiveSolver.uniqueClassScore(shortestPath);
-        logger.info("Unique class score for shortest path: " + shortestPathScore);
-
-        // run naive greedy approach
-        List<Node> naiveGreedyPath = naiveSolver.solve();
-        int naiveGreedyPathScore = naiveSolver.uniqueClassScore(naiveGreedyPath);
-        logger.info("Unique class score for naive greedy path: " + naiveGreedyPathScore);
+        NaiveSolver naiveSolver = new NaiveSolver(osmGraph, source, target, maxDistance);
 
         // start interactive web visualization
-        new Webserver(osmGraph, naiveSolver);
+        // TODO investigate/fix: shortest path fails if graph is not cloned
+        new Webserver(osmGraph.clone(), naiveSolver);
     }
 
     private static InMemoryMapDataSet readData() {

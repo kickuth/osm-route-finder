@@ -57,25 +57,25 @@ public class NaiveSolver implements Solver {
         this.maxDistance = maxDistance;
 
         dijkstra = new Dijkstra(g);
-        limitMap(maxDistance);
+        //limitMap(maxDistance);
     }
 
-    private void limitMap(double maxDistance) {
-        Map<Node, Double> reachableSourceSet = dijkstra.sssp(source, maxDistance);
-        Map<Node, Double> reachableTargetSet = dijkstra.sssp(target, maxDistance);
-        Set<Node> reachableSet = new HashSet<>();
-        for (Node node : reachableSourceSet.keySet()) {
-            if (!reachableTargetSet.containsKey(node)) {
-                continue;
-            }
-            double totalDist = reachableSourceSet.get(node) + reachableTargetSet.get(node);
-            if (totalDist <= maxDistance) {
-                reachableSet.add(node);
-            }
-        }
-
-        searchGraph = searchGraph.createSubgraph(reachableSet);
-    }
+//    private void limitMap(double maxDistance) {
+//        Map<Node, Double> reachableSourceSet = dijkstra.sssp(source, maxDistance);
+//        Map<Node, Double> reachableTargetSet = dijkstra.sssp(target, maxDistance);
+//        Set<Node> reachableSet = new HashSet<>();
+//        for (Node node : reachableSourceSet.keySet()) {
+//            if (!reachableTargetSet.containsKey(node)) {
+//                continue;
+//            }
+//            double totalDist = reachableSourceSet.get(node) + reachableTargetSet.get(node);
+//            if (totalDist <= maxDistance) {
+//                reachableSet.add(node);
+//            }
+//        }
+//
+//        searchGraph = searchGraph.createSubgraph(reachableSet);
+//    }
 
     public List<Node> shortestPath() {
         return dijkstra.shortestPath(source, target).getNodes();
@@ -129,6 +129,8 @@ public class NaiveSolver implements Solver {
             // print estimated progress
             logger.trace(String.format("Naive greedy: %.2f%%", shortestPath.getPathCost()*100/maxDistance));
         }
+
+        logger.info("Unique class score for naive greedy path: {}", uniqueClassScore(shortestPath));
         return shortestPath.getNodes();
     }
 
@@ -137,28 +139,10 @@ public class NaiveSolver implements Solver {
      * @param path The path to score
      * @return number of unique classes on path
      */
-    public int uniqueClassScore(List<Node> path) {
-        // check if the path nodes are valid
-        if (!searchGraph.adjList.keySet().containsAll(path) || path.isEmpty()) {
-            System.err.println("Path contains invalid nodes!");
-            return -1;
-        }
-        // check if the path edges are valid
-        Iterator<Node> iter = path.iterator();
-        Node current = iter.next();
-        while (iter.hasNext()) {
-            Node next = iter.next();
-            if (!searchGraph.adjList.get(current).contains(next)) {
-                // edge does not exist
-                logger.error("Path to score contains non-existing edges!");
-                return -1;
-            }
-            current = next;
-        }
-
+    public int uniqueClassScore(Path path) {
         // count unique classes (simple scoring)
         Set<String> uniqueClasses = new HashSet<>();
-        for (Node site : path) {
+        for (Node site : path.getNodes()) {
             String type = site.getType();
             if (!StringUtils.isEmpty(type)) {
                 uniqueClasses.add(type);
