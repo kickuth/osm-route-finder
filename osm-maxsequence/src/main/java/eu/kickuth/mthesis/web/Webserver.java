@@ -69,10 +69,14 @@ public class Webserver {
         // TODO experimental code. Put in own function
         String reqSource = req.queryParams("source");
         String reqTarget = req.queryParams("sink");
-        if (reqSource != null && reqTarget != null) {
+        String reqMaxDistance = req.queryParams("max_dist");
+        if (reqSource != null && reqTarget != null && reqMaxDistance != null) {
             long newSourceId = Long.parseLong(reqSource);
             long newTargetId = Long.parseLong(reqTarget);
-            logger.debug("Setting source to {} and sink/target to {}", newSourceId, newTargetId);
+            long newMaxDistance = Long.parseLong(reqMaxDistance);
+            logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
+                    newSourceId, newTargetId, newMaxDistance);
+            solver.setMaxDistance(newMaxDistance * 1000); // from m to km
             Node newSource = graph.getNode(newSourceId);
             Node newTarget = graph.getNode(newTargetId);
             if (newSource == null || newTarget == null) {
@@ -101,8 +105,7 @@ public class Webserver {
         // populate html template fields
         htmlContext.put("pathJSONs", paths);
         htmlContext.put("poiGeoJSON", poiJSON);
-        htmlContext.put("startNode", solver.getSource());
-        htmlContext.put("targetNode", solver.getTarget());
+        htmlContext.put("solver", solver);
 
 
         // render template

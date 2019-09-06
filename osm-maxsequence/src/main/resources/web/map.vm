@@ -19,14 +19,14 @@
         <input id="algo_ot" type="checkbox" name="algo_ot" value="ot"><label for="algo_ot">other</label><br><br>
         <label>
             max distance:<br>
-            <input id="max_dist" type="number" min="0" style="width: 35%;" name="max_dist" value="150"> km
+            <input id="max_dist" type="number" min="0" style="width: 35%;" name="max_dist" value="$solver.getMaxDistanceKM()"> km
         </label><br><br>
         <label>
-            <input type="number" min="0" style="width: 35%;" name="source" value="$startNode.id">
+            <input type="number" min="0" style="width: 35%;" name="source" value="$solver.getSource().id">
             Source ID
         </label>
         <label>
-            <input type="number" min="0" style="width: 35%;" name="sink" value="$targetNode.id">
+            <input type="number" min="0" style="width: 35%;" name="sink" value="$solver.getTarget().id">
             Sink ID
         </label><br><br>
         <button class="button"><span>Go!</span></button><br><br><br> ## TODO fix awful layout

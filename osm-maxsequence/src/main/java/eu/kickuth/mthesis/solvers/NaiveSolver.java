@@ -39,6 +39,10 @@ public class NaiveSolver implements Solver {
         return maxDistance;
     }
 
+    public int getMaxDistanceKM() {
+        return (int) maxDistance / 1000;
+    }
+
     public void setMaxDistance(double maxDistance) {
         this.maxDistance = maxDistance;
     }
