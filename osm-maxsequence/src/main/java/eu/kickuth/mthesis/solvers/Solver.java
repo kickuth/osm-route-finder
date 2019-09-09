@@ -3,12 +3,15 @@ package eu.kickuth.mthesis.solvers;
 import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class Solver {
 
@@ -34,6 +37,22 @@ public abstract class Solver {
             throw new IllegalArgumentException();
         }
         return new LinkedList<>();
+    }
+
+    /**
+     * Simple scoring for a path, that computes the number of unique classes visited
+     * @param path The path to score
+     * @return number of unique classes on path
+     */
+    public int uniqueClassScore(Graph.Path path) {
+        Set<String> uniqueClasses = new HashSet<>();
+        for (Node site : path.getNodes()) {
+            String type = site.getType();
+            if (!StringUtils.isEmpty(type)) {
+                uniqueClasses.add(type);
+            }
+        }
+        return uniqueClasses.size();
     }
 
     /*

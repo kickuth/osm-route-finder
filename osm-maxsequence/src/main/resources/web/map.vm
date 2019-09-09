@@ -14,8 +14,8 @@
 
 <div class="sidenav">
     <form action=""> ## TODO (?) method="post">
-        <input id="algo_sp" type="checkbox" name="algo_sp" value="sp" checked><label for="algo_sp">shortest path</label><br>
-        <input id="algo_ng" type="checkbox" name="algo_ng" value="ng" checked><label for="algo_ng">naive greedy</label><br>
+        <input id="algo_ng" type="checkbox" name="algo_ng" value="ng" checked><label for="algo_ng">naive</label><br>
+        <input id="algo_gr" type="checkbox" name="algo_gr" value="gr" checked><label for="algo_gr">greedy</label><br>
         <input id="algo_ot" type="checkbox" name="algo_ot" value="ot"><label for="algo_ot">other</label><br><br>
         <label>
             max distance:<br>

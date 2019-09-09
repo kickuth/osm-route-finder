@@ -1,9 +1,9 @@
 package eu.kickuth.mthesis.web;
 
 import eu.kickuth.mthesis.*;
-import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import eu.kickuth.mthesis.solvers.GreedySolver;
 import eu.kickuth.mthesis.solvers.Solver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -29,6 +29,7 @@ public class Webserver {
 
     private final Graph graph;
     private final Solver solver;
+    private final Solver greedySolver;
 
     private static final VelocityEngine ve = new VelocityEngine();
     private static final GeoJSONObject poiJSON = new GeoJSONObject();
@@ -36,6 +37,7 @@ public class Webserver {
     public Webserver(Graph g, Solver solver) {
         graph = g;
         this.solver = solver;
+        greedySolver = new GreedySolver(solver.getSource(), solver.getTarget(), solver.getMaxDistance(), g);
         Set<Node> poiNodes = graph.adjList.keySet();
         poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
         poiJSON.addPois(poiNodes);
@@ -60,6 +62,7 @@ public class Webserver {
     }
 
     private String renderMap(Request req, Response res) {
+        logger.trace("Accessed map from {} using {}", req.ip(), req.userAgent());
         // load map html template
         Template htmlTemplate = ve.getTemplate( "web/map.vm" );
 
@@ -95,19 +98,19 @@ public class Webserver {
         }
         List<GeoJSONObject> paths = new LinkedList<>();
         if (req.queryParams("algo_ng") != null) {
-            logger.debug("Computing naive greedy path");
+            logger.debug("Computing naive path");
             GeoJSONObject pathJSON = new GeoJSONObject();
             List<Node> path = solver.solve();
             pathJSON.addPath(path);
             paths.add(pathJSON);
         }
-//        if (req.queryParams("algo_sp") != null) {
-//            logger.debug("Computing shortest path");
-//            GeoJSONObject pathJSON = new GeoJSONObject();
-//            List<Node> path = solver.shortestPath();
-//            pathJSON.addPath(path);
-//            paths.add(pathJSON);
-//        }
+        if (req.queryParams("algo_gr") != null) {
+            logger.debug("Computing greedy path");
+            GeoJSONObject pathJSON = new GeoJSONObject();
+            List<Node> path = greedySolver.solve();
+            pathJSON.addPath(path);
+            paths.add(pathJSON);
+        }
 
         // populate html template fields
         htmlContext.put("pathJSONs", paths);

@@ -140,7 +140,6 @@ public class Dijkstra {
         }
 
         // reconstruct the path from the target
-        // TODO use LinkedHashMap to also store each distance?
         LinkedList<DijkstraNode> results = new LinkedList<>();
         while (backtrack != null) {
             results.add(0, backtrack);

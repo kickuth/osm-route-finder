@@ -93,29 +93,11 @@ public class NaiveSolver extends Solver {
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
-            logger.trace(String.format("Naive greedy: %.2f%%", shortestPath.getPathCost()*100/maxDistance));
+            logger.trace(String.format("solving: %.2f%%", shortestPath.getPathCost()*100/maxDistance));
         }
 
         logger.info("Unique class score for naive greedy path: {}", uniqueClassScore(shortestPath));
         return shortestPath.getNodes();
-    }
-
-    /**
-     * Simple scoring for a path, that computes the number of unique classes visited
-     * @param path The path to score
-     * @return number of unique classes on path
-     */
-    public int uniqueClassScore(Path path) {
-        // count unique classes (simple scoring)
-        Set<String> uniqueClasses = new HashSet<>();
-        for (Node site : path.getNodes()) {
-            String type = site.getType();
-            if (!StringUtils.isEmpty(type)) {
-                uniqueClasses.add(type);
-            }
-        }
-
-        return uniqueClasses.size();
     }
 
 }
