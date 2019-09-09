@@ -66,6 +66,7 @@ public class GreedySolver extends Solver {
             } else {
                 poiNodes.remove(newPoi);
                 if (retries-- <= 0) {
+                    sol.append(dijkstra.shortestPath(currentEnd, target));
                     break;
                 }
             }
