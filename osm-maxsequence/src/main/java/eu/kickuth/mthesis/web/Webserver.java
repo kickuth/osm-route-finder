@@ -4,6 +4,7 @@ import eu.kickuth.mthesis.*;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import eu.kickuth.mthesis.solvers.Solver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,12 +28,12 @@ public class Webserver {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     private final Graph graph;
-    private final NaiveSolver solver;
+    private final Solver solver;
 
     private static final VelocityEngine ve = new VelocityEngine();
     private static final GeoJSONObject poiJSON = new GeoJSONObject();
 
-    public Webserver(Graph g, NaiveSolver solver) {
+    public Webserver(Graph g, Solver solver) {
         graph = g;
         this.solver = solver;
         Set<Node> poiNodes = graph.adjList.keySet();
@@ -71,19 +72,25 @@ public class Webserver {
         String reqTarget = req.queryParams("sink");
         String reqMaxDistance = req.queryParams("max_dist");
         if (reqSource != null && reqTarget != null && reqMaxDistance != null) {
-            long newSourceId = Long.parseLong(reqSource);
-            long newTargetId = Long.parseLong(reqTarget);
-            long newMaxDistance = Long.parseLong(reqMaxDistance);
-            logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
-                    newSourceId, newTargetId, newMaxDistance);
-            solver.setMaxDistance(newMaxDistance * 1000); // from m to km
-            Node newSource = graph.getNode(newSourceId);
-            Node newTarget = graph.getNode(newTargetId);
-            if (newSource == null || newTarget == null) {
-                logger.error("Invalid source or sink/target requested!");
-            } else {
-                solver.setSource(newSource);
-                solver.setTarget(newTarget);
+            try {
+                long newSourceId = Long.parseLong(reqSource);
+                long newTargetId = Long.parseLong(reqTarget);
+                long newMaxDistance = (long) (Double.parseDouble(reqMaxDistance) * 1000);
+                logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
+                        newSourceId, newTargetId, newMaxDistance);
+                solver.setMaxDistance(newMaxDistance); // from m to km
+                Node newSource = graph.getNode(newSourceId);
+                Node newTarget = graph.getNode(newTargetId);
+                if (newSource == null || newTarget == null) {
+                    logger.error("Invalid source or sink/target requested!");
+                } else {
+                    solver.setSource(newSource);
+                    solver.setTarget(newTarget);
+                }
+            } catch (NumberFormatException e) {
+                logger.error("Failed to convert user input to string:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
+                        reqSource, reqTarget, reqMaxDistance);
+
             }
         }
         List<GeoJSONObject> paths = new LinkedList<>();
@@ -94,13 +101,13 @@ public class Webserver {
             pathJSON.addPath(path);
             paths.add(pathJSON);
         }
-        if (req.queryParams("algo_sp") != null) {
-            logger.debug("Computing shortest path");
-            GeoJSONObject pathJSON = new GeoJSONObject();
-            List<Node> path = solver.shortestPath();
-            pathJSON.addPath(path);
-            paths.add(pathJSON);
-        }
+//        if (req.queryParams("algo_sp") != null) {
+//            logger.debug("Computing shortest path");
+//            GeoJSONObject pathJSON = new GeoJSONObject();
+//            List<Node> path = solver.shortestPath();
+//            pathJSON.addPath(path);
+//            paths.add(pathJSON);
+//        }
 
         // populate html template fields
         htmlContext.put("pathJSONs", paths);

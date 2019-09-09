@@ -12,7 +12,7 @@ import eu.kickuth.mthesis.graph.Graph.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class GraphTest {
+class GraphTest {
 
     private static final Logger logger = LogManager.getLogger(Main.class);
 
@@ -63,9 +63,7 @@ public class GraphTest {
         Path p = getShortestPath(3, 7); // 3, 2, 0, 1, 7
         Path q = getShortestPath(0, 3); // 0, 1, 7, 3
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            p.append(p);
-        }); // TODO move to own test for edge cases
+        assertThrows(IllegalArgumentException.class, () -> p.append(p)); // TODO move to own test for edge cases
 
         LinkedList<Node> qNodesTest = new LinkedList<>();
         qNodesTest.add(g.getNode(0));

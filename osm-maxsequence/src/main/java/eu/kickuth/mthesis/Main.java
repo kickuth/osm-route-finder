@@ -10,6 +10,7 @@ import de.topobyte.osm4j.pbf.seq.PbfIterator;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import eu.kickuth.mthesis.solvers.Solver;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +38,7 @@ public class Main {
         int maxDistance = 150_000; // in meters
 
         // initialise solver
-        NaiveSolver naiveSolver = new NaiveSolver(osmGraph, source, target, maxDistance);
+        Solver naiveSolver = new NaiveSolver(osmGraph, source, target, maxDistance);
 
         // start interactive web visualization
         // TODO investigate/fix: shortest path fails if graph is not cloned

@@ -4,61 +4,18 @@ import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 
 import eu.kickuth.mthesis.graph.Graph.Path;
 
-public class NaiveSolver implements Solver {
+public class NaiveSolver extends Solver {
 
-    private static final Logger logger = LogManager.getLogger(NaiveSolver.class.getName());
-
-    public Graph getSearchGraph() {
-        return searchGraph;
-    }
-
-    public Node getSource() {
-        return source;
-    }
-
-    public void setSource(Node source) {
-        this.source = source;
-    }
-
-    public Node getTarget() {
-        return target;
-    }
-
-    public void setTarget(Node target) {
-        this.target = target;
-    }
-
-    public double getMaxDistance() {
-        return maxDistance;
-    }
-
-    public int getMaxDistanceKM() {
-        return (int) maxDistance / 1000;
-    }
-
-    public void setMaxDistance(double maxDistance) {
-        this.maxDistance = maxDistance;
-    }
-
-    private Graph searchGraph;
-    private Node source;
-    private Node target;
-    private double maxDistance;
 
     private final Dijkstra dijkstra;
 
     public NaiveSolver(Graph g, Node source, Node target, double maxDistance) {
-        searchGraph = g;
-        this.source = source;
-        this.target = target;
-        this.maxDistance = maxDistance;
+        setup(source, target, maxDistance, g);
 
         dijkstra = new Dijkstra(g);
         //limitMap(maxDistance);
@@ -117,6 +74,11 @@ public class NaiveSolver implements Solver {
         // TODO will currently overshoot maximal distance
         while (shortestPath.getPathCost() < maxDistance && !targets.isEmpty()) {
             Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
+            // stop if we can't find new POIs
+            if (pathToNewPoi.isEmpty()) {
+                logger.trace("No new POI classes are reachable!");
+                break;
+            }
             Node newPoi = pathToNewPoi.getLast();
             //find shortest way back
             Path backPath = dijkstra.shortestPath(newPoi, sources);
