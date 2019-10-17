@@ -13,10 +13,13 @@
 <body>
 
 <div class="sidenav">
-    <form action=""> ## TODO (?) method="post">
-        <input id="algo_ng" type="checkbox" name="algo_ng" value="ng" checked><label for="algo_ng">naive</label><br>
-        <input id="algo_gr" type="checkbox" name="algo_gr" value="gr" checked><label for="algo_gr">greedy</label><br>
-        <input id="algo_ot" type="checkbox" name="algo_ot" value="ot"><label for="algo_ot">other</label><br><br>
+    <form id="panelForm">
+        <select id="algo" name="algo">
+            <option value="ng">naive</option>
+            <option value="gr">greedy</option>
+            <option value="ot">other</option>
+        </select>
+        <br>
         <label>
             max distance:<br>
             <input id="max_dist" type="number" step="0.01" min="0" style="width: 35%;" name="max_dist" value="$solver.getMaxDistanceKM()"> km
@@ -32,6 +35,8 @@
         <button class="button"><span>Go!</span></button><br><br><br> ## TODO fix awful layout
     </form>
 
+    <progress id="progressBar" value="0" max="100" style="width: 95%; margin: 0 auto;"></progress>
+
     <input type="checkbox" id="poiToggle" onchange="togglePois(this)" checked/><label for="poiToggle">Show POIs</label>
 </div>
 
@@ -40,6 +45,9 @@
 <!-- Add the Leaflet JavaScript library and plugins -->
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.js"></script>
+<!-- Add jquery library and plugins -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
 
 <script>
     // Create variable to hold map element, give initial settings to map
@@ -56,12 +64,6 @@
         "weight": 5,
         "opacity": 0.75
     };
-
-    #foreach ($path in $pathJSONs)
-        L.geoJSON($path.toString(), {style: lineStyle}).addTo(map);
-        lineStyle.color = colors[++col_idx%colors.length];
-    #end
-
 
 
     // POIs
@@ -93,6 +95,25 @@
             map.removeLayer(poiLayer);
         }
     }
+
+    // Define submit behaviour
+    $('#panelForm').on('submit', function computePath() {
+        const progressUpdater = window.setInterval(function () {
+            $.getJSON("status", function (res) {
+                document.getElementById("progressBar").value = res.progress;
+            });
+        }, 1000);
+
+        $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
+            L.geoJSON(res, {style: lineStyle}).addTo(map);
+            lineStyle.color = colors[++col_idx%colors.length];
+            // stop updating and reset the progressbar
+            window.clearInterval(progressUpdater);
+            document.getElementById("progressBar").value = 0;
+        });
+
+        return false;  // do not reload page on submit
+    });
 </script>
 </body>
 </html>

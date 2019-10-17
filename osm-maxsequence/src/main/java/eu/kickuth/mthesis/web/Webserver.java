@@ -58,7 +58,36 @@ public class Webserver {
 
         // return the web page
         get("/", "application/json", this::renderMap);
-        post("/", "application/json", this::renderMap);
+        get("/path", "application/json", this::computePath);
+        get("/status", "application/json", this::computeProgress);
+        //post("/", "application/json", this::renderMap);
+    }
+
+    private String computeProgress(Request req, Response res) {
+        // TODO
+        int d = (int) (Math.random() * 100);
+        return String.format("{ \"progress\":%d }", d);
+    }
+
+    private String computePath(Request req, Response res) {
+        GeoJSONObject pathJSON = new GeoJSONObject();
+        List<Node> path;
+        String reqAlgo = req.queryParams("algo");
+        switch (reqAlgo) {
+            case "ng":
+                logger.debug("Computing naive path");
+                path = solver.solve();
+                pathJSON.addPath(path);
+                break;
+            case "gr":
+                logger.debug("Computing greedy path");
+                path = greedySolver.solve();
+                pathJSON.addPath(path);
+                break;
+            default:
+                logger.debug("Ignoring requested algorithm: " + reqAlgo);
+        }
+        return pathJSON.toString();
     }
 
     private String renderMap(Request req, Response res) {
@@ -96,24 +125,24 @@ public class Webserver {
 
             }
         }
-        List<GeoJSONObject> paths = new LinkedList<>();
-        if (req.queryParams("algo_ng") != null) {
-            logger.debug("Computing naive path");
-            GeoJSONObject pathJSON = new GeoJSONObject();
-            List<Node> path = solver.solve();
-            pathJSON.addPath(path);
-            paths.add(pathJSON);
-        }
-        if (req.queryParams("algo_gr") != null) {
-            logger.debug("Computing greedy path");
-            GeoJSONObject pathJSON = new GeoJSONObject();
-            List<Node> path = greedySolver.solve();
-            pathJSON.addPath(path);
-            paths.add(pathJSON);
-        }
+        // TODO
+//        List<GeoJSONObject> paths = new LinkedList<>();
+//        if (req.queryParams("algo_ng") != null) {
+//            logger.debug("Computing naive path");
+//            GeoJSONObject pathJSON = new GeoJSONObject();
+//            List<Node> path = solver.solve();
+//            pathJSON.addPath(path);
+//            paths.add(pathJSON);
+//        }
+//        if (req.queryParams("algo_gr") != null) {
+//            logger.debug("Computing greedy path");
+//            GeoJSONObject pathJSON = new GeoJSONObject();
+//            List<Node> path = greedySolver.solve();
+//            pathJSON.addPath(path);
+//            paths.add(pathJSON);
+//        }
 
         // populate html template fields
-        htmlContext.put("pathJSONs", paths);
         htmlContext.put("poiGeoJSON", poiJSON);
         htmlContext.put("solver", solver);
 
