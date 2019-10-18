@@ -22,6 +22,8 @@ public abstract class Solver {
     Node target;
     double maxDistance;
 
+    volatile double status;
+
     public void setup(long sourceID, long targetID, double maxDistance, Graph g) {
         setup(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
     }
@@ -90,5 +92,13 @@ public abstract class Solver {
     public String getMaxDistanceKM() {
         DecimalFormat df = new DecimalFormat("#.##");
         return df.format(maxDistance / 1000);
+    }
+
+    /**
+     * Get the progress of the solver.
+     * @return double [0, 1] representing the current solving progress
+     */
+    public double getStatus() {
+        return Math.min(status, 1);
     }
 }

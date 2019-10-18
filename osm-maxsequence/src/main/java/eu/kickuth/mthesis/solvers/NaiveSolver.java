@@ -60,6 +60,9 @@ public class NaiveSolver extends Solver {
                 sources.add(site);
             }
         }
+        // also add start and end point
+        sources.add(shortestPath.getFirst());
+        sources.add(shortestPath.getLast());
 
         // find all nodes with classes we haven't visited yet
         Set<Node> targets = new HashSet<>();
@@ -80,8 +83,14 @@ public class NaiveSolver extends Solver {
                 break;
             }
             Node newPoi = pathToNewPoi.getLast();
-            //find shortest way back
+            // find shortest way back
             Path backPath = dijkstra.shortestPath(newPoi, sources);
+            // remove target POI, if no path back exists
+            if (backPath.isEmpty()) {
+                targets.remove(newPoi);
+                continue;
+            }
+            sources.add(newPoi);
             // remove possible targets with the same class as the new node
             targets.removeIf(node -> node.getType().equals(newPoi.getType()));
             // insert the detour into the previous path
@@ -90,12 +99,19 @@ public class NaiveSolver extends Solver {
             int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getFirst());
             int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
 
+            double distTEMP = shortestPath.getPathCost();
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
+            if (shortestPath.getPathCost() < distTEMP) {
+                continue;
+            }
+
             // print estimated progress
-            logger.trace(String.format("solving: %.2f%%", shortestPath.getPathCost()*100/maxDistance));
+            status = shortestPath.getPathCost()/maxDistance;
+            logger.trace(String.format("solving: %.2f%%", status*100));
         }
 
+        status = 0;
         logger.info("Unique class score for naive greedy path: {}", uniqueClassScore(shortestPath));
         return shortestPath.getNodes();
     }

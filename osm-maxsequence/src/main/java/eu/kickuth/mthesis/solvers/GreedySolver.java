@@ -62,7 +62,8 @@ public class GreedySolver extends Solver {
                 // append new path
                 sol.append(pathToNewPoi);
                 currentEnd = sol.getLast();
-                logger.trace(String.format("solving: %.2f%%", sol.getPathCost()*100/maxDistance));
+                status = sol.getPathCost()/maxDistance;
+                logger.trace(String.format("solving: %.2f%%", status*100));
             } else {
                 poiNodes.remove(newPoi);
                 if (retries-- <= 0) {
@@ -72,6 +73,8 @@ public class GreedySolver extends Solver {
             }
         }
 
+        logger.trace(String.format("solving: %.2f%%", sol.getPathCost()*100/maxDistance));
+        status = 0;
         logger.info("Unique class score for greedy algorithm: {}", uniqueClassScore(sol));
         return sol.getNodes();
     }
