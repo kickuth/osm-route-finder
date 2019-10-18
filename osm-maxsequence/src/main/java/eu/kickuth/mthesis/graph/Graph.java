@@ -141,16 +141,17 @@ public class Graph {
         }
 
         public Path insert(Path toInsert, int start, int end) {
-            // check if parameters are invalid. Passing this check implies that nodes.size() > 0.
+            // check if parameters are invalid. Passing this check implies that dNodes.size() > 0.
             if (dNodes.size() <= Math.max(start, end) || Math.min(start, end) < 0) {
                 throw new IllegalArgumentException("Insertion points are out of bounds!");
             }
 
-            //Path front = new Path(new LinkedList<>(dNodes.subList(0, start+1)));
+            // LinkedList.subList does not create a copy. Therefore we map dNodes to new DijkstraNodes
             LinkedList<DijkstraNode> backList = new LinkedList<>(dNodes.subList(end, dNodes.size()));
             double reducedCost = backList.getFirst().distanceFromSource;
-            backList.forEach(dNode -> dNode.distanceFromSource -= reducedCost);
-            Path back = new Path(backList);
+            Path back = new Path(backList.stream().map(
+                    dNode -> new DijkstraNode(dNode.node, dNode.distanceFromSource - reducedCost))
+                    .collect(Collectors.toCollection(LinkedList::new)));
 
             dNodes.subList(start+1, dNodes.size()).clear();
             // if start == end, backList's first node is our last node.
