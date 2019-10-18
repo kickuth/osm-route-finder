@@ -64,12 +64,38 @@ public class Webserver {
     }
 
     private String computeProgress(Request req, Response res) {
-        // TODO
-        int d = (int) (Math.random() * 100);
-        return String.format("{ \"progress\":%d }", d);
+        return String.format("{ \"progress\":%d }", (int) (solver.getStatus() * 100));
     }
 
     private String computePath(Request req, Response res) {
+        // TODO experimental code. Put in own function
+        String reqSource = req.queryParams("source");
+        String reqTarget = req.queryParams("sink");
+        String reqMaxDistance = req.queryParams("max_dist");
+        if (reqSource != null && reqTarget != null && reqMaxDistance != null) {
+            try {
+                long newSourceId = Long.parseLong(reqSource);
+                long newTargetId = Long.parseLong(reqTarget);
+                long newMaxDistance = (long) (Double.parseDouble(reqMaxDistance) * 1000);  // convert from km to m
+                logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
+                        newSourceId, newTargetId, newMaxDistance);
+                solver.setMaxDistance(newMaxDistance);
+                Node newSource = graph.getNode(newSourceId);
+                Node newTarget = graph.getNode(newTargetId);
+                if (newSource == null || newTarget == null) {
+                    logger.error("Invalid source or sink/target requested!");
+                } else {
+                    solver.setSource(newSource);
+                    solver.setTarget(newTarget);
+                }
+            } catch (NumberFormatException e) {
+                logger.error("Failed to convert user input to string:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
+                        reqSource, reqTarget, reqMaxDistance);
+
+            }
+        }
+
+
         GeoJSONObject pathJSON = new GeoJSONObject();
         List<Node> path;
         String reqAlgo = req.queryParams("algo");
@@ -98,49 +124,6 @@ public class Webserver {
         // create context to add data
         VelocityContext htmlContext = new VelocityContext();
 
-
-        // TODO experimental code. Put in own function
-        String reqSource = req.queryParams("source");
-        String reqTarget = req.queryParams("sink");
-        String reqMaxDistance = req.queryParams("max_dist");
-        if (reqSource != null && reqTarget != null && reqMaxDistance != null) {
-            try {
-                long newSourceId = Long.parseLong(reqSource);
-                long newTargetId = Long.parseLong(reqTarget);
-                long newMaxDistance = (long) (Double.parseDouble(reqMaxDistance) * 1000);
-                logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
-                        newSourceId, newTargetId, newMaxDistance);
-                solver.setMaxDistance(newMaxDistance); // from m to km
-                Node newSource = graph.getNode(newSourceId);
-                Node newTarget = graph.getNode(newTargetId);
-                if (newSource == null || newTarget == null) {
-                    logger.error("Invalid source or sink/target requested!");
-                } else {
-                    solver.setSource(newSource);
-                    solver.setTarget(newTarget);
-                }
-            } catch (NumberFormatException e) {
-                logger.error("Failed to convert user input to string:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
-                        reqSource, reqTarget, reqMaxDistance);
-
-            }
-        }
-        // TODO
-//        List<GeoJSONObject> paths = new LinkedList<>();
-//        if (req.queryParams("algo_ng") != null) {
-//            logger.debug("Computing naive path");
-//            GeoJSONObject pathJSON = new GeoJSONObject();
-//            List<Node> path = solver.solve();
-//            pathJSON.addPath(path);
-//            paths.add(pathJSON);
-//        }
-//        if (req.queryParams("algo_gr") != null) {
-//            logger.debug("Computing greedy path");
-//            GeoJSONObject pathJSON = new GeoJSONObject();
-//            List<Node> path = greedySolver.solve();
-//            pathJSON.addPath(path);
-//            paths.add(pathJSON);
-//        }
 
         // populate html template fields
         htmlContext.put("poiGeoJSON", poiJSON);
