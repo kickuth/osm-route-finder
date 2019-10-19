@@ -1,9 +1,9 @@
 package eu.kickuth.mthesis.web;
 
-import eu.kickuth.mthesis.*;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.solvers.GreedySolver;
+import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.solvers.Solver;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -17,7 +17,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.StringWriter;
-import java.util.LinkedList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -25,50 +25,61 @@ import static spark.Spark.*;
 
 public class Webserver {
 
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LogManager.getLogger(Webserver.class);
 
     private final Graph graph;
-    private final Solver solver;
-    private final Solver greedySolver;
+    private Solver currentSolver;
 
+    private final HashMap<String, Solver> solvers = new HashMap<>(5);
     private static final VelocityEngine ve = new VelocityEngine();
     private static final GeoJSONObject poiJSON = new GeoJSONObject();
 
-    public Webserver(Graph g, Solver solver) {
+    public Webserver(Node defaultSource, Node defaultTarget, long defaultMaxDist, Graph g) {
         graph = g;
-        this.solver = solver;
-        greedySolver = new GreedySolver(solver.getSource(), solver.getTarget(), solver.getMaxDistance(), g);
+        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDist, g.clone());
+        solvers.put("ng", currentSolver);
+        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
+
         Set<Node> poiNodes = graph.adjList.keySet();
-        poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType()));
+        poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType())); // TODO does this impact graph.adjList?
         poiJSON.addPois(poiNodes);
         start(4567);
     }
 
     public void start(int port) {
-        logger.trace("Starting web-server on port {}", port);
+        logger.trace("Starting web-server: http://[::1]:{}/", port);
+
         // Configure Spark
         port(port);
         staticFiles.location("/web/pub");
-        staticFiles.expireTime(600);
+        // staticFiles.expireTime(600);  // cache
 
         // initialize engine
         ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
         ve.init();
 
-        // return the web page
+        // setup request handlers
         get("/", "application/json", this::renderMap);
+        //post("/", "application/json", this::renderMap);
         get("/path", "application/json", this::computePath);
         get("/status", "application/json", this::computeProgress);
-        //post("/", "application/json", this::renderMap);
     }
 
     private String computeProgress(Request req, Response res) {
-        return String.format("{ \"progress\":%d }", (int) (solver.getStatus() * 100));
+        return String.format("{ \"progress\":%d }", (int) (currentSolver.getStatus() * 100));
     }
 
     private String computePath(Request req, Response res) {
-        // TODO experimental code. Put in own function
+        String reqAlgo = req.queryParams("algo");
+        if (solvers.containsKey(reqAlgo)) {
+            logger.debug("Current solver set to: " + reqAlgo);
+            currentSolver = solvers.get(reqAlgo);
+        } else {
+            logger.warn("Ignoring requested solver/algorithm: " + reqAlgo);
+        }
+
+        // TODO check/rework code block
         String reqSource = req.queryParams("source");
         String reqTarget = req.queryParams("sink");
         String reqMaxDistance = req.queryParams("max_dist");
@@ -79,40 +90,27 @@ public class Webserver {
                 long newMaxDistance = (long) (Double.parseDouble(reqMaxDistance) * 1000);  // convert from km to m
                 logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
                         newSourceId, newTargetId, newMaxDistance);
-                solver.setMaxDistance(newMaxDistance);
+                currentSolver.setMaxDistance(newMaxDistance);
                 Node newSource = graph.getNode(newSourceId);
                 Node newTarget = graph.getNode(newTargetId);
                 if (newSource == null || newTarget == null) {
                     logger.error("Invalid source or sink/target requested!");
                 } else {
-                    solver.setSource(newSource);
-                    solver.setTarget(newTarget);
+                    currentSolver.setSource(newSource);
+                    currentSolver.setTarget(newTarget);
                 }
             } catch (NumberFormatException e) {
-                logger.error("Failed to convert user input to string:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
+                logger.error("Failed to convert user input to long:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
                         reqSource, reqTarget, reqMaxDistance);
 
             }
         }
 
-
         GeoJSONObject pathJSON = new GeoJSONObject();
         List<Node> path;
-        String reqAlgo = req.queryParams("algo");
-        switch (reqAlgo) {
-            case "ng":
-                logger.debug("Computing naive path");
-                path = solver.solve();
-                pathJSON.addPath(path);
-                break;
-            case "gr":
-                logger.debug("Computing greedy path");
-                path = greedySolver.solve();
-                pathJSON.addPath(path);
-                break;
-            default:
-                logger.debug("Ignoring requested algorithm: " + reqAlgo);
-        }
+        path = currentSolver.solve();
+        pathJSON.addPath(path);
+
         return pathJSON.toString();
     }
 
@@ -127,7 +125,7 @@ public class Webserver {
 
         // populate html template fields
         htmlContext.put("poiGeoJSON", poiJSON);
-        htmlContext.put("solver", solver);
+        htmlContext.put("solver", currentSolver);
 
 
         // render template

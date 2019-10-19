@@ -37,12 +37,9 @@ public class Main {
         Node target = osmGraph.getNode(251878779);
         int maxDistance = 150_000; // in meters
 
-        // initialise solver
-        Solver naiveSolver = new NaiveSolver(osmGraph, source, target, maxDistance);
-
         // start interactive web visualization
-        // TODO investigate/fix: shortest path fails if graph is not cloned
-        new Webserver(osmGraph.clone(), naiveSolver);
+        // TODO investigate/fix: shortest path fails if graph is not cloned (see Webserver class)
+        new Webserver(source, target, maxDistance, osmGraph.clone());
     }
 
     private static InMemoryMapDataSet readData() {

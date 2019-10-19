@@ -14,7 +14,7 @@ public class NaiveSolver extends Solver {
 
     private final Dijkstra dijkstra;
 
-    public NaiveSolver(Graph g, Node source, Node target, double maxDistance) {
+    public NaiveSolver(Node source, Node target, double maxDistance, Graph g) {
         setup(source, target, maxDistance, g);
 
         dijkstra = new Dijkstra(g);
@@ -50,9 +50,11 @@ public class NaiveSolver extends Solver {
             return new LinkedList<>();
         }
 
+        // possible points at which new greedy routes can start/end
+        Set<Node> sources = new HashSet<>();
+
         // Find out which classes we have visited and which nodes have a class
         Set<String> currentUniquePois = new HashSet<>();
-        Set<Node> sources = new HashSet<>();
         for (Node site : shortestPath.getNodes()) {
             String type = site.getType();
             if (!StringUtils.isEmpty(type)) {
@@ -99,12 +101,7 @@ public class NaiveSolver extends Solver {
             int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getFirst());
             int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
 
-            double distTEMP = shortestPath.getPathCost();
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
-
-            if (shortestPath.getPathCost() < distTEMP) {
-                continue;
-            }
 
             // print estimated progress
             status = shortestPath.getPathCost()/maxDistance;

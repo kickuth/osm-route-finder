@@ -28,6 +28,7 @@ public abstract class Solver {
         setup(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
     }
     public void setup(Node source, Node target, double maxDistance, Graph g) {
+        // TODO searchGraph = g.clone() why clone required?!;
         searchGraph = g.clone();
         this.source = source;
         this.target = target;
