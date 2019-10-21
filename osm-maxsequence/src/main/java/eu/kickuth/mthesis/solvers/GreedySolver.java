@@ -33,6 +33,7 @@ public class GreedySolver extends Solver {
 
     @Override
     public List<Node> solve() {
+        logger.debug("Solving");
         // find all nodes with classes
         Set<Node> poiNodes = new HashSet<>();
         for (Node node : searchGraph.adjList.keySet()) {
@@ -75,7 +76,11 @@ public class GreedySolver extends Solver {
 
         logger.trace(String.format("solving: %.2f%%", sol.getPathCost()*100/maxDistance));
         status = 0;
-        logger.info("Unique class score for greedy algorithm: {}", uniqueClassScore(sol));
         return sol.getNodes();
+    }
+
+    @Override
+    public String getName() {
+        return "Greedy Solver";
     }
 }

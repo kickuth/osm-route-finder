@@ -44,6 +44,7 @@ public class NaiveSolver extends Solver {
 
     // TODO improve/rewrite, comment
     public List<Node> solve() {
+        logger.debug("Solving");
         Path shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
             System.out.println("Target is not reachable!");
@@ -109,8 +110,11 @@ public class NaiveSolver extends Solver {
         }
 
         status = 0;
-        logger.info("Unique class score for naive greedy path: {}", uniqueClassScore(shortestPath));
         return shortestPath.getNodes();
     }
 
+    @Override
+    public String getName() {
+        return "Naive Solver";
+    }
 }

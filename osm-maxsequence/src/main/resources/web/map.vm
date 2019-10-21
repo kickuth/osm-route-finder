@@ -71,7 +71,7 @@
     // POIs
     const canvasRenderer = L.canvas({ padding: 0.5 });  ## renderer that draws everything onto a single canvas
 
-    var poiLayer = L.geoJSON($poiGeoJSON.toString(), {
+    var poiLayer = L.geoJSON($poiGeoJSON, {
         renderer: canvasRenderer,
         onEachFeature: function (feature, layer) {
             layer.bindPopup(feature.properties.name + " - " + feature.properties.id);
@@ -108,7 +108,7 @@
         }, 1000);
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
-            L.geoJSON(res, {style: lineStyle}).addTo(map);
+            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.name).addTo(map);
             lineStyle.color = colors[++col_idx%colors.length];
             // stop updating and reset the progressbar
             window.clearInterval(progressUpdater);

@@ -47,9 +47,18 @@ public abstract class Solver {
      * @param path The path to score
      * @return number of unique classes on path
      */
-    public int uniqueClassScore(Graph.Path path) {
+    public static int uniqueClassScore(Graph.Path path) {
+        return uniqueClassScore(path.getNodes());
+    }
+
+    /**
+     * Simple scoring for a path, that computes the number of unique classes visited
+     * @param path The path to score
+     * @return number of unique classes on path
+     */
+    public static int uniqueClassScore(List<Node> path) {
         Set<String> uniqueClasses = new HashSet<>();
-        for (Node site : path.getNodes()) {
+        for (Node site : path) {
             String type = site.getType();
             if (!StringUtils.isEmpty(type)) {
                 uniqueClasses.add(type);
@@ -101,5 +110,13 @@ public abstract class Solver {
      */
     public double getStatus() {
         return Math.min(status, 1);
+    }
+
+    /**
+     * A name representing the solver.
+     * @return Name of solver
+     */
+    public String getName() {
+        return "Generic Solver";
     }
 }

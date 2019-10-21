@@ -5,6 +5,7 @@ import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.solvers.GreedySolver;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.solvers.Solver;
+import eu.kickuth.mthesis.utils.GeoJSON;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,7 +33,7 @@ public class Webserver {
 
     private final HashMap<String, Solver> solvers = new HashMap<>(5);
     private static final VelocityEngine ve = new VelocityEngine();
-    private static final GeoJSONObject poiJSON = new GeoJSONObject();
+    private final String poiJSON;
 
     public Webserver(Node defaultSource, Node defaultTarget, long defaultMaxDist, Graph g) {
         graph = g;
@@ -42,7 +43,7 @@ public class Webserver {
 
         Set<Node> poiNodes = graph.adjList.keySet();
         poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType())); // TODO does this impact graph.adjList?
-        poiJSON.addPois(poiNodes);
+        poiJSON = GeoJSON.createPOIList(poiNodes);
         start(4567);
     }
 
@@ -106,12 +107,11 @@ public class Webserver {
             }
         }
 
-        GeoJSONObject pathJSON = new GeoJSONObject();
-        List<Node> path;
-        path = currentSolver.solve();
-        pathJSON.addPath(path);
+        List<Node> path = currentSolver.solve();
+        String score = String.valueOf(Solver.uniqueClassScore(path));
+        logger.info("Unique class score for {}: {}", currentSolver.getName(), score);
 
-        return pathJSON.toString();
+        return GeoJSON.createPath(path, score);
     }
 
     private String renderMap(Request req, Response res) {
@@ -122,11 +122,9 @@ public class Webserver {
         // create context to add data
         VelocityContext htmlContext = new VelocityContext();
 
-
         // populate html template fields
         htmlContext.put("poiGeoJSON", poiJSON);
         htmlContext.put("solver", currentSolver);
-
 
         // render template
         StringWriter writer = new StringWriter();
