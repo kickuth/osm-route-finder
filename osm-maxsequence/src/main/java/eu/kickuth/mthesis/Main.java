@@ -38,8 +38,7 @@ public class Main {
         int maxDistance = 150_000; // in meters
 
         // start interactive web visualization
-        // TODO investigate/fix: shortest path fails if graph is not cloned (see Webserver class)
-        new Webserver(source, target, maxDistance, osmGraph.clone());
+        new Webserver(source, target, maxDistance, osmGraph);
     }
 
     private static InMemoryMapDataSet readData() {

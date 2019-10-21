@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -41,13 +42,16 @@ public class Webserver {
         solvers.put("ng", currentSolver);
         solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
 
-        Set<Node> poiNodes = graph.adjList.keySet();
-        poiNodes.removeIf((node) -> StringUtils.isEmpty(node.getType())); // TODO does this impact graph.adjList?
-        poiJSON = GeoJSON.createPOIList(poiNodes);
+        // get POIs from nodes
+        poiJSON = GeoJSON.createPOIList(
+                graph.adjList.keySet().stream().filter(
+                        (node) -> !StringUtils.isEmpty(node.getType())
+                ).collect(Collectors.toList())
+        );
         start(4567);
     }
 
-    public void start(int port) {
+    private void start(int port) {
         logger.trace("Starting web-server: http://[::1]:{}/", port);
 
         // Configure Spark
