@@ -22,4 +22,19 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
         }
         return (this.distanceFromSource == other.distanceFromSource ? 0 : 1);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if((obj == null) || (obj.getClass() != this.getClass())) {
+            return false;
+        } else {
+            return this.node.equals(((DijkstraNode) obj).node) &&
+                    this.distanceFromSource == ((DijkstraNode) obj).distanceFromSource;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return (node.hashCode() + (int) distanceFromSource) % Integer.MAX_VALUE;
+    }
 }

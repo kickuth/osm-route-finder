@@ -62,9 +62,8 @@ public class Main {
         } catch (IOException e) {
             logger.fatal("Failed to load data into memory!");
             System.exit(1);
+            return null;
         }
-
-        return null;
     }
 
 
@@ -80,8 +79,8 @@ public class Main {
             String access = wayTags.get("access");
             String area = wayTags.get("area");
             if (rt == null ||  // not a road
-                    (area != null && area.equals("yes")) || // way describes an area and not a road
-                    (access != null && access.equals("no")) ||  // not accessible
+                    "yes".equals(area) || // way describes an area and not a road
+                    "no".equals(access) ||  // not accessible
                     // filter for roads allowing motorised vehicles
                     !( rt.startsWith("motorway") || rt.startsWith("trunk") ||
                             rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
@@ -93,7 +92,7 @@ public class Main {
             // check if the road is one way only (i.e. we shouldn't add back edges later)
             String oneWayTag = wayTags.get("oneway");
             boolean oneWay = false;
-            if (oneWayTag != null && oneWayTag.equals("yes")) {
+            if ("yes".equals(oneWayTag)) {
                 oneWay = true;
             }
 

@@ -67,17 +67,13 @@ public class Node {
         if((obj == null) || (obj.getClass() != this.getClass())) {
             return false;
         } else {
-            return this.id == ((Node) obj).id && StringUtils.equals(this.type, ((Node) obj).type);
+            return this.id == ((Node) obj).id;
         }
     }
 
     @Override
     public int hashCode() {
-        if (type == null) {
-            return (int) (id % Integer.MAX_VALUE);
-        } else {
-            return (int) ((id + type.hashCode()) % Integer.MAX_VALUE);
-        }
+        return (int) (id % Integer.MAX_VALUE);
     }
 
     @Override

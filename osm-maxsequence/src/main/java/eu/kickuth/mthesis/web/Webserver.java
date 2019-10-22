@@ -40,7 +40,7 @@ public class Webserver {
         graph = g;
         currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDist, g.clone());
         solvers.put("ng", currentSolver);
-        //solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
+        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
 
         // get POIs from nodes
         poiJSON = GeoJSON.createPOIList(

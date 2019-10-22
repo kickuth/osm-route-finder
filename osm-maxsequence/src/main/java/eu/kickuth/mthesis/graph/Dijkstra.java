@@ -115,7 +115,7 @@ public class Dijkstra {
             }
             DijkstraNode currentMin = pqueue.poll();
             // check whether an updated node has already been processed
-            if (lookup.get(currentMin.node) != currentMin) {
+            if (!lookup.get(currentMin.node).equals(currentMin)) {
                 continue;
             }
             // are we at the target yet?
@@ -123,10 +123,7 @@ public class Dijkstra {
                 backtrack = currentMin;
                 break;
             }
-            // check whether only unreachable nodes are left --> Target unreachable
-            if (currentMin.distanceFromSource == Double.MAX_VALUE) {
-                return graph.new Path();
-            }
+            // get and potentially update all neighbours
             for (Node neighbour : graph.adjList.get(currentMin.node)) {
                 double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // update node, if the new path is shorter than the previous shortest
