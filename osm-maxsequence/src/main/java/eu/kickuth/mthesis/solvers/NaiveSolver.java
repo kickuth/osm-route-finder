@@ -15,31 +15,9 @@ public class NaiveSolver extends Solver {
     private final Dijkstra dijkstra;
 
     public NaiveSolver(Node source, Node target, double maxDistance, Graph g) {
-        setup(source, target, maxDistance, g);
+        super(source, target, maxDistance, g);
 
         dijkstra = new Dijkstra(g);
-        //limitMap(maxDistance);
-    }
-
-//    private void limitMap(double maxDistance) {
-//        Map<Node, Double> reachableSourceSet = dijkstra.sssp(source, maxDistance);
-//        Map<Node, Double> reachableTargetSet = dijkstra.sssp(target, maxDistance);
-//        Set<Node> reachableSet = new HashSet<>();
-//        for (Node node : reachableSourceSet.keySet()) {
-//            if (!reachableTargetSet.containsKey(node)) {
-//                continue;
-//            }
-//            double totalDist = reachableSourceSet.get(node) + reachableTargetSet.get(node);
-//            if (totalDist <= maxDistance) {
-//                reachableSet.add(node);
-//            }
-//        }
-//
-//        searchGraph = searchGraph.createSubgraph(reachableSet);
-//    }
-
-    public List<Node> shortestPath() {
-        return dijkstra.shortestPath(source, target).getNodes();
     }
 
     // TODO improve/rewrite, comment

@@ -17,18 +17,9 @@ public class GreedySolver extends Solver {
     private Map<Node, Double> estimatedDistanceToTarget;
 
     public GreedySolver(Node source, Node target, double maxDistance, Graph g) {
-        setup(source, target, maxDistance, g);
-    }
-
-    @Override
-    public void setup(Node source, Node target, double maxDistance, Graph g) {
-        super.setup(source, target, maxDistance, g);
-        // TODO limit graph? // fix graph.clone?!
+        super(source, target, maxDistance, g);
         dijkstra = new Dijkstra(searchGraph);
         estimatedDistanceToTarget = dijkstra.sssp(target, maxDistance);
-
-
-
     }
 
     @Override

@@ -24,12 +24,12 @@ public abstract class Solver {
 
     volatile double status;
 
-    public void setup(long sourceID, long targetID, double maxDistance, Graph g) {
-        setup(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
+    public Solver(long sourceID, long targetID, double maxDistance, Graph g) {
+        this(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
     }
-    public void setup(Node source, Node target, double maxDistance, Graph g) {
-        // TODO searchGraph = g.clone() why clone required?!;
-        searchGraph = g.clone();
+
+    public Solver(Node source, Node target, double maxDistance, Graph g) {
+        searchGraph = g;
         this.source = source;
         this.target = target;
         this.maxDistance = maxDistance;

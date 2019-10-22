@@ -7,10 +7,9 @@ public class Node {
     private final long id;
     private final double lat;
     private final double lon;
-    private String type;
+    private final String type;
 
     public Node(long id, double lat, double lon, String type) {
-        //this.id = (int) (id % Integer.MAX_VALUE);
         this.id = id;
         this.lat = lat;
         this.lon = lon;
@@ -31,10 +30,6 @@ public class Node {
 
     public String getType() {
         return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     /**
