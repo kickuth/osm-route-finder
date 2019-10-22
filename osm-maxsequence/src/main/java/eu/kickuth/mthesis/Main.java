@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
+import static eu.kickuth.mthesis.utils.Settings.*;
+
 public class Main {
 
     private static final Logger logger = LogManager.getLogger(Main.class);
@@ -44,7 +46,7 @@ public class Main {
         logger.debug("reading data dump");
         InputStream input = null;
         try {
-            File f = new File("src/main/resources/osm_data/tue.osm.pbf");
+            File f = new File(OSM_DUMP);
             input = new FileInputStream(f);
         } catch (IOException e) {
             logger.fatal("Failed to locate map dump!");
@@ -57,8 +59,7 @@ public class Main {
         try {
             // return InMemoryMapDataSet
             return MapDataSetLoader.read(data_iterator, true, true, false);
-        } catch (IOException e)
-        {
+        } catch (IOException e) {
             logger.fatal("Failed to load data into memory!");
             System.exit(1);
         }
@@ -68,7 +69,7 @@ public class Main {
 
 
     private static Graph createGraph(InMemoryMapDataSet data) {
-        logger.trace("creating graph from data dump");
+        logger.debug("creating graph from data dump");
         Graph osmGraph = new Graph(data.getNodes().size());
 
         for (OsmWay way : data.getWays().valueCollection()) {

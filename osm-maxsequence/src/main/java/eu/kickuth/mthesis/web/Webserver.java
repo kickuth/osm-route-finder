@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static eu.kickuth.mthesis.utils.Settings.*;
 import static spark.Spark.*;
 
 public class Webserver {
@@ -39,7 +40,7 @@ public class Webserver {
         graph = g;
         currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDist, g.clone());
         solvers.put("ng", currentSolver);
-        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
+        //solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g.clone()));
 
         // get POIs from nodes
         poiJSON = GeoJSON.createPOIList(
@@ -47,14 +48,14 @@ public class Webserver {
                         (node) -> !StringUtils.isEmpty(node.getType())
                 ).collect(Collectors.toList())
         );
-        start(4567);
+        start();
     }
 
-    private void start(int port) {
-        logger.trace("Starting web-server: http://[::1]:{}/", port);
+    private void start() {
+        logger.trace("Starting web-server: http://[::1]:{}/", PORT);
 
         // Configure Spark
-        port(port);
+        port(PORT);
         staticFiles.location("/web/pub");
         // staticFiles.expireTime(600);  // cache
 

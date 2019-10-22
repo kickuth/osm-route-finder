@@ -19,14 +19,13 @@ class IntegrationTest {
         logger.trace("Running integration test.");
         Main.main(new String[]{""});
 
-        // Give the Webserver time to start
-        Thread.sleep(5_000);
+        Thread.sleep(5_000);  // Give the Webserver time to start
     }
 
     @Test
     void pingSite() throws IOException {
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress("127.0.0.1", 4567), 100);
+        socket.connect(new InetSocketAddress("127.0.0.1", 4567), 10_000);
     }
 
     // TODO access /path to check path computation
