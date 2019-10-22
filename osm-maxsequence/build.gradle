@@ -20,7 +20,8 @@ println "Running gradle version $gradle.gradleVersion for java $sourceCompatibil
 
 test {
     useJUnitPlatform()
-    maxHeapSize = '1G'
+    minHeapSize = "1G"
+    maxHeapSize = "6G"
 
     if (System.getenv('CI')) {
         failFast = true;
