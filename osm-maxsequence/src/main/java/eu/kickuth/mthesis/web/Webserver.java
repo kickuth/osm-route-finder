@@ -20,7 +20,6 @@ import spark.Response;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static spark.Spark.*;
