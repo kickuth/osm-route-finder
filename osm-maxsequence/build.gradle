@@ -40,16 +40,8 @@ repositories {
 
 dependencies {
     // OSM import
-    compile 'de.topobyte:osm4j-xml:0.1.2'
-    compile 'de.topobyte:osm4j-pbf:0.1.1'
-    compile 'de.topobyte:osm4j-tbo:0.1.0'
-    compile 'de.topobyte:osm4j-geometry:0.1.0'
-
-    compile 'de.topobyte:adt-geo:0.0.4'
-    compile 'de.topobyte:jts2awt:0.0.1'
-    compile 'de.topobyte:mercator-image:0.0.2'
-
-    compile 'org.apache.commons:commons-compress:1.8'
+    compile 'org.apache.commons:commons-compress:1.8'  // TODO needed?
+    compile 'org.openstreetmap.osmosis:osmosis-pbf:0.47'
 
     // json
     compile 'org.json:json:20190722'
