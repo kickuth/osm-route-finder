@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class GraphTest {
 
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LogManager.getLogger(GraphTest.class);
 
     private final Graph g = new Graph();
     private Dijkstra dijkstra;
