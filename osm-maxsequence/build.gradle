@@ -37,8 +37,10 @@ repositories {
 
 dependencies {
     // OSM import
-    compile 'org.apache.commons:commons-lang3:3.9'
     compile 'org.openstreetmap.osmosis:osmosis-pbf:0.47'
+
+    // StringUtils
+    compile 'org.apache.commons:commons-lang3:3.9'
 
     // json
     compile 'org.json:json:20190722'

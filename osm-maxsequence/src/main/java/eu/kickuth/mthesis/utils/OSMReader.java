@@ -1,7 +1,5 @@
 package eu.kickuth.mthesis.utils;
 
-import crosby.binary.osmosis.OsmosisReader;
-import eu.kickuth.mthesis.Main;
 import eu.kickuth.mthesis.graph.Graph;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,22 +13,17 @@ import org.openstreetmap.osmosis.core.domain.v0_6.Way;
 import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.*;
-
-import static eu.kickuth.mthesis.utils.Settings.*;
 
 
 public class OSMReader implements Sink {
 
     private static final Logger logger = LogManager.getLogger(OSMReader.class);
 
-    private HashMap<Long, String> nodeTypes = new HashMap<>();
+    private HashMap<Long, eu.kickuth.mthesis.graph.Node> nodes = new HashMap<>();
 
 
-    private Graph osmGraph = new Graph();
+    private final Graph osmGraph = new Graph();
 
 
     @Override
@@ -55,12 +48,17 @@ public class OSMReader implements Sink {
     }
 
     private void processNode(Node osmNode) {
+        String type = null;
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
-                nodeTypes.put(osmNode.getId(), tag.getValue());
+                type = tag.getValue();
                 break;
             }
+            // TODO add fake classes? Other type sources?
         }
+        nodes.put(osmNode.getId(), new eu.kickuth.mthesis.graph.Node(
+                osmNode.getId(), osmNode.getLatitude(), osmNode.getLongitude(), type
+        ));
     }
 
     private void processWay(Way osmWay) {
@@ -107,16 +105,12 @@ public class OSMReader implements Sink {
         // iterate through all way nodes and add them to the graph
         ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
         WayNode wn = wayNodes.next();
-        eu.kickuth.mthesis.graph.Node currentNode = new eu.kickuth.mthesis.graph.Node(
-                wn.getNodeId(),wn.getLatitude(), wn.getLongitude(), nodeTypes.get(wn.getNodeId())
-        );
+        eu.kickuth.mthesis.graph.Node currentNode = nodes.get(wn.getNodeId());
         osmGraph.addNode(currentNode);
         eu.kickuth.mthesis.graph.Node nextNode;
         while (wayNodes.hasNext()) {
             wn = wayNodes.next();
-            nextNode = new eu.kickuth.mthesis.graph.Node(
-                    wn.getNodeId(),wn.getLatitude(), wn.getLongitude(), nodeTypes.get(wn.getNodeId())
-            );
+            nextNode = nodes.get(wn.getNodeId());
             osmGraph.addNode(nextNode);
             osmGraph.addEdge(currentNode, nextNode);
             if (!isOneWay) {
@@ -129,11 +123,15 @@ public class OSMReader implements Sink {
 
     @Override
     public void complete() {
-        Main.osmGraph = osmGraph;
+
     }
 
     @Override
     public void close() {
 
+    }
+
+    public Graph getOsmGraph() {
+        return osmGraph;
     }
 }

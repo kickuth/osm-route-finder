@@ -20,11 +20,13 @@ public class Main {
 
     public static void main(String[] args) {
         logger.trace("Starting application.");
+        OSMReader myReader = new OSMReader();
         try {
             InputStream inputStream = new FileInputStream(OSM_DUMP);
             OsmosisReader reader = new OsmosisReader(inputStream);
-            reader.setSink(new OSMReader());
+            reader.setSink(myReader);
             reader.run();  // this also sets osmGraph
+            osmGraph = myReader.getOsmGraph();
         } catch (FileNotFoundException e) {
             logger.fatal("Failed to load map data", e);
             System.exit(1);
