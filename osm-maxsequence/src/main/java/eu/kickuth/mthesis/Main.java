@@ -26,11 +26,11 @@ public class Main {
             OsmosisReader reader = new OsmosisReader(inputStream);
             reader.setSink(myReader);
             reader.run();  // this also sets osmGraph
-            osmGraph = myReader.getOsmGraph();
         } catch (FileNotFoundException e) {
             logger.fatal("Failed to load map data", e);
             System.exit(1);
         }
+        osmGraph = myReader.getOsmGraph();
 
 
         // TODO experimental code
