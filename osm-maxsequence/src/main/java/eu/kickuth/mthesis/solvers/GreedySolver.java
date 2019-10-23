@@ -44,6 +44,7 @@ public class GreedySolver extends Solver {
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
                 logger.trace("No new POI classes are reachable!");
+                // TODO because we only estimate the way back, there might not be a way back and we get stuck.
                 sol.append(dijkstra.shortestPath(currentEnd, target));
                 break;
             }
