@@ -14,7 +14,7 @@ public class Graph {
     }
 
     public Graph() {
-        this(10000);
+        this(1_000_000);
     }
 
     public Graph(int nodeCountEstimate) {

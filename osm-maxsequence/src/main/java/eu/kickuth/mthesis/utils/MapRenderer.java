@@ -1,6 +1,5 @@
 package eu.kickuth.mthesis.utils;
 
-import de.topobyte.osm4j.core.model.iface.OsmBounds;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
@@ -63,9 +62,6 @@ public class MapRenderer {
         poiSets = new LinkedList<>();
     }
 
-    public MapRenderer(Graph g, OsmBounds b) {
-        this(g, b.getBottom(), b.getLeft(), b.getTop(), b.getRight());
-    }
 
     public MapRenderer(Graph g, double minLat, double maxLat, double minLon, double maxLon) {
         this.minLat = minLat;

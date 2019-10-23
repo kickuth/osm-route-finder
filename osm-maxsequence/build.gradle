@@ -30,9 +30,6 @@ test {
 
 repositories {
     maven {
-        url 'http://mvn.topobyte.de'
-    }
-    maven {
         url 'http://mvn.slimjars.com'
     }
     mavenCentral()
@@ -40,7 +37,7 @@ repositories {
 
 dependencies {
     // OSM import
-    compile 'org.apache.commons:commons-compress:1.8'  // TODO needed?
+    compile 'org.apache.commons:commons-lang3:3.9'
     compile 'org.openstreetmap.osmosis:osmosis-pbf:0.47'
 
     // json

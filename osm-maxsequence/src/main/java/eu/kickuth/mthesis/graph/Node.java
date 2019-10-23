@@ -1,7 +1,5 @@
 package eu.kickuth.mthesis.graph;
 
-import org.apache.commons.lang3.StringUtils;
-
 public class Node {
 
     private final long id;
