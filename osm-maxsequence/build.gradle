@@ -24,7 +24,7 @@ test {
     maxHeapSize = "6G"
 
     if (System.getenv('CI')) {
-        failFast = true;
+        failFast = true
     }
 }
 
@@ -63,5 +63,6 @@ dependencies {
     // testing
     testCompile 'org.junit.jupiter:junit-jupiter-api:5.5.1'
     testCompile 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+    testCompile 'org.apache.commons:commons-compress:1.8'  // TODO what is this needed for?
 
 }

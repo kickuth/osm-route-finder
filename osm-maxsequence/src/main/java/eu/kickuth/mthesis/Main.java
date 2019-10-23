@@ -31,6 +31,7 @@ public class Main {
             System.exit(1);
         }
         osmGraph = myReader.getOsmGraph();
+        logger.trace("Loaded graph from file.");
 
 
         // TODO experimental code

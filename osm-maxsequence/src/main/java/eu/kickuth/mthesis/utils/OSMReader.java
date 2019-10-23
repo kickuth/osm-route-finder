@@ -3,14 +3,8 @@ package eu.kickuth.mthesis.utils;
 import eu.kickuth.mthesis.graph.Graph;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openstreetmap.osmosis.core.container.v0_6.EntityContainer;
-import org.openstreetmap.osmosis.core.container.v0_6.NodeContainer;
-import org.openstreetmap.osmosis.core.container.v0_6.RelationContainer;
-import org.openstreetmap.osmosis.core.container.v0_6.WayContainer;
-import org.openstreetmap.osmosis.core.domain.v0_6.Node;
-import org.openstreetmap.osmosis.core.domain.v0_6.Tag;
-import org.openstreetmap.osmosis.core.domain.v0_6.Way;
-import org.openstreetmap.osmosis.core.domain.v0_6.WayNode;
+import org.openstreetmap.osmosis.core.container.v0_6.*;
+import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 import java.util.*;
@@ -41,6 +35,10 @@ public class OSMReader implements Sink {
 
         } else if (entityContainer instanceof RelationContainer) {
             // We don't process relations
+
+        } else if (entityContainer instanceof BoundContainer) {
+            Bound b = ((BoundContainer) entityContainer).getEntity();
+            logger.info("Map bounds are: {}", b);
 
         } else {
             logger.warn("Unknown Entity: {}", entityContainer.getEntity());
