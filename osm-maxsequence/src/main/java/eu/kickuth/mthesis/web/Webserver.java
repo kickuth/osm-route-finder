@@ -111,8 +111,8 @@ public class Webserver {
             }
         }
 
-        List<Node> path = currentSolver.solve();
-        String score = String.valueOf(Solver.uniqueClassScore(path));
+        Graph.Path path = currentSolver.solve();
+        String score = String.valueOf(currentSolver.uniqueClassScore(path));
         logger.info("Unique class score for {}: {}", currentSolver.getName(), score);
 
         return GeoJSON.createPath(path, score);

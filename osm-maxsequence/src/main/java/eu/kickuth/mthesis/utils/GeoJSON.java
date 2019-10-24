@@ -1,12 +1,12 @@
 package eu.kickuth.mthesis.utils;
 
+import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collection;
-import java.util.List;
 
 public class GeoJSON {
 
@@ -46,10 +46,10 @@ public class GeoJSON {
      * create a JSON path object.
      * @param path List of coordinates in lat,lon format
      */
-    public static String createPath(List<Node> path, String name) {
+    public static String createPath(Graph.Path path, String name) {
         try {
             JSONArray coordinates = new JSONArray();
-            for (Node node : path) {
+            for (Node node : path.getNodes()) {
                 // ! geoJSON works with lon,lat !
                 double[] lonLat = new double[] {node.getLon(), node.getLat()};
                 // add coordinate
@@ -61,6 +61,7 @@ public class GeoJSON {
             JSONObject jsonPath = new JSONObject();
             jsonPath.put("type", "LineString");
             jsonPath.put("name", name);
+            jsonPath.put("length", Math.floor(path.getPathCost())/1000);
             jsonPath.put("coordinates", coordinates);
 
             return jsonPath.toString();

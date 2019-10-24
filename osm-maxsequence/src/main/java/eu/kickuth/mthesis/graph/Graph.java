@@ -1,5 +1,7 @@
 package eu.kickuth.mthesis.graph;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -7,6 +9,7 @@ public class Graph {
 
     public Map<Node, Set<Node>> adjList;
     private Map<Long, Node> nodes;
+    private Set<Node> pois;
 
     public Graph(Map<Long, Node> nodes, Map<Node, Set<Node>> adjList) {
         this.nodes = nodes;
@@ -20,6 +23,7 @@ public class Graph {
     public Graph(int nodeCountEstimate) {
         adjList = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
         nodes = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
+        pois = new HashSet<>(nodeCountEstimate / 100);
     }
 
     /**
@@ -34,6 +38,9 @@ public class Graph {
         } else {
             adjList.put(toAdd, new HashSet<>());
             nodes.put(toAdd.getId(), toAdd);
+            if(!StringUtils.isEmpty(toAdd.getType())) {
+                pois.add(toAdd);
+            }
             return true;
         }
     }
@@ -102,6 +109,18 @@ public class Graph {
             nodesCopy.put(entry.getKey(), entry.getValue());
         }
         return new Graph(nodesCopy, adjListCopy);
+    }
+
+    public Set<Node> getPois() {
+        return pois;
+    }
+
+    public Set<Node> getPoisOnPath(Path p) {
+        return getPoisOnPath(p.getNodes());
+    }
+
+    public Set<Node> getPoisOnPath(List<Node> p) {
+        return p.stream().filter(node -> pois.contains(node)).collect(Collectors.toSet());
     }
 
     public class Path {

@@ -21,37 +21,28 @@ public class NaiveSolver extends Solver {
     }
 
     // TODO improve/rewrite, comment
-    public List<Node> solve() {
+    public Path solve() {
         logger.debug("Solving");
         Path shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
             System.out.println("Target is not reachable!");
-            return new LinkedList<>();
+            return searchGraph.new Path();
         }
 
-        // possible points at which new greedy routes can start/end
-        Set<Node> sources = new HashSet<>();
+        // get a copy of all POIs
+        Set<Node> targets = new HashSet<>(searchGraph.getPois());
 
-        // Find out which classes we have visited and which nodes have a class
-        Set<String> currentUniquePois = new HashSet<>();
-        for (Node site : shortestPath.getNodes()) {
-            String type = site.getType();
-            if (!StringUtils.isEmpty(type)) {
-                currentUniquePois.add(type);
-                sources.add(site);
-            }
-        }
-        // also add start and end point
+        // get POIs on shortest path
+        Set<Node> initialVisitedPois = searchGraph.getPoisOnPath(shortestPath);
+
+        // allow path insertions at visited POIs, start and end node
+        Set<Node> sources = new HashSet<>(initialVisitedPois);
         sources.add(shortestPath.getFirst());
         sources.add(shortestPath.getLast());
 
-        // find all nodes with classes we haven't visited yet
-        Set<Node> targets = new HashSet<>();
-        for (Node node : searchGraph.adjList.keySet()) {
-            String type = node.getType();
-            if (!StringUtils.isEmpty(type) && !currentUniquePois.contains(type)) {
-                targets.add(node);
-            }
+        // remove nodes with classes we have already visited
+        for (Node visitedPoi : initialVisitedPois) {
+            targets.removeIf(possibleTarget -> possibleTarget.getType().equals(visitedPoi.getType()));
         }
 
         // keep adding shortest paths to new classes until we run over the maximal distance
@@ -80,6 +71,11 @@ public class NaiveSolver extends Solver {
             int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getFirst());
             int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
 
+            if (insertStart < 0 || insertEnd < 0) {
+                System.err.println("BUG!");
+                // TODO investigate bug (values -1 for both, bw map, 1500 km, default start/end nodes)
+            }
+
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
@@ -88,7 +84,7 @@ public class NaiveSolver extends Solver {
         }
 
         status = 0;
-        return shortestPath.getNodes();
+        return shortestPath;
     }
 
     @Override

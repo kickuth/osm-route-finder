@@ -19,11 +19,12 @@ public class GreedySolver extends Solver {
     public GreedySolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
         dijkstra = new Dijkstra(searchGraph);
+        // TODO this should be computed for every node, not only up to maxDistance (see also quickfix below)
         estimatedDistanceToTarget = dijkstra.sssp(target, maxDistance);
     }
 
     @Override
-    public List<Node> solve() {
+    public Path solve() {
         logger.debug("Solving");
         // find all nodes with classes
         Set<Node> poiNodes = new HashSet<>();
@@ -49,7 +50,11 @@ public class GreedySolver extends Solver {
                 break;
             }
             Node newPoi = pathToNewPoi.getLast();
-            if (sol.getPathCost() + pathToNewPoi.getPathCost() + estimatedDistanceToTarget.get(newPoi) < maxDistance) {
+            if (estimatedDistanceToTarget.containsKey(newPoi) &&  // TODO containsKey as quickfix for maxdist fail (above)
+                    maxDistance >
+                            pathToNewPoi.getPathCost()
+                            + estimatedDistanceToTarget.get(newPoi)
+                            + sol.getPathCost()) {
                 // remove possible targets with the same class as the new node
                 poiNodes.removeIf(node -> node.getType().equals(newPoi.getType()));
                 // append new path
@@ -68,7 +73,7 @@ public class GreedySolver extends Solver {
 
         logger.trace(String.format("solving: %.2f%%", sol.getPathCost()*100/maxDistance));
         status = 0;
-        return sol.getNodes();
+        return sol;
     }
 
     @Override

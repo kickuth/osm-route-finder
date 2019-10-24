@@ -108,7 +108,7 @@
         }, 1000);
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
-            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.name).addTo(map);
+            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.name + " length: " + res.length).addTo(map);
             lineStyle.color = colors[++col_idx%colors.length];
             // stop updating and reset the progressbar
             window.clearInterval(progressUpdater);

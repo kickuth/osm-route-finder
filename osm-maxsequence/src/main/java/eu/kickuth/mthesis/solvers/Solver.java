@@ -35,11 +35,11 @@ public abstract class Solver {
         this.maxDistance = maxDistance;
     }
 
-    public List<Node> solve() {
+    public Graph.Path solve() {
         if (maxDistance < 0) {
             throw new IllegalArgumentException();
         }
-        return new LinkedList<>();
+        return searchGraph.new Path();
     }
 
     /**
@@ -47,8 +47,8 @@ public abstract class Solver {
      * @param path The path to score
      * @return number of unique classes on path
      */
-    public static int uniqueClassScore(Graph.Path path) {
-        return uniqueClassScore(path.getNodes());
+    public int uniqueClassScore(Graph.Path path) {
+        return searchGraph.getPoisOnPath(path).size();
     }
 
     /**
@@ -56,15 +56,8 @@ public abstract class Solver {
      * @param path The path to score
      * @return number of unique classes on path
      */
-    public static int uniqueClassScore(List<Node> path) {
-        Set<String> uniqueClasses = new HashSet<>();
-        for (Node site : path) {
-            String type = site.getType();
-            if (!StringUtils.isEmpty(type)) {
-                uniqueClasses.add(type);
-            }
-        }
-        return uniqueClasses.size();
+    public int uniqueClassScore(List<Node> path) {
+        return searchGraph.getPoisOnPath(path).size();
     }
 
     /*
