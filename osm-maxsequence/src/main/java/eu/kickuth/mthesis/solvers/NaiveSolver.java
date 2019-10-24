@@ -3,7 +3,6 @@ package eu.kickuth.mthesis.solvers;
 import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -25,7 +24,7 @@ public class NaiveSolver extends Solver {
         logger.debug("Solving");
         Path shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
-            System.out.println("Target is not reachable!");
+            logger.info("Target is not reachable!");
             return searchGraph.new Path();
         }
 
@@ -68,13 +67,8 @@ public class NaiveSolver extends Solver {
             // insert the detour into the previous path
             pathToNewPoi.append(backPath);
             // find index for insertion
-            int insertStart = shortestPath.getNodes().indexOf(pathToNewPoi.getFirst());
+            int insertStart = shortestPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
             int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
-
-            if (insertStart < 0 || insertEnd < 0) {
-                System.err.println("BUG!");
-                // TODO investigate bug (values -1 for both, bw map, 1500 km, default start/end nodes)
-            }
 
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
