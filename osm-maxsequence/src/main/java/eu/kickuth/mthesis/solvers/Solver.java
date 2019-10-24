@@ -3,15 +3,10 @@ package eu.kickuth.mthesis.solvers;
 import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.text.DecimalFormat;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 public abstract class Solver {
 
@@ -24,6 +19,8 @@ public abstract class Solver {
 
     volatile double status;
 
+    private Dijkstra dijkstra;
+
     public Solver(long sourceID, long targetID, double maxDistance, Graph g) {
         this(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
     }
@@ -33,6 +30,7 @@ public abstract class Solver {
         this.source = source;
         this.target = target;
         this.maxDistance = maxDistance;
+        dijkstra = new Dijkstra(searchGraph);
     }
 
     public Graph.Path solve() {
@@ -85,16 +83,22 @@ public abstract class Solver {
         return target;
     }
 
-    public void setMaxDistance(double maxDistance) {
+    /**
+     * Set the maximum distance
+     * @param maxDistance maximum distance in meters.
+     */
+    public void setAbsoluteMaxDistance(double maxDistance) {
         this.maxDistance = maxDistance;
     }
 
-    public double getMaxDistance() {
-        return maxDistance;
-    }
-    public String getMaxDistanceKM() {
-        DecimalFormat df = new DecimalFormat("#.##");
-        return df.format(maxDistance / 1000);
+    /**
+     * Set the maximum distance as a factor of the shortest path
+     * @param shortestPathFactor Length as a factor of the shortest path (i.e. should be > 1)
+     */
+    public void setRelativeMaxDistance(double shortestPathFactor) {
+        double shortestPathDist = dijkstra.shortestPath(source, target).getPathCost();
+        maxDistance = shortestPathDist * shortestPathFactor;
+        logger.trace("New maxDistance is {}", maxDistance);
     }
 
     /**

@@ -19,7 +19,6 @@ import spark.Response;
 
 import java.io.StringWriter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static eu.kickuth.mthesis.utils.Settings.*;
@@ -92,10 +91,10 @@ public class Webserver {
             try {
                 long newSourceId = Long.parseLong(reqSource);
                 long newTargetId = Long.parseLong(reqTarget);
-                long newMaxDistance = (long) (Double.parseDouble(reqMaxDistance) * 1000);  // convert from km to m
-                logger.debug("Setting source to {}, sink/target to {}, maxDistance to {}",
-                        newSourceId, newTargetId, newMaxDistance);
-                currentSolver.setMaxDistance(newMaxDistance);
+                double newRelativeMaxDistance = Double.parseDouble(reqMaxDistance);
+                logger.debug("Setting source to {}, sink/target to {}, relativeMaxDistance to {}",
+                        newSourceId, newTargetId, newRelativeMaxDistance);
+                currentSolver.setRelativeMaxDistance(newRelativeMaxDistance);
                 Node newSource = graph.getNode(newSourceId);
                 Node newTarget = graph.getNode(newTargetId);
                 if (newSource == null || newTarget == null) {
