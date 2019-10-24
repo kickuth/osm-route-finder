@@ -78,7 +78,7 @@ public class OSMReader implements Sink {
 //                        return;
 //                    }
 //                    break;
-                case "highway":
+                case "highway":  // is it a (probably) drivable road?
                     String rt = wayTag.getValue();
                     if (!( rt.startsWith("motorway") || rt.startsWith("trunk") ||
                             rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
@@ -87,7 +87,12 @@ public class OSMReader implements Sink {
                     }
                     isHighway = true;
                     break;
-                case "oneway":
+                case "junction":  // is it a roundabout (implies one directional)?
+                    if ("roundabout".equalsIgnoreCase(wayTag.getValue())) {
+                        isOneWay = true;
+                    }
+                    break;
+                case "oneway":  // is it explicitly one directional?
                     isOneWay = "yes".equalsIgnoreCase(wayTag.getValue());
                     break;
                 default:
