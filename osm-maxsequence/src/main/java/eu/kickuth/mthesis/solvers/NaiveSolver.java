@@ -1,22 +1,17 @@
 package eu.kickuth.mthesis.solvers;
 
-import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
+import eu.kickuth.mthesis.graph.Graph.Path;
 import eu.kickuth.mthesis.graph.Node;
 
-import java.util.*;
-
-import eu.kickuth.mthesis.graph.Graph.Path;
+import java.util.HashSet;
+import java.util.Set;
 
 public class NaiveSolver extends Solver {
 
 
-    private final Dijkstra dijkstra;
-
     public NaiveSolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
-
-        dijkstra = new Dijkstra(g);
     }
 
     // TODO improve/rewrite, comment

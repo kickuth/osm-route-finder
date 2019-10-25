@@ -35,11 +35,11 @@ public class Webserver {
     private static final VelocityEngine ve = new VelocityEngine();
     private final String poiJSON;
 
-    public Webserver(Node defaultSource, Node defaultTarget, long defaultMaxDist, Graph g) {
+    public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
         graph = g;
-        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDist, g);
+        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, g);
         solvers.put("ng", currentSolver);
-        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDist, g));
+        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, g));
 
         // get POIs from nodes
         poiJSON = GeoJSON.createPOIList(
@@ -94,7 +94,9 @@ public class Webserver {
                 double newRelativeMaxDistance = Double.parseDouble(reqMaxDistance);
                 logger.debug("Setting source to {}, sink/target to {}, relativeMaxDistance to {}",
                         newSourceId, newTargetId, newRelativeMaxDistance);
-                currentSolver.setRelativeMaxDistance(newRelativeMaxDistance);
+                if (currentSolver.getMaxDistanceFactor() != newRelativeMaxDistance) {
+                    currentSolver.setMaxDistanceFactor(newRelativeMaxDistance);
+                }
                 Node newSource = graph.getNode(newSourceId);
                 Node newTarget = graph.getNode(newTargetId);
                 if (newSource == null || newTarget == null) {

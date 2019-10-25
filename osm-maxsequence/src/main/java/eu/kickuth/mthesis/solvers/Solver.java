@@ -6,6 +6,7 @@ import eu.kickuth.mthesis.graph.Node;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 public abstract class Solver {
@@ -13,24 +14,26 @@ public abstract class Solver {
     Logger logger = LogManager.getLogger(this.getClass().getName());
 
     Graph searchGraph;
+    Dijkstra dijkstra;
     Node source;
     Node target;
     double maxDistance;
+    double maxDistanceFactor;
 
     volatile double status;
 
-    private Dijkstra dijkstra;
 
-    public Solver(long sourceID, long targetID, double maxDistance, Graph g) {
-        this(g.getNode(sourceID), g.getNode(targetID), maxDistance, g);
+    public Solver(long sourceID, long targetID, double maxDistanceFactor, Graph g) {
+        this(g.getNode(sourceID), g.getNode(targetID), maxDistanceFactor, g);
     }
 
-    public Solver(Node source, Node target, double maxDistance, Graph g) {
+    public Solver(Node source, Node target, double maxDistanceFactor, Graph g) {
         searchGraph = g;
         this.source = source;
         this.target = target;
-        this.maxDistance = maxDistance;
         dijkstra = new Dijkstra(searchGraph);
+        this.maxDistanceFactor = maxDistanceFactor;
+        setMaxDistanceFactor(maxDistanceFactor);
     }
 
     public Graph.Path solve() {
@@ -95,10 +98,30 @@ public abstract class Solver {
      * Set the maximum distance as a factor of the shortest path
      * @param shortestPathFactor Length as a factor of the shortest path (i.e. should be > 1)
      */
-    public void setRelativeMaxDistance(double shortestPathFactor) {
+    public void setMaxDistanceFactor(double shortestPathFactor) {
+        if (shortestPathFactor < 1) {
+            logger.error("Solver distance is too short! Setting to shortest path length");
+            shortestPathFactor = 1;
+        } else if (shortestPathFactor > 10) {
+            logger.warn("Solver distance is being set very high!");
+        }
+        maxDistanceFactor = shortestPathFactor;
         double shortestPathDist = dijkstra.shortestPath(source, target).getPathCost();
         maxDistance = shortestPathDist * shortestPathFactor;
         logger.trace("New maxDistance is {}", maxDistance);
+    }
+
+    public double getMaxDistanceFactor() {
+        return maxDistanceFactor;
+    }
+
+    /**
+     * Get maximum distance in kilo meters.
+     * @return maximum solution path distance
+     */
+    public String getMaxDistanceKM() {
+        DecimalFormat df = new DecimalFormat("#.##");
+        return df.format(maxDistance / 1000);
     }
 
     /**

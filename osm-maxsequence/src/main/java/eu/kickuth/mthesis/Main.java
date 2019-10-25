@@ -37,9 +37,9 @@ public class Main {
         // TODO experimental code
         Node source = osmGraph.getNode(1409294970);
         Node target = osmGraph.getNode(251878779);
-        int maxDistance = 150_000; // in meters
+        double maxDistanceFactor = 1.25;
 
         // start interactive web visualization
-        new Webserver(source, target, maxDistance, osmGraph);
+        new Webserver(source, target, maxDistanceFactor, osmGraph);
     }
 }

@@ -1,24 +1,20 @@
 package eu.kickuth.mthesis.solvers;
 
-import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Graph.Path;
 import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class GreedySolver extends Solver {
 
-    private Dijkstra dijkstra;
     private Map<Node, Double> estimatedDistanceToTarget;
 
     public GreedySolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
-        dijkstra = new Dijkstra(searchGraph);
         // TODO this should be computed for every node, not only up to maxDistance (see also quickfix below)
         estimatedDistanceToTarget = dijkstra.sssp(target, maxDistance);
     }
