@@ -116,12 +116,20 @@ public abstract class Solver {
     }
 
     /**
-     * Get maximum distance in kilo meters.
+     * Get formatted maximum distance in kilo meters.
      * @return maximum solution path distance
      */
     public String getMaxDistanceKM() {
-        DecimalFormat df = new DecimalFormat("#.##");
+        DecimalFormat df = new DecimalFormat("#.###");
         return df.format(maxDistance / 1000);
+    }
+
+    /**
+     * Get maximum distance in meters.
+     * @return maximum solution path distance
+     */
+    public double getMaxDistance() {
+        return maxDistance;
     }
 
     /**

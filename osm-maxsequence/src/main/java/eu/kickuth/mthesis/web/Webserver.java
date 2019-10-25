@@ -19,6 +19,7 @@ import spark.Response;
 
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static eu.kickuth.mthesis.utils.Settings.*;
@@ -68,6 +69,13 @@ public class Webserver {
         //post("/", "application/json", this::renderMap);
         get("/path", "application/json", this::computePath);
         get("/status", "application/json", this::computeProgress);
+        get("/maxdist", "application/json", this::updateMaxDist);
+    }
+
+    private String updateMaxDist(Request req, Response res) {
+        return String.format("{ \"maxdist\":%f }",
+                (currentSolver.getMaxDistance() / currentSolver.getMaxDistanceFactor())
+                        * Double.parseDouble(req.queryParams("newfactor")));
     }
 
     private String computeProgress(Request req, Response res) {
@@ -94,9 +102,6 @@ public class Webserver {
                 double newRelativeMaxDistance = Double.parseDouble(reqMaxDistance);
                 logger.debug("Setting source to {}, sink/target to {}, relativeMaxDistance to {}",
                         newSourceId, newTargetId, newRelativeMaxDistance);
-                if (currentSolver.getMaxDistanceFactor() != newRelativeMaxDistance) {
-                    currentSolver.setMaxDistanceFactor(newRelativeMaxDistance);
-                }
                 Node newSource = graph.getNode(newSourceId);
                 Node newTarget = graph.getNode(newTargetId);
                 if (newSource == null || newTarget == null) {
@@ -104,6 +109,7 @@ public class Webserver {
                 } else {
                     currentSolver.setSource(newSource);
                     currentSolver.setTarget(newTarget);
+                    currentSolver.setMaxDistanceFactor(newRelativeMaxDistance);
                 }
             } catch (NumberFormatException e) {
                 logger.error("Failed to convert user input to long:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
@@ -116,7 +122,12 @@ public class Webserver {
         String score = String.valueOf(currentSolver.uniqueClassScore(path));
         logger.info("Unique class score for {}: {}", currentSolver.getName(), score);
 
-        return GeoJSON.createPath(path, score);
+        Map<String, String> jsonArgs = new HashMap<>();
+        jsonArgs.put("score", score);
+        jsonArgs.put("shortestpathdist", String.valueOf(
+                currentSolver.getMaxDistance()/currentSolver.getMaxDistanceFactor()));
+
+        return GeoJSON.createPath(path, jsonArgs);
     }
 
     private String renderMap(Request req, Response res) {

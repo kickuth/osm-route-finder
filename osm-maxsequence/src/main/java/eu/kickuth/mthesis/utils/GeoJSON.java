@@ -7,6 +7,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Collection;
+import java.util.Map;
 
 public class GeoJSON {
 
@@ -46,7 +47,7 @@ public class GeoJSON {
      * create a JSON path object.
      * @param path List of coordinates in lat,lon format
      */
-    public static String createPath(Graph.Path path, String name) {
+    public static String createPath(Graph.Path path, Map<String,String> args) {
         try {
             JSONArray coordinates = new JSONArray();
             for (Node node : path.getNodes()) {
@@ -60,9 +61,11 @@ public class GeoJSON {
             // create path and add it to the feature object
             JSONObject jsonPath = new JSONObject();
             jsonPath.put("type", "LineString");
-            jsonPath.put("name", name);
             jsonPath.put("length", Math.floor(path.getPathCost())/1000);
             jsonPath.put("coordinates", coordinates);
+            for (Map.Entry<String, String> arg : args.entrySet()) {
+                jsonPath.put(arg.getKey(), arg.getValue());
+            }
 
             return jsonPath.toString();
         } catch (JSONException e) {

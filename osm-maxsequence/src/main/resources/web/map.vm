@@ -24,7 +24,8 @@
         <br><br>
         max distance: <br>
         <label id="max_dist_km">$solver.getMaxDistanceKM()</label> km<br>  ## TODO update max_dist_km
-        <input id="max_dist" type="number" step="0.01" min="1" style="width: 35%;" name="max_dist" value="$solver.getMaxDistanceFactor()"> SP factor<br><br>
+        <input id="max_dist_factor" onchange="updateMaxDist()" type="number" step="0.01" min="1" style="width: 35%;" name="max_dist" value="$solver.getMaxDistanceFactor()">
+        <label for="max_dist"> SP factor</label><br><br>
         <label>
             <input type="number" min="0" style="width: 35%;" name="source" value="$solver.getSource().getId()">
             Source ID
@@ -88,6 +89,9 @@
         }
     }).addTo(map);
 
+    // shortest path between source and target, i.e. allowed max dist ignoring factor.
+    var baseMaxDist = $solver.getMaxDistance();
+
     // Toggle: Display/hide POIs
     function togglePois(obj) {
         if (obj.checked) {
@@ -107,8 +111,15 @@
         }, 1000);
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
-            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.name + " length: " + res.length).addTo(map);
+            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.score + " length: " + res.length).addTo(map);
+            // var animatedMarker = L.animatedMarker(line.getLatLngs(), {
+            //     distance: 100, // meters
+            //     interval: 50, // milliseconds
+            // }).addTo(map);
             lineStyle.color = colors[++col_idx%colors.length];
+            // update max distance
+            baseMaxDist = parseInt(res.shortestpathdist);
+            updateMaxDist();
             // stop updating and reset the progressbar
             window.clearInterval(progressUpdater);
             document.getElementById("progressBar").value = 0;
@@ -117,6 +128,10 @@
 
         return false;  // do not reload page on submit
     });
+
+    function updateMaxDist() {
+        document.getElementById("max_dist_km").innerHTML = ((baseMaxDist * document.getElementById("max_dist_factor").value) | 0) / 1000;
+    }
 </script>
 </body>
 </html>
