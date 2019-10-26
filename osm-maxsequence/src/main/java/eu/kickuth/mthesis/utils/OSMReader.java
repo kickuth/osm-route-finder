@@ -126,7 +126,13 @@ public class OSMReader implements Sink {
 
     @Override
     public void complete() {
-
+        // TODO
+        // postprocess: Remove nodes without neighbours and dead ends
+        for (Map.Entry<eu.kickuth.mthesis.graph.Node, Set<eu.kickuth.mthesis.graph.Node>> e : osmGraph.adjList.entrySet()) {
+            if (e.getValue().isEmpty()) {
+                System.err.println("DEAD END IN GRAPH");
+            }
+        }
     }
 
     @Override
