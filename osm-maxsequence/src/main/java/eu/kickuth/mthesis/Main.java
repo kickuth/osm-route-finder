@@ -4,6 +4,7 @@ import crosby.binary.osmosis.OsmosisReader;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.utils.OSMReader;
+import eu.kickuth.mthesis.utils.OSMWriter;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +39,11 @@ public class Main {
         Node source = osmGraph.getNode(1409294970);
         Node target = osmGraph.getNode(251878779);
         double maxDistanceFactor = 1.25;
+
+        // TODO export test
+        logger.trace("Exporting graph.");
+        OSMWriter exporter = new OSMWriter();
+        exporter.export(osmGraph,"/home/todd/Desktop/EXPORT.osm.pbf");
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);
