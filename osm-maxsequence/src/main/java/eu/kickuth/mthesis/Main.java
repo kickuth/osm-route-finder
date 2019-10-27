@@ -41,9 +41,9 @@ public class Main {
         double maxDistanceFactor = 1.25;
 
         // TODO export test
-        logger.trace("Exporting graph.");
-        OSMWriter exporter = new OSMWriter();
-        exporter.export(osmGraph,"/home/todd/Desktop/EXPORT.osm.pbf");
+//        logger.trace("Exporting graph.");
+//        OSMWriter exporter = new OSMWriter();
+//        exporter.export(osmGraph,"~/Desktop/EXPORT.osm.pbf");
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);

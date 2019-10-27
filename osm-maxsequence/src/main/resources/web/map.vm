@@ -46,7 +46,8 @@
 
 <!-- Add the Leaflet JavaScript library and plugins -->
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.js"></script>
+<script src="js/leaflet.uGeoJSON.js"></script>
+## <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.js"></script>
 <!-- Add jquery library and plugins -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
@@ -56,6 +57,8 @@
     var map = L.map('map',{ center: [48, 9.5], zoom: 10});
     // Add OpenStreetMap tile layer to map
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
+    // Add hook to dynamically load POIs
+    new L.UGeoJSONLayer({endpoint:"pois", minzoom:11}).addTo(map);
 
 
     // Paths

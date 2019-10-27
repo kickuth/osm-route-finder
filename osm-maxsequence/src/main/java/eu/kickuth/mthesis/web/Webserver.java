@@ -14,9 +14,17 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.json.JSONObject;
+import spark.Filter;
 import spark.Request;
 import spark.Response;
+import spark.Spark;
 
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +43,15 @@ public class Webserver {
     private final HashMap<String, Solver> solvers = new HashMap<>(5);
     private static final VelocityEngine ve = new VelocityEngine();
     private final String poiJSON;
+
+    // uncomment here (and in start()) for Cross-Origin Resource Sharing
+//    private static final HashMap<String, String> corsHeaders = new HashMap<>();
+//    static {
+//        corsHeaders.put("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+//        corsHeaders.put("Access-Control-Allow-Origin", "*");
+//        corsHeaders.put("Access-Control-Allow-Headers", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,");
+//        corsHeaders.put("Access-Control-Allow-Credentials", "true");
+//    }
 
     public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
         graph = g;
@@ -64,12 +81,23 @@ public class Webserver {
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
         ve.init();
 
+        // allow CORS
+        //Spark.after((request, response) -> corsHeaders.forEach(response::header));
+
         // setup request handlers
         get("/", "application/json", this::renderMap);
         //post("/", "application/json", this::renderMap);
         get("/path", "application/json", this::computePath);
         get("/status", "application/json", this::computeProgress);
         get("/maxdist", "application/json", this::updateMaxDist);
+        post("/pois", this::getPoisInWindow);
+    }
+
+    private String getPoisInWindow(Request req, Response res) {
+        // TODO implement
+        JSONObject data = new JSONObject(req.body());
+        System.out.println(data.get("south"));  // north, east, south, west, zoom
+        return "";
     }
 
     private String updateMaxDist(Request req, Response res) {
