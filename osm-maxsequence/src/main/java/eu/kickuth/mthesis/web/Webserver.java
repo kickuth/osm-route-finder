@@ -15,16 +15,9 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.runtime.RuntimeConstants;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.json.JSONObject;
-import spark.Filter;
 import spark.Request;
 import spark.Response;
-import spark.Spark;
 
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -54,6 +47,7 @@ public class Webserver {
 //    }
 
     public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
+        logger.trace("Initialising solvers");
         graph = g;
         currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, g);
         solvers.put("ng", currentSolver);
@@ -74,15 +68,14 @@ public class Webserver {
         // Configure Spark
         port(PORT);
         staticFiles.location("/web/pub");
-        // staticFiles.expireTime(600);  // cache
+        //staticFiles.expireTime(600);  // cache
+        //Spark.after((request, response) -> corsHeaders.forEach(response::header));  // allow CORS
 
         // initialize engine
         ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
         ve.init();
 
-        // allow CORS
-        //Spark.after((request, response) -> corsHeaders.forEach(response::header));
 
         // setup request handlers
         get("/", "application/json", this::renderMap);
@@ -90,12 +83,14 @@ public class Webserver {
         get("/path", "application/json", this::computePath);
         get("/status", "application/json", this::computeProgress);
         get("/maxdist", "application/json", this::updateMaxDist);
-        post("/pois", this::getPoisInWindow);
+        post("/pois", "application/json", this::getPoisInWindow);
     }
 
     private String getPoisInWindow(Request req, Response res) {
-        // TODO implement
-        JSONObject data = new JSONObject(req.body());
+        String body = req.body();
+        logger.trace("Requested POIs for {}", body);
+        JSONObject data = new JSONObject(body);
+        // TODO implement;
         System.out.println(data.get("south"));  // north, east, south, west, zoom
         return "";
     }

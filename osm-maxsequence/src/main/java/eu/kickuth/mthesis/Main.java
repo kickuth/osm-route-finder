@@ -17,22 +17,20 @@ public class Main {
 
     private static final Logger logger = LogManager.getLogger(Main.class);
 
-    public static Graph osmGraph;
 
     public static void main(String[] args) {
-        logger.trace("Starting application.");
+        logger.trace("Loading graph from file");
         OSMReader myReader = new OSMReader();
         try {
             InputStream inputStream = new FileInputStream(OSM_DUMP);
             OsmosisReader reader = new OsmosisReader(inputStream);
             reader.setSink(myReader);
-            reader.run();  // this also sets osmGraph
+            reader.run();
         } catch (FileNotFoundException e) {
             logger.fatal("Failed to load map data", e);
             System.exit(1);
         }
-        osmGraph = myReader.getOsmGraph();
-        logger.trace("Loaded graph from file.");
+        Graph osmGraph = myReader.getOsmGraph();
 
 
         // TODO experimental code
