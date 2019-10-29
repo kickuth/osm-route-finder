@@ -18,7 +18,7 @@
         <select id="algo" name="algo">
             <option value="ng">naive</option>
             <option value="gr">greedy</option>
-            <option value="ot">other</option>
+            ## <option value="ot">other</option>
         </select>
         <label for="algo">algorithm</label>
         <br><br>
@@ -58,7 +58,7 @@
     // Add OpenStreetMap tile layer to map
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
     // Add hook to dynamically load POIs
-    new L.UGeoJSONLayer({endpoint:"pois", minzoom:11}).addTo(map);
+    new L.UGeoJSONLayer({endpoint:"pois", enctype:"json", minzoom:12}).addTo(map);
 
 
     // Paths
