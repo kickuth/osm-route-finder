@@ -89,10 +89,9 @@ public class Webserver {
     private String getPoisInWindow(Request req, Response res) {
         String body = req.body();
         logger.trace("Requested POIs for {}", body);
-        JSONObject data = new JSONObject(body);
-        // TODO implement;
-        System.out.println(data.get("south"));  // north, east, south, west, zoom
-        return "";
+        JSONObject data = new JSONObject(body);  // available fields: north, east, south, west, zoom
+        double[] area = {(double) data.get("north"), (double) data.get("south"), (double) data.get("west"), (double) data.get("east")};
+        return GeoJSON.createPOIList(graph.getPois(area));
     }
 
     private String updateMaxDist(Request req, Response res) {

@@ -31,6 +31,13 @@ public class Main {
             System.exit(1);
         }
         Graph osmGraph = myReader.getOsmGraph();
+        logger.debug("Node count: {}", osmGraph.adjList.keySet().size());
+        logger.debug("POI count: {}", osmGraph.getPois().size());
+        for (var entry : osmGraph.poiTypes.entrySet()) {
+            if (entry.getValue() > 10) {
+                System.out.println(entry.getKey() + " -- " + entry.getValue());
+            }
+        }
 
 
         // TODO experimental code

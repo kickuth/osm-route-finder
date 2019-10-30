@@ -17,7 +17,7 @@ public class OSMReader implements Sink {
     private HashMap<Long, eu.kickuth.mthesis.graph.Node> nodes = new HashMap<>();
 
 
-    private final Graph osmGraph = new Graph();
+    private Graph osmGraph;
 
 
     @Override
@@ -38,6 +38,7 @@ public class OSMReader implements Sink {
 
         } else if (entityContainer instanceof BoundContainer) {
             Bound b = ((BoundContainer) entityContainer).getEntity();
+            osmGraph = new Graph(new double[]{b.getTop(), b.getBottom(), b.getLeft(), b.getRight()});
             logger.info("Map bounds are: {}", b);
 
         } else {
@@ -108,7 +109,7 @@ public class OSMReader implements Sink {
         // iterate through all way nodes and add them to the graph
         ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
         WayNode wn = wayNodes.next();
-        eu.kickuth.mthesis.graph.Node currentNode = nodes.get(wn.getNodeId());
+        var currentNode = nodes.get(wn.getNodeId());
         osmGraph.addNode(currentNode);
         eu.kickuth.mthesis.graph.Node nextNode;
         while (wayNodes.hasNext()) {
@@ -128,7 +129,7 @@ public class OSMReader implements Sink {
     public void complete() {
         // TODO
         // postprocess: Remove nodes without neighbours and dead ends
-        for (Map.Entry<eu.kickuth.mthesis.graph.Node, Set<eu.kickuth.mthesis.graph.Node>> e : osmGraph.adjList.entrySet()) {
+        for (var e : osmGraph.adjList.entrySet()) {
             if (e.getValue().isEmpty()) {
                 System.err.println("DEAD END IN GRAPH");
             }

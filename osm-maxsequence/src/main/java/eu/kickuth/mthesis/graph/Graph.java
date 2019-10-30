@@ -1,29 +1,46 @@
 package eu.kickuth.mthesis.graph;
 
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static eu.kickuth.mthesis.utils.Settings.*;
 
 public class Graph {
 
     public Map<Node, Set<Node>> adjList;
     private Map<Long, Node> nodes;
     private Set<Node> pois;
+    public HashMap<String, Integer> poiTypes = new HashMap<>(); // TODO private
+    private List<List<Node>> poiGrid;
 
-    public Graph(Map<Long, Node> nodes, Map<Node, Set<Node>> adjList) {
-        this.nodes = nodes;
-        this.adjList = adjList;
+    // bounds related variables
+    private final double[] bounds;  // top/N, bottom/S, left/W, right/E
+    private final int nsLineCount;
+
+
+    public Graph(double[] bounds) {
+        this(bounds, 1_000_000);
     }
 
-    public Graph() {
-        this(1_000_000);
-    }
-
-    public Graph(int nodeCountEstimate) {
+    public Graph(double[] bounds, int nodeCountEstimate) {
+        this.bounds = bounds;
         adjList = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
         nodes = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
         pois = new HashSet<>(nodeCountEstimate / 100);
+
+        // TODO poiGrid based on distances, not lat/lon values
+        // Initialise POI grid
+        double nsDiff = Math.abs(bounds[0] - bounds[1]);
+        double weDiff = Math.abs(bounds[2] - bounds[3]);
+        nsLineCount = (int) Math.ceil(nsDiff / POI_GRID_FIDELITY);
+        int weLineCount = (int) Math.ceil(weDiff / POI_GRID_FIDELITY);
+        poiGrid = new ArrayList<>(nsLineCount * weLineCount);
+        for (int i = 0; i < nsLineCount * weLineCount; i++) {
+            poiGrid.add(new ArrayList<>());
+        }
     }
 
     /**
@@ -38,11 +55,33 @@ public class Graph {
         } else {
             adjList.put(toAdd, new HashSet<>());
             nodes.put(toAdd.getId(), toAdd);
-            if(!StringUtils.isEmpty(toAdd.getType())) {
+
+            // check if the node is a POI
+            String nodeType = toAdd.getType();
+            if (!StringUtils.isEmpty(nodeType)) {
+                // add POI
                 pois.add(toAdd);
+                addToPoiGrid(toAdd);
+
+                // count up respective POI type: increment by one, or set to 1 if not present
+                poiTypes.merge(toAdd.getType(), 1, Integer::sum);
             }
             return true;
         }
+    }
+
+    /**
+     * Add POI to the correct element in the POI grid
+     * @param poi The node we want to add to the grid
+     */
+    private void addToPoiGrid(Node poi) {
+        double south = poi.getLat() - bounds[1];
+        double west = poi.getLon() - bounds[2];
+
+        int appropriateField = (int) Math.floor(west / POI_GRID_FIDELITY)  // west/east index
+                + nsLineCount * (int) Math.floor(south / POI_GRID_FIDELITY);  // north/south index
+
+        poiGrid.get(appropriateField).add(poi);
     }
 
     /**
@@ -73,7 +112,7 @@ public class Graph {
     }
 
     public Graph createSubgraph(Set<Node> nodeSubset) {
-        Graph subGraph = new Graph(nodeSubset.size());
+        Graph subGraph = new Graph(bounds, nodeSubset.size());
         // populate subgraph with nodes
         for (Node node : nodeSubset) {
             subGraph.addNode(node);
@@ -92,27 +131,26 @@ public class Graph {
         return subGraph;
     }
 
-    /**
-     * create a deep copy of the graph
-     * @return the copy
-     */
-    @Override
-    public Graph clone() {
-        Map<Node, Set<Node>> adjListCopy = new HashMap<>();
-        for (Map.Entry<Node, Set<Node>> entry : adjList.entrySet())
-        {
-            adjListCopy.put(entry.getKey(), new HashSet<>(entry.getValue()));
-        }
-        Map<Long, Node> nodesCopy = new HashMap<>();
-        for (Map.Entry<Long, Node> entry : nodes.entrySet())
-        {
-            nodesCopy.put(entry.getKey(), entry.getValue());
-        }
-        return new Graph(nodesCopy, adjListCopy);
+    public Collection<Node> getPois() {
+        return pois;
     }
 
-    public Set<Node> getPois() {
-        return pois;
+    public Collection<Node> getPois(double[] area) {
+        int north = (int) Math.ceil((area[0] - bounds[1]) / POI_GRID_FIDELITY);
+        int south = (int) Math.floor((area[1] - bounds[1]) / POI_GRID_FIDELITY);
+        int west = (int) Math.floor((area[2] - bounds[2]) / POI_GRID_FIDELITY);
+        int east = (int) Math.ceil((area[3] - bounds[2]) / POI_GRID_FIDELITY);
+
+        List<Node> results = new ArrayList<>();
+
+        // add all elements in all touching grid cells
+        for (int we = west; we < east; we++) {
+            for (int sn = south; sn < north; sn++) {
+                results.addAll(poiGrid.get(we + nsLineCount * sn));
+            }
+        }
+
+        return results;
     }
 
     public Set<Node> getPoisOnPath(Path p) {
@@ -128,7 +166,7 @@ public class Graph {
         private final LinkedList<DijkstraNode> dNodes;
         private double pathCost;
 
-        public Path(LinkedList<DijkstraNode> nodes) {
+        Path(LinkedList<DijkstraNode> nodes) {
             this.dNodes = nodes;
             pathCost = (nodes.isEmpty() ? 0 : nodes.getLast().distanceFromSource);
         }
