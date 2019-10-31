@@ -16,7 +16,7 @@ class GraphTest {
 
     private static final Logger logger = LogManager.getLogger(GraphTest.class);
 
-    private final Graph g = new Graph();
+    private final Graph g = new Graph(new double[]{90, -90, -180, 180});
     private Dijkstra dijkstra;
 
     private final double EPSILON = 10e-6;
