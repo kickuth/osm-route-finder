@@ -1,27 +1,53 @@
 package eu.kickuth.mthesis.utils;
 
+import crosby.binary.osmosis.OsmosisSerializer;
 import eu.kickuth.mthesis.graph.Graph;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openstreetmap.osmosis.core.container.v0_6.*;
 import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
+import org.openstreetmap.osmosis.core.task.v0_6.Source;
+import org.openstreetmap.osmosis.osmbinary.file.BlockOutputStream;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static eu.kickuth.mthesis.utils.Settings.*;
 
-public class OSMReader implements Sink {
+public class OSMPreprocessor implements Sink, Source {
 
-    private static final Logger logger = LogManager.getLogger(OSMReader.class);
+    private static final Logger logger = LogManager.getLogger(OSMPreprocessor.class);
 
-    private HashMap<Long, eu.kickuth.mthesis.graph.Node> nodes = new HashMap<>();
+    private Sink sink;
 
+    private final OsmUser user = new OsmUser(0, "");
+    private final Date date = new Date();
+    private final File outputFile;
 
-    private Graph osmGraph;
+    public OSMPreprocessor(File outputFile) {
+        this.outputFile = outputFile;
+    }
 
+    @Override
+    public void setSink(Sink sink) {
+        this.sink = sink;
+    }
 
     @Override
     public void initialize(Map<String, Object> metaData) {
+        // initialise writer
+        try {
+            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(outputFile))));
+        } catch (FileNotFoundException e) {
+            logger.error("Could not find File! Aborting export.", e);
+            return;
+        }
 
     }
 
@@ -37,9 +63,7 @@ public class OSMReader implements Sink {
             // We don't process relations
 
         } else if (entityContainer instanceof BoundContainer) {
-            Bound b = ((BoundContainer) entityContainer).getEntity();
-            osmGraph = new Graph(new double[]{b.getTop(), b.getBottom(), b.getLeft(), b.getRight()});
-            logger.info("Map bounds are: {}", b);
+            sink.process(entityContainer);
 
         } else {
             logger.warn("Unknown Entity: {}", entityContainer.getEntity());
@@ -47,23 +71,27 @@ public class OSMReader implements Sink {
     }
 
     private void processNode(Node osmNode) {
-        String type = null;
+        Collection<Tag> tags = new ArrayList<>(1);
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
-                type = tag.getValue();
-                break;
+                Pattern roadSignPattern = Pattern.compile("(DE:\\d+)|(city_limit)");
+                Matcher matcher = roadSignPattern.matcher(tag.getValue());
+                if (matcher.find()) {
+                    tags.add(new Tag("traffic_sign", matcher.group(0)));
+                }
+                while (matcher.find()) {
+                    logger.info("Ignoring additional sign: {}", matcher.group(0));
+                }
             }
-            // TODO add fake classes? Other type sources?
         }
-        nodes.put(osmNode.getId(), new eu.kickuth.mthesis.graph.Node(
-                osmNode.getId(), osmNode.getLatitude(), osmNode.getLongitude(), type
-        ));
+        Node node = new Node(osmNode.getId(), 1, date, user, 0, tags, osmNode.getLatitude(), osmNode.getLongitude());
+        sink.process(new NodeContainer(node));
     }
 
     private void processWay(Way osmWay) {
         boolean isHighway = false;  // is road drivable?
         boolean isOneWay = false;
-        String rt = null;  // what type of road is it?
+        Collection<Tag> tags = new ArrayList<>(10);
 
         // filter for useful roads and check if the way is one way only
         for (Tag wayTag : osmWay.getTags()) {
@@ -74,21 +102,26 @@ public class OSMReader implements Sink {
                     }
                     break;
                 case "highway":  // is it a (probably) drivable road?
-                    rt = wayTag.getValue();
-                    if (!( rt.startsWith("motorway") || rt.startsWith("trunk") ||
+                    String rt = wayTag.getValue();
+                    if (!(rt.startsWith("motorway") || rt.startsWith("trunk") ||
                             rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
-                            rt.equals("unclassified") || rt.equals("residential") )) {
+                            rt.equals("unclassified") || rt.equals("residential"))) {
                         return;
                     }
+                    tags.add(new Tag("highway", rt));
                     isHighway = true;
                     break;
                 case "junction":  // is it a roundabout (implies one directional)?
-                    if ("roundabout".equalsIgnoreCase(wayTag.getValue())) {
+                    if ("roundabout".equalsIgnoreCase(wayTag.getValue()) && !isOneWay) {
                         isOneWay = true;
+                        tags.add(new Tag("oneway", "yes"));
                     }
                     break;
                 case "oneway":  // is it explicitly one directional?
-                    isOneWay = "yes".equalsIgnoreCase(wayTag.getValue());
+                    if ("yes".equalsIgnoreCase(wayTag.getValue()) && !isOneWay) {
+                        isOneWay = true;
+                        tags.add(new Tag("oneway", "yes"));
+                    }
                     break;
                 default:
                     // ignore all other tags
@@ -100,48 +133,18 @@ public class OSMReader implements Sink {
             return;
         }
 
-        // iterate through all way nodes and add them to the graph
-        ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
-        WayNode wn = wayNodes.next();
-        var currentNode = nodes.get(wn.getNodeId());
-        currentNode.setRoadType(rt);
-        osmGraph.addNode(currentNode);
-        eu.kickuth.mthesis.graph.Node nextNode;
-        while (wayNodes.hasNext()) {
-            wn = wayNodes.next();
-            nextNode = nodes.get(wn.getNodeId());
-            nextNode.setRoadType(rt);
-            osmGraph.addNode(nextNode);
-            osmGraph.addEdge(currentNode, nextNode);
-            if (!isOneWay) {
-                osmGraph.addEdge(nextNode, currentNode);
-            }
-            currentNode = nextNode;
-        }
+        Way way = new Way(osmWay.getId(), 1, date, user, 0, tags, osmWay.getWayNodes());
+        sink.process(new WayContainer(way));
 
     }
 
     @Override
     public void complete() {
-        // TODO
-        // postprocess: Remove nodes without neighbours and dead ends
-        int deadEndCount = 0;
-        for (var e : osmGraph.adjList.entrySet()) {
-            if (e.getValue().isEmpty()) {
-                deadEndCount++;
-            }
-        }
-        if (deadEndCount > 0) {
-            logger.warn("DEAD ENDS IN GRAPH: " + deadEndCount);
-        }
+
     }
 
     @Override
     public void close() {
 
-    }
-
-    public Graph getOsmGraph() {
-        return osmGraph;
     }
 }

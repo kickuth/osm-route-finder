@@ -57,6 +57,9 @@ public class Webserver {
         poiJSON = GeoJSON.createPOIList(
                 graph.adjList.keySet().stream().filter(
                         (node) -> !StringUtils.isEmpty(node.getType())
+                                && !node.getType().equals("city_limit")
+                                && !node.getType().equals("DE:205")
+                                && !node.getType().equals("DE:206")
                 ).collect(Collectors.toList())
         );
         start();

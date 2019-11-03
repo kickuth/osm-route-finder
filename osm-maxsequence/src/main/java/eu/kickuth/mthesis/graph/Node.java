@@ -6,6 +6,7 @@ public class Node {
     private final double lat;
     private final double lon;
     private final String type;
+    private String roadType;
 
     public Node(long id, double lat, double lon, String type) {
         this.id = id;
@@ -28,6 +29,13 @@ public class Node {
 
     public String getType() {
         return type;
+    }
+    public String getRoadType() {
+        return roadType;
+    }
+
+    public void setRoadType(String rt) {
+        roadType = rt;
     }
 
     /**

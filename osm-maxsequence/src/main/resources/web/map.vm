@@ -83,9 +83,12 @@
             if (name === "DE:205") {
                 return L.marker(latlon, {icon: icon205});
             } else if (name === "DE:206") {
-                return L.marker(latlon, {icon: icon205});
+                return L.marker(latlon, {icon: icon206});
+            } else if (name === "DE:274") {
+                return L.marker(latlon, {icon: icon274});
             } else if (name === "city_limit") {
                 return L.marker(latlon, {icon: iconcity});
+                ## TODO  why no cities showing??
             // } else {
             //     return L.circleMarker(latlon, {
             //         radius: 6,
@@ -112,7 +115,7 @@
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;
-            if (name === "DE:205" || name === "DE:206" || name === "city_limit") {
+            if (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit") {
                 return null;
             } else {
                 return L.circleMarker(latlon, {

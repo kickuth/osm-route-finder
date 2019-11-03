@@ -3,8 +3,8 @@ package eu.kickuth.mthesis;
 import crosby.binary.osmosis.OsmosisReader;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import eu.kickuth.mthesis.utils.OSMPreprocessor;
 import eu.kickuth.mthesis.utils.OSMReader;
-import eu.kickuth.mthesis.utils.OSMWriter;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -19,10 +19,23 @@ public class Main {
 
 
     public static void main(String[] args) {
-        logger.trace("Loading graph from file");
+        if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
+            try {
+                logger.trace("Preprocessing file dump");
+                InputStream osmInput = new FileInputStream(OSM_DUMP);
+                OsmosisReader reader = new OsmosisReader(osmInput);
+                reader.setSink(new OSMPreprocessor(OSM_DUMP_PROCESSED));
+                reader.run();
+            } catch (IOException e) {
+                logger.fatal("Failed preprocess map data", e);
+                System.exit(1);
+            }
+        }
+
+        logger.trace("Loading graph from preprocessed file");
         OSMReader myReader = new OSMReader();
         try {
-            InputStream inputStream = new FileInputStream(OSM_DUMP);
+            InputStream inputStream = new FileInputStream(OSM_DUMP_PROCESSED);
             OsmosisReader reader = new OsmosisReader(inputStream);
             reader.setSink(myReader);
             reader.run();
@@ -45,10 +58,6 @@ public class Main {
         Node target = osmGraph.getNode(251878779);
         double maxDistanceFactor = 1.25;
 
-        // TODO export test
-//        logger.trace("Exporting graph.");
-//        OSMWriter exporter = new OSMWriter();
-//        exporter.export(osmGraph,"~/Desktop/EXPORT.osm.pbf");
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);
