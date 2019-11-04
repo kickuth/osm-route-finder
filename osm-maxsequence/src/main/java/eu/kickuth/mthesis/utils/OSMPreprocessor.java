@@ -1,8 +1,7 @@
 package eu.kickuth.mthesis.utils;
 
+import crosby.binary.osmosis.OsmosisReader;
 import crosby.binary.osmosis.OsmosisSerializer;
-import eu.kickuth.mthesis.graph.Graph;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.openstreetmap.osmosis.core.container.v0_6.*;
@@ -11,9 +10,7 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.core.task.v0_6.Source;
 import org.openstreetmap.osmosis.osmbinary.file.BlockOutputStream;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,9 +26,16 @@ public class OSMPreprocessor implements Sink, Source {
     private final OsmUser user = new OsmUser(0, "");
     private final Date date = new Date();
     private final File outputFile;
+    private final Set<Long> nodesOnRoads;
 
-    public OSMPreprocessor(File outputFile) {
+    public OSMPreprocessor(File outputFile) throws FileNotFoundException {
         this.outputFile = outputFile;
+        OSMNodesOnPathReader nodesReader = new OSMNodesOnPathReader();
+        InputStream inputStream = new FileInputStream(OSM_DUMP);
+        OsmosisReader reader = new OsmosisReader(inputStream);
+        reader.setSink(nodesReader);
+        reader.run();
+        nodesOnRoads = nodesReader.getNodes();
     }
 
     @Override
@@ -45,8 +49,7 @@ public class OSMPreprocessor implements Sink, Source {
         try {
             setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(outputFile))));
         } catch (FileNotFoundException e) {
-            logger.error("Could not find File! Aborting export.", e);
-            return;
+            logger.fatal("Could not find File!", e);
         }
 
     }
@@ -71,6 +74,9 @@ public class OSMPreprocessor implements Sink, Source {
     }
 
     private void processNode(Node osmNode) {
+        if (!nodesOnRoads.contains(osmNode.getId())) {
+            return;
+        }
         Collection<Tag> tags = new ArrayList<>(1);
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {

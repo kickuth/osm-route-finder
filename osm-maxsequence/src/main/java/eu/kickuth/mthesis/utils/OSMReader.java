@@ -50,14 +50,14 @@ public class OSMReader implements Sink {
         String type = null;
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
-                type = tag.getValue();
+                type = tag.getValue().intern();
                 break;
             }
             // TODO add fake classes? Other type sources?
         }
-        nodes.put(osmNode.getId(), new eu.kickuth.mthesis.graph.Node(
-                osmNode.getId(), osmNode.getLatitude(), osmNode.getLongitude(), type
-        ));
+        var newNode = new eu.kickuth.mthesis.graph.Node(
+                osmNode.getId(), osmNode.getLatitude(), osmNode.getLongitude(), type);
+        nodes.put(osmNode.getId(), newNode);
     }
 
     private void processWay(Way osmWay) {

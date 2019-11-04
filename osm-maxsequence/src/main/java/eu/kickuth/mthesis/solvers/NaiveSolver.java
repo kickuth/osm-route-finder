@@ -36,7 +36,7 @@ public class NaiveSolver extends Solver {
 
         // remove nodes with classes we have already visited
         for (Node visitedPoi : initialVisitedPois) {
-            targets.removeIf(possibleTarget -> possibleTarget.getType().equals(visitedPoi.getType()));
+            targets.removeIf(possibleTarget -> possibleTarget.type.equals(visitedPoi.type));
         }
 
         // keep adding shortest paths to new classes until we run over the maximal distance
@@ -58,7 +58,7 @@ public class NaiveSolver extends Solver {
             }
             sources.add(newPoi);
             // remove possible targets with the same class as the new node
-            targets.removeIf(node -> node.getType().equals(newPoi.getType()));
+            targets.removeIf(node -> node.type.equals(newPoi.type));
             // insert the detour into the previous path
             pathToNewPoi.append(backPath);
             // find index for insertion

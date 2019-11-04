@@ -22,12 +22,12 @@ public class GeoJSON {
                 JSONObject geometry = new JSONObject();
                 geometry.put("type", "Point");
                 // !! GeoJSON format is longitude then latitude !!
-                JSONArray coord = new JSONArray("["+node.getLon()+","+node.getLat()+"]");
+                JSONArray coord = new JSONArray("["+node.lon+","+node.lat+"]");
                 geometry.put("coordinates", coord);
 
                 JSONObject properties = new JSONObject();
-                properties.put("name", node.getType());
-                properties.put("id", node.getId());
+                properties.put("name", node.type);
+                properties.put("id", node.id);
 
                 JSONObject poi = new JSONObject();
                 poi.put("type", "Feature");
@@ -52,7 +52,7 @@ public class GeoJSON {
             JSONArray coordinates = new JSONArray();
             for (Node node : path.getNodes()) {
                 // ! geoJSON works with lon,lat !
-                double[] lonLat = new double[] {node.getLon(), node.getLat()};
+                double[] lonLat = new double[] {node.lon, node.lat};
                 // add coordinate
                 JSONArray coordinate = new JSONArray(lonLat);
                 coordinates.put(coordinate);

@@ -54,17 +54,17 @@ public class Graph {
             return false;
         } else {
             adjList.put(toAdd, new HashSet<>());
-            nodes.put(toAdd.getId(), toAdd);
+            nodes.put(toAdd.id, toAdd);
 
             // check if the node is a POI
-            String nodeType = toAdd.getType();
+            String nodeType = toAdd.type;
             if (!StringUtils.isEmpty(nodeType)) {
                 // add POI
                 pois.add(toAdd);
                 addToPoiGrid(toAdd);
 
                 // count up respective POI type: increment by one, or set to 1 if not present
-                poiTypes.merge(toAdd.getType(), 1, Integer::sum);
+                poiTypes.merge(toAdd.type, 1, Integer::sum);
             }
             return true;
         }
@@ -75,8 +75,8 @@ public class Graph {
      * @param poi The node we want to add to the grid
      */
     private void addToPoiGrid(Node poi) {
-        double south = poi.getLat() - bounds[1];
-        double west = poi.getLon() - bounds[2];
+        double south = poi.lat - bounds[1];
+        double west = poi.lon - bounds[2];
 
         int appropriateField = (int) Math.floor(west / POI_GRID_FIDELITY)  // west/east index
                 + nsLineCount * (int) Math.floor(south / POI_GRID_FIDELITY);  // north/south index
@@ -246,11 +246,11 @@ public class Graph {
             StringBuilder s = new StringBuilder("Path: ");
             if (dNodes.size() < 15) {
                 for (DijkstraNode dNode : dNodes) {
-                    s.append(dNode.node.getId()).append(", ");
+                    s.append(dNode.node.id).append(", ");
                 }
             } else {
-                s.append(String.format("%d, %d, [%d nodes], %d, ", dNodes.getFirst().node.getId(),
-                        dNodes.get(1).node.getId(), dNodes.size()-3, dNodes.getLast().node.getId()));
+                s.append(String.format("%d, %d, [%d nodes], %d, ", dNodes.getFirst().node.id,
+                        dNodes.get(1).node.id, dNodes.size()-3, dNodes.getLast().node.id));
             }
             s.append("Total length: ").append(pathCost);
             return s.toString();

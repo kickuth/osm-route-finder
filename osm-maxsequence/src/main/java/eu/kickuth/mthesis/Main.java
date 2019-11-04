@@ -27,7 +27,7 @@ public class Main {
                 reader.setSink(new OSMPreprocessor(OSM_DUMP_PROCESSED));
                 reader.run();
             } catch (IOException e) {
-                logger.fatal("Failed preprocess map data", e);
+                logger.fatal("Failed to preprocess map data", e);
                 System.exit(1);
             }
         }
@@ -54,8 +54,8 @@ public class Main {
 
 
         // TODO experimental code
-        Node source = osmGraph.getNode(1409294970);
-        Node target = osmGraph.getNode(251878779);
+        Node source = osmGraph.getNode(1409294970L);  // Gaiberg 1495678246L
+        Node target = osmGraph.getNode(251878779L);  // KN 4782625977L
         double maxDistanceFactor = 1.25;
 
 

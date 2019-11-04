@@ -25,7 +25,7 @@ public class GreedySolver extends Solver {
         // find all nodes with classes
         Set<Node> poiNodes = new HashSet<>();
         for (Node node : searchGraph.adjList.keySet()) {
-            String type = node.getType();
+            String type = node.type;
             if (!StringUtils.isEmpty(type)) {
                 poiNodes.add(node);
             }
@@ -52,7 +52,7 @@ public class GreedySolver extends Solver {
                             + estimatedDistanceToTarget.get(newPoi)
                             + sol.getPathCost()) {
                 // remove possible targets with the same class as the new node
-                poiNodes.removeIf(node -> node.getType().equals(newPoi.getType()));
+                poiNodes.removeIf(node -> node.type.equals(newPoi.type));
                 // append new path
                 sol.append(pathToNewPoi);
                 currentEnd = sol.getLast();

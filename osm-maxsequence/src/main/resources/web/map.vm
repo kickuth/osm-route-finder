@@ -88,16 +88,6 @@
                 return L.marker(latlon, {icon: icon274});
             } else if (name === "city_limit") {
                 return L.marker(latlon, {icon: iconcity});
-                ## TODO  why no cities showing??
-            // } else {
-            //     return L.circleMarker(latlon, {
-            //         radius: 6,
-            //         fillColor: colors[name.charCodeAt(name.length - 1) % colors.length],
-            //         color: '#000',
-            //         weight: 1,
-            //         opacity: 0.5,
-            //         fillOpacity: 0.7
-            //     });
             }
         }
     }).addTo(map);

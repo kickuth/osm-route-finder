@@ -56,10 +56,10 @@ public class Webserver {
         // get POIs from nodes
         poiJSON = GeoJSON.createPOIList(
                 graph.adjList.keySet().stream().filter(
-                        (node) -> !StringUtils.isEmpty(node.getType())
-                                && !node.getType().equals("city_limit")
-                                && !node.getType().equals("DE:205")
-                                && !node.getType().equals("DE:206")
+                        (node) -> !StringUtils.isEmpty(node.type)
+                                && !node.type.equals("city_limit")
+                                && !node.type.equals("DE:205")
+                                && !node.type.equals("DE:206")
                 ).collect(Collectors.toList())
         );
         start();
@@ -82,7 +82,6 @@ public class Webserver {
 
         // setup request handlers
         get("/", "application/json", this::renderMap);
-        //post("/", "application/json", this::renderMap);
         get("/path", "application/json", this::computePath);
         get("/status", "application/json", this::computeProgress);
         get("/maxdist", "application/json", this::updateMaxDist);

@@ -2,40 +2,33 @@ package eu.kickuth.mthesis.graph;
 
 public class Node {
 
-    private final long id;
-    private final double lat;
-    private final double lon;
-    private final String type;
+    public final long id;
+    public final double lat;
+    public final double lon;
+    public final String type;
     private String roadType;
 
     public Node(long id, double lat, double lon, String type) {
         this.id = id;
         this.lat = lat;
         this.lon = lon;
-        this.type = type;
+        this.type = (type == null ? null : type.intern());
     }
 
+    /**
+     * getter method used by velocity. You may access the id variable directly.
+     * @return the node id
+     */
     public long getId() {
         return id;
     }
 
-    public double getLat() {
-        return lat;
-    }
-
-    public double getLon() {
-        return lon;
-    }
-
-    public String getType() {
-        return type;
-    }
     public String getRoadType() {
         return roadType;
     }
 
     public void setRoadType(String rt) {
-        roadType = rt;
+        roadType = rt.intern();
     }
 
     /**
@@ -50,9 +43,8 @@ public class Node {
     public double getDistance(Node n) {
         final int R = 6371;  // earths radius
 
-
-        double lat2 = n.getLat();
-        double lon2 = n.getLon();
+        double lat2 = n.lat;
+        double lon2 = n.lon;
         double latDistance = Math.toRadians(lat2 - lat);
         double lonDistance = Math.toRadians(lon2 - lon);
         double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
@@ -74,7 +66,7 @@ public class Node {
 
     @Override
     public int hashCode() {
-        return (int) (id % Integer.MAX_VALUE);
+        return (int) ((id + Integer.MIN_VALUE) % Integer.MAX_VALUE);
     }
 
     @Override
