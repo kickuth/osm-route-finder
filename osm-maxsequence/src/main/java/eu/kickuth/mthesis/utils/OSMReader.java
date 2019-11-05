@@ -14,8 +14,6 @@ public class OSMReader implements Sink {
 
     private static final Logger logger = LogManager.getLogger(OSMReader.class);
 
-    private HashMap<Long, eu.kickuth.mthesis.graph.Node> nodes = new HashMap<>();
-
 
     private Graph osmGraph;
 
@@ -55,63 +53,51 @@ public class OSMReader implements Sink {
             }
             // TODO add fake classes? Other type sources?
         }
-        var newNode = new eu.kickuth.mthesis.graph.Node(
-                osmNode.getId(), osmNode.getLatitude(), osmNode.getLongitude(), type);
-        nodes.put(osmNode.getId(), newNode);
+        int id = -1;
+        try {
+            id = Math.toIntExact(osmNode.getId());
+        } catch (ArithmeticException e) {
+            logger.error("ID is too large to fit in int!", e);
+        }
+
+        osmGraph.addNode(new eu.kickuth.mthesis.graph.Node(
+                id, osmNode.getLatitude(), osmNode.getLongitude(), type));
     }
 
     private void processWay(Way osmWay) {
-        boolean isHighway = false;  // is road drivable?
         boolean isOneWay = false;
-        String rt = null;  // what type of road is it?
+        String roadType = null;  // what type of road is it?
 
-        // filter for useful roads and check if the way is one way only
+        // get road tag and check if the way is one way only
         for (Tag wayTag : osmWay.getTags()) {
             switch (wayTag.getKey().toLowerCase(Locale.ENGLISH)) {
-                case "access":  // can we access the road?
-                    if ("no".equalsIgnoreCase(wayTag.getValue()) || "private".equalsIgnoreCase(wayTag.getValue())) {
-                        return;
-                    }
-                    break;
                 case "highway":  // is it a (probably) drivable road?
-                    rt = wayTag.getValue();
-                    if (!( rt.startsWith("motorway") || rt.startsWith("trunk") ||
-                            rt.startsWith("primary") || rt.startsWith("secondary") || rt.startsWith("tertiary") ||
-                            rt.equals("unclassified") || rt.equals("residential") )) {
-                        return;
-                    }
-                    isHighway = true;
-                    break;
-                case "junction":  // is it a roundabout (implies one directional)?
-                    if ("roundabout".equalsIgnoreCase(wayTag.getValue())) {
-                        isOneWay = true;
-                    }
+                    roadType = wayTag.getValue();
                     break;
                 case "oneway":  // is it explicitly one directional?
                     isOneWay = "yes".equalsIgnoreCase(wayTag.getValue());
                     break;
                 default:
                     // ignore all other tags
-                    // TODO include maxspeed?
+                    // TODO include maxspeed? (see also preprocessing)
             }
         }
-        if (!isHighway) {
-            // way is not a road
+
+        if (roadType == null) {
+            logger.error("OSM dump was not properly preprocessed (way is not a highway)! Ignoring way.");
             return;
         }
 
         // iterate through all way nodes and add them to the graph
         ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
         WayNode wn = wayNodes.next();
-        var currentNode = nodes.get(wn.getNodeId());
-        currentNode.setRoadType(rt);
-        osmGraph.addNode(currentNode);
+        var currentNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
+        currentNode.setRoadType(roadType);
         eu.kickuth.mthesis.graph.Node nextNode;
         while (wayNodes.hasNext()) {
             wn = wayNodes.next();
-            nextNode = nodes.get(wn.getNodeId());
-            nextNode.setRoadType(rt);
-            osmGraph.addNode(nextNode);
+            nextNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
+            nextNode.setRoadType(roadType);
             osmGraph.addEdge(currentNode, nextNode);
             if (!isOneWay) {
                 osmGraph.addEdge(nextNode, currentNode);
@@ -126,8 +112,8 @@ public class OSMReader implements Sink {
         // TODO
         // postprocess: Remove nodes without neighbours and dead ends
         int deadEndCount = 0;
-        for (var e : osmGraph.adjList.entrySet()) {
-            if (e.getValue().isEmpty()) {
+        for (var e : osmGraph.adjList) {
+            if (e.isEmpty()) {
                 deadEndCount++;
             }
         }

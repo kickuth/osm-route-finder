@@ -55,7 +55,7 @@ public class Webserver {
 
         // get POIs from nodes
         poiJSON = GeoJSON.createPOIList(
-                graph.adjList.keySet().stream().filter(
+                graph.pois.stream().filter(
                         (node) -> !StringUtils.isEmpty(node.type)
                                 && !node.type.equals("city_limit")
                                 && !node.type.equals("DE:205")
@@ -121,8 +121,8 @@ public class Webserver {
         String reqMaxDistance = req.queryParams("max_dist");
         if (reqSource != null && reqTarget != null && reqMaxDistance != null) {
             try {
-                long newSourceId = Long.parseLong(reqSource);
-                long newTargetId = Long.parseLong(reqTarget);
+                int newSourceId = Integer.parseInt(reqSource);
+                int newTargetId = Integer.parseInt(reqTarget);
                 double newRelativeMaxDistance = Double.parseDouble(reqMaxDistance);
                 logger.debug("Setting source to {}, sink/target to {}, relativeMaxDistance to {}",
                         newSourceId, newTargetId, newRelativeMaxDistance);

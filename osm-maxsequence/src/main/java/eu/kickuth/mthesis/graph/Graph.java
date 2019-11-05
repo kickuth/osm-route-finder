@@ -2,6 +2,8 @@ package eu.kickuth.mthesis.graph;
 
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,11 +12,13 @@ import static eu.kickuth.mthesis.utils.Settings.*;
 
 public class Graph {
 
-    public Map<Node, Set<Node>> adjList;
-    private Map<Long, Node> nodes;
-    private Set<Node> pois;
-    public HashMap<String, Integer> poiTypes = new HashMap<>(); // TODO private
-    private List<List<Node>> poiGrid;
+    private static final Logger logger = LogManager.getLogger(Graph.class);
+
+    public final List<List<Node>> adjList;
+    public final List<Node> nodes;
+    public final Set<Node> pois;
+    public final HashMap<String, Integer> poiTypes = new HashMap<>(); // TODO private
+    private final List<List<Node>> poiGrid;
 
     // bounds related variables
     private final double[] bounds;  // top/N, bottom/S, left/W, right/E
@@ -22,14 +26,14 @@ public class Graph {
 
 
     public Graph(double[] bounds) {
-        this(bounds, 1_000_000);
+        this(bounds, 10_000_000);
     }
 
     public Graph(double[] bounds, int nodeCountEstimate) {
         this.bounds = bounds;
-        adjList = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
-        nodes = new HashMap<>(nodeCountEstimate + nodeCountEstimate / 3);
-        pois = new HashSet<>(nodeCountEstimate / 100);
+        adjList = new ArrayList<>(nodeCountEstimate);
+        nodes = new ArrayList<>(nodeCountEstimate);
+        pois = new HashSet<>(nodeCountEstimate / 200);
 
         // TODO poiGrid based on distances, not lat/lon values
         // Initialise POI grid
@@ -47,26 +51,20 @@ public class Graph {
      * Add a node to the graph.
      *
      * @param toAdd node to add
-     * @return false, iff the node already was present.
      */
-    public boolean addNode(Node toAdd) {
-        if (adjList.containsKey(toAdd)) {
-            return false;
-        } else {
-            adjList.put(toAdd, new HashSet<>());
-            nodes.put(toAdd.id, toAdd);
+    public void addNode(Node toAdd) {
+        adjList.add(new ArrayList<>());
+        nodes.add(toAdd);
 
-            // check if the node is a POI
-            String nodeType = toAdd.type;
-            if (!StringUtils.isEmpty(nodeType)) {
-                // add POI
-                pois.add(toAdd);
-                addToPoiGrid(toAdd);
+        // check if the node is a POI
+        String nodeType = toAdd.type;
+        if (!StringUtils.isEmpty(nodeType)) {
+            // add POI
+            pois.add(toAdd);
+            addToPoiGrid(toAdd);
 
-                // count up respective POI type: increment by one, or set to 1 if not present
-                poiTypes.merge(toAdd.type, 1, Integer::sum);
-            }
-            return true;
+            // count up respective POI type: increment by one, or set to 1 if not present
+            poiTypes.merge(toAdd.type, 1, Integer::sum);
         }
     }
 
@@ -86,29 +84,27 @@ public class Graph {
 
     /**
      * Add an edge to the graph
-     *
-     * @param source edge source
-     * @param dest   edge destination
-     * @return false, iff the edge already exists.
-     * @throws IllegalArgumentException, if one of the nodes is not present in the graph
      */
-    public boolean addEdge(Node source, Node dest) {
-        // assure that the nodes exist in the graph
-        if (adjList.get(source) == null || adjList.get(dest) == null) {
-            throw new IllegalArgumentException("Nodes not present in graph!");
+    public void addEdge(Node source, Node dest) {
+        try {
+            adjList.get(source.id).add(dest);
+        } catch (IndexOutOfBoundsException e) {
+            logger.warn("Edge from non existent node {} added. Ignoring.", source);
         }
-        // check if the edge already exists
-        Set<Node> sourceNeighbours = adjList.get(source);
-        if (sourceNeighbours.contains(dest)) {
-            return false;
-        }
-        // add edge
-        sourceNeighbours.add(dest);
-        return true;
     }
 
-    public Node getNode(long id) {
-        return nodes.get(id);
+    /**
+     * Get node by id. Returns null if node with specified id is not present in graph.
+     * @param id the node's id
+     * @return node with specified id, null if no node present
+     */
+    public Node getNode(int id) {
+        try {
+            return nodes.get(id);
+        } catch (IndexOutOfBoundsException e) {
+            logger.debug("Non-existent node requested (id: {}).", id);
+            return null;
+        }
     }
 
     public Graph createSubgraph(Set<Node> nodeSubset) {
@@ -120,7 +116,7 @@ public class Graph {
 
         // add edges present in both graphs
         for (Node node : nodeSubset) {
-            Set<Node> neighbours = adjList.get(node);
+            var neighbours = adjList.get(node.id);
             for (Node neighbour : neighbours) {
                 if (nodeSubset.contains(neighbour)) {
                     subGraph.addEdge(node, neighbour);
@@ -129,10 +125,6 @@ public class Graph {
         }
 
         return subGraph;
-    }
-
-    public Collection<Node> getPois() {
-        return pois;
     }
 
     public Collection<Node> getPois(double[] area) {
@@ -158,7 +150,7 @@ public class Graph {
     }
 
     public Set<Node> getPoisOnPath(List<Node> p) {
-        return p.stream().filter(node -> pois.contains(node)).collect(Collectors.toSet());
+        return p.stream().filter(pois::contains).collect(Collectors.toSet());
     }
 
     public class Path {

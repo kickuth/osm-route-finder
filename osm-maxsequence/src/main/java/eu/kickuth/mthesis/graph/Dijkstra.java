@@ -49,7 +49,7 @@ public class Dijkstra {
                 continue;
             }
             results.put(currentMin.node, currentMin.distanceFromSource);
-            for (Node neighbour : graph.adjList.get(currentMin.node)) {
+            for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
                 double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // ignore nodes outside of maxDistance
                 if (alternativeDistance > maxDistance) {
@@ -72,7 +72,7 @@ public class Dijkstra {
      * @param targets set of target nodes
      * @return path from source to closest target
      */
-    public Path shortestPath(final Node source, final Set<Node> targets) {
+    public Path shortestPath(final Node source, final Collection<Node> targets) {
         Set<Node> sources = new HashSet<>();
         sources.add(source);
         return shortestPath(sources, targets);
@@ -99,7 +99,7 @@ public class Dijkstra {
      * @param targets the set of target nodes
      * @return Path of nodes for the shortest s-t-path, empty Path if no path exists
      */
-    public Path shortestPath(final Set<Node> sources, final Set<Node> targets) {
+    public Path shortestPath(final Collection<Node> sources, final Collection<Node> targets) {
         initDijkstra(sources);
         // map to backtrack shortest path
         Map<DijkstraNode, DijkstraNode> previousNode = new HashMap<>();
@@ -124,7 +124,7 @@ public class Dijkstra {
                 break;
             }
             // get and potentially update all neighbours
-            for (Node neighbour : graph.adjList.get(currentMin.node)) {
+            for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
                 double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // update node, if the new path is shorter than the previous shortest
                 if (alternativeDistance < lookup.get(neighbour).distanceFromSource) {
@@ -157,9 +157,9 @@ public class Dijkstra {
     /**
      * Initialise queue with multiple sources and initialise lookup table
      */
-    private void initDijkstra(Set<Node> sources) {
+    private void initDijkstra(Collection<Node> sources) {
         pqueue.clear();
-        for (Node node : graph.adjList.keySet()) {
+        for (Node node : graph.nodes) {
             DijkstraNode dNode;
             if (sources.contains(node)) {
                 dNode = new DijkstraNode(node, 0);

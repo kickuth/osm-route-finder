@@ -18,12 +18,12 @@ public abstract class Solver {
     Node source;
     Node target;
     double maxDistance;
-    double maxDistanceFactor;
+    private double maxDistanceFactor;
 
     volatile double status;
 
 
-    public Solver(long sourceID, long targetID, double maxDistanceFactor, Graph g) {
+    public Solver(int sourceID, int targetID, double maxDistanceFactor, Graph g) {
         this(g.getNode(sourceID), g.getNode(targetID), maxDistanceFactor, g);
     }
 
@@ -32,7 +32,6 @@ public abstract class Solver {
         this.source = source;
         this.target = target;
         dijkstra = new Dijkstra(searchGraph);
-        this.maxDistanceFactor = maxDistanceFactor;
         setMaxDistanceFactor(maxDistanceFactor);
     }
 
@@ -64,7 +63,7 @@ public abstract class Solver {
     /*
     getters and setters
     */
-    public void setSource(long id) {
+    public void setSource(int id) {
         source = searchGraph.getNode(id);
     }
     public void setSource(Node source) {
@@ -75,7 +74,7 @@ public abstract class Solver {
         return source;
     }
 
-    public void setTarget(long id) {
+    public void setTarget(int id) {
         target = searchGraph.getNode(id);
     }
     public void setTarget(Node target) {

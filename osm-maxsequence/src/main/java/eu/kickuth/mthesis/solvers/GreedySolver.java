@@ -5,9 +5,7 @@ import eu.kickuth.mthesis.graph.Graph.Path;
 import eu.kickuth.mthesis.graph.Node;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GreedySolver extends Solver {
 
@@ -23,13 +21,7 @@ public class GreedySolver extends Solver {
     public Path solve() {
         logger.debug("Solving");
         // find all nodes with classes
-        Set<Node> poiNodes = new HashSet<>();
-        for (Node node : searchGraph.adjList.keySet()) {
-            String type = node.type;
-            if (!StringUtils.isEmpty(type)) {
-                poiNodes.add(node);
-            }
-        }
+        Collection<Node> poiNodes = new HashSet<>(searchGraph.pois);
         Path sol = searchGraph.new Path();
         Node currentEnd = source;
 

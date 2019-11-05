@@ -105,7 +105,7 @@ class GraphTest {
         logger.trace("Testpath after insert: {}", a);
     }
 
-    Path getShortestPath(long sourceId, long targetId) {
+    Path getShortestPath(int sourceId, int targetId) {
         return dijkstra.shortestPath(g.getNode(sourceId), g.getNode(targetId));
     }
 }

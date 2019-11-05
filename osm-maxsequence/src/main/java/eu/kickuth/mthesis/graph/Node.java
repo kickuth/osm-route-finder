@@ -2,13 +2,13 @@ package eu.kickuth.mthesis.graph;
 
 public class Node {
 
-    public final long id;
+    public final int id;
     public final double lat;
     public final double lon;
     public final String type;
     private String roadType;
 
-    public Node(long id, double lat, double lon, String type) {
+    public Node(int id, double lat, double lon, String type) {
         this.id = id;
         this.lat = lat;
         this.lon = lon;

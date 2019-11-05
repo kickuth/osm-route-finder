@@ -14,28 +14,32 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static eu.kickuth.mthesis.utils.Settings.*;
 
 public class OSMPreprocessor implements Sink, Source {
 
     private static final Logger logger = LogManager.getLogger(OSMPreprocessor.class);
+    private static final OsmUser user = new OsmUser(0, "");
+    private static final Date date = new Date();
 
     private Sink sink;
 
-    private final OsmUser user = new OsmUser(0, "");
-    private final Date date = new Date();
-    private final File outputFile;
     private final Set<Long> nodesOnRoads;
 
-    public OSMPreprocessor(File outputFile) throws FileNotFoundException {
-        this.outputFile = outputFile;
+    private final Map<Long, Integer> idMap;
+    private int mappedID = 0;
+
+    public OSMPreprocessor() throws FileNotFoundException {
+        logger.trace("First run: Finding node IDs on paths");
         OSMNodesOnPathReader nodesReader = new OSMNodesOnPathReader();
         InputStream inputStream = new FileInputStream(OSM_DUMP);
         OsmosisReader reader = new OsmosisReader(inputStream);
         reader.setSink(nodesReader);
         reader.run();
         nodesOnRoads = nodesReader.getNodes();
+        idMap = new HashMap<>((nodesOnRoads.size() * 4) / 3);
     }
 
     @Override
@@ -45,9 +49,10 @@ public class OSMPreprocessor implements Sink, Source {
 
     @Override
     public void initialize(Map<String, Object> metaData) {
+        logger.trace("Second run: Preprocessing");
         // initialise writer
         try {
-            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(outputFile))));
+            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(OSM_DUMP_PROCESSED))));
         } catch (FileNotFoundException e) {
             logger.fatal("Could not find File!", e);
         }
@@ -74,9 +79,11 @@ public class OSMPreprocessor implements Sink, Source {
     }
 
     private void processNode(Node osmNode) {
-        if (!nodesOnRoads.contains(osmNode.getId())) {
+        if (!nodesOnRoads.remove(osmNode.getId())) {
+            // continue if id was not present
             return;
         }
+        idMap.put(osmNode.getId(), mappedID);
         Collection<Tag> tags = new ArrayList<>(1);
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
@@ -90,7 +97,7 @@ public class OSMPreprocessor implements Sink, Source {
                 }
             }
         }
-        Node node = new Node(osmNode.getId(), 1, date, user, 0, tags, osmNode.getLatitude(), osmNode.getLongitude());
+        Node node = new Node(mappedID++, 1, date, user, 0, tags, osmNode.getLatitude(), osmNode.getLongitude());
         sink.process(new NodeContainer(node));
     }
 
@@ -139,7 +146,11 @@ public class OSMPreprocessor implements Sink, Source {
             return;
         }
 
-        Way way = new Way(osmWay.getId(), 1, date, user, 0, tags, osmWay.getWayNodes());
+        List<WayNode> newWayNodes = osmWay.getWayNodes().stream().map(
+                n -> new WayNode(idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
+        ).collect(Collectors.toList());
+
+        Way way = new Way(osmWay.getId(), 1, date, user, 0, tags, newWayNodes);
         sink.process(new WayContainer(way));
 
     }

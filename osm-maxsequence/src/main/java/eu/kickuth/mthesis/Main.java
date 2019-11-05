@@ -19,12 +19,13 @@ public class Main {
 
 
     public static void main(String[] args) {
+        // preprocessing
         if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
+            logger.trace("Preprocessing file dump");
             try {
-                logger.trace("Preprocessing file dump");
                 InputStream osmInput = new FileInputStream(OSM_DUMP);
                 OsmosisReader reader = new OsmosisReader(osmInput);
-                reader.setSink(new OSMPreprocessor(OSM_DUMP_PROCESSED));
+                reader.setSink(new OSMPreprocessor());
                 reader.run();
             } catch (IOException e) {
                 logger.fatal("Failed to preprocess map data", e);
@@ -44,8 +45,9 @@ public class Main {
             System.exit(1);
         }
         Graph osmGraph = myReader.getOsmGraph();
-        logger.debug("Node count: {}", osmGraph.adjList.keySet().size());
-        logger.debug("POI count: {}", osmGraph.getPois().size());
+        logger.debug("Node count: {}", osmGraph.adjList.size());
+        logger.debug("POI count: {}", osmGraph.pois.size());
+        logger.debug("Types of POIs: {}", osmGraph.poiTypes.size());
         for (var entry : osmGraph.poiTypes.entrySet()) {  // TODO experimental
             if (entry.getValue() > 10) {
                 System.out.println(entry.getKey() + " -- " + entry.getValue());
@@ -54,8 +56,8 @@ public class Main {
 
 
         // TODO experimental code
-        Node source = osmGraph.getNode(1409294970L);  // Gaiberg 1495678246L
-        Node target = osmGraph.getNode(251878779L);  // KN 4782625977L
+        Node source = osmGraph.getNode(27182);
+        Node target = osmGraph.getNode(31415);
         double maxDistanceFactor = 1.25;
 
 

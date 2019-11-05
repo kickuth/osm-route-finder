@@ -24,7 +24,7 @@ public class NaiveSolver extends Solver {
         }
 
         // get a copy of all POIs
-        Set<Node> targets = new HashSet<>(searchGraph.getPois());
+        Set<Node> targets = new HashSet<>(searchGraph.pois);
 
         // get POIs on shortest path
         Set<Node> initialVisitedPois = searchGraph.getPoisOnPath(shortestPath);
