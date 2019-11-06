@@ -1,18 +1,22 @@
 package eu.kickuth.mthesis.graph;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
 import eu.kickuth.mthesis.graph.Graph.Path;
 
 public class Dijkstra {
 
     private final Graph graph;
     private final PriorityQueue<DijkstraNode> pqueue;
-    private final Map<Node, DijkstraNode> lookup;
+    private final List<DijkstraNode> pqueueNodes;
+    private boolean[] updatedPqueueNodes;  // keep track of which nodes need resetting after dijkstra run
 
     public Dijkstra(Graph graph) {
         this.graph = graph;
-        pqueue = new PriorityQueue<>(graph.adjList.size());
-        lookup = new HashMap<>(graph.adjList.size());
+        pqueue = new PriorityQueue<>(graph.nodes.size());
+        pqueueNodes = graph.nodes.stream().map(node -> new DijkstraNode(node, Double.POSITIVE_INFINITY)).collect(Collectors.toList());
+        updatedPqueueNodes = new boolean[graph.nodes.size()];  // initialize with false
     }
 
 
@@ -22,7 +26,7 @@ public class Dijkstra {
      * @return map of reachable nodes to their minimal distance from the source
      */
     public Map<Node, Double> sssp(final Node source) {
-        return sssp(source, Double.MAX_VALUE);
+        return sssp(source, Double.POSITIVE_INFINITY);
     }
 
     /**
@@ -41,12 +45,14 @@ public class Dijkstra {
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
             // check if only unreachable nodes are left and we are done
-            if (currentMin.distanceFromSource == Double.MAX_VALUE) {
+            if (currentMin.distanceFromSource == Double.POSITIVE_INFINITY) {
                 break;
             }
             // check whether an updated node has already been processed
-            if (lookup.get(currentMin.node) != currentMin) {
+            if (currentMin.wasProcessed) {
                 continue;
+            } else {
+                currentMin.wasProcessed = true;
             }
             results.put(currentMin.node, currentMin.distanceFromSource);
             for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
@@ -56,13 +62,20 @@ public class Dijkstra {
                     continue;
                 }
                 // update node, if the new path is shorter than the previous shortest
-                if (alternativeDistance < lookup.get(neighbour).distanceFromSource) {
-                    DijkstraNode updatedNeighbour = new DijkstraNode(neighbour, alternativeDistance);
-                    pqueue.add(updatedNeighbour);
-                    lookup.put(neighbour, updatedNeighbour);
+                DijkstraNode dNeighbour = pqueueNodes.get(neighbour.id);
+                if (alternativeDistance < dNeighbour.distanceFromSource) {
+                    updatedPqueueNodes[neighbour.id] = true;
+                    dNeighbour.distanceFromSource = alternativeDistance;
+                    pqueue.add(dNeighbour);
                 }
             }
         }
+        // TODO reset pqueueNodes and updatedPqueueNodes in a better way (i.e. only reset ones that were altered)
+        pqueueNodes.forEach(dNode -> {
+            dNode.distanceFromSource = Double.POSITIVE_INFINITY;
+            dNode.wasProcessed = false;
+        });
+        updatedPqueueNodes = new boolean[updatedPqueueNodes.length];
         return results;
     }
 
@@ -73,7 +86,7 @@ public class Dijkstra {
      * @return path from source to closest target
      */
     public Path shortestPath(final Node source, final Collection<Node> targets) {
-        Set<Node> sources = new HashSet<>();
+        ArrayList<Node> sources = new ArrayList<>(1);
         sources.add(source);
         return shortestPath(sources, targets);
 
@@ -86,8 +99,8 @@ public class Dijkstra {
      * @return Path of nodes from source to target, empty Path if no path exists
      */
     public Path shortestPath(final Node source, final Node target) {
-        Set<Node> sources = new HashSet<>();
-        Set<Node> targets = new HashSet<>();
+        List<Node> sources = new ArrayList<>(1);
+        List<Node> targets = new ArrayList<>(1);
         sources.add(source);
         targets.add(target);
         return shortestPath(sources, targets);
@@ -105,19 +118,19 @@ public class Dijkstra {
         Map<DijkstraNode, DijkstraNode> previousNode = new HashMap<>();
 
         // the first reached node in targets
-        DijkstraNode backtrack;
+        DijkstraNode backtrack = null;
 
         // main loop
-        while (true) {
-            // if the queue is empty, we didn't find the target
-            if (pqueue.isEmpty()) {
-                return graph.new Path();
-            }
+        while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
+
             // check whether an updated node has already been processed
-            if (!lookup.get(currentMin.node).equals(currentMin)) {
+            if (currentMin.wasProcessed) {
                 continue;
+            } else {
+                currentMin.wasProcessed = true;
             }
+
             // are we at the target yet?
             if (targets.contains(currentMin.node)) {
                 backtrack = currentMin;
@@ -127,11 +140,12 @@ public class Dijkstra {
             for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
                 double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
                 // update node, if the new path is shorter than the previous shortest
-                if (alternativeDistance < lookup.get(neighbour).distanceFromSource) {
-                    DijkstraNode updatedNeighbour = new DijkstraNode(neighbour, alternativeDistance);
-                    pqueue.add(updatedNeighbour);
-                    lookup.put(neighbour, updatedNeighbour);
-                    previousNode.put(updatedNeighbour, currentMin);
+                DijkstraNode dNeighbour = pqueueNodes.get(neighbour.id);
+                if (alternativeDistance < dNeighbour.distanceFromSource) {
+                    updatedPqueueNodes[neighbour.id] = true;
+                    dNeighbour.distanceFromSource = alternativeDistance;
+                    previousNode.put(dNeighbour, currentMin);
+                    pqueue.add(dNeighbour);
                 }
             }
         }
@@ -139,35 +153,36 @@ public class Dijkstra {
         // reconstruct the path from the target
         LinkedList<DijkstraNode> results = new LinkedList<>();
         while (backtrack != null) {
-            results.add(0, backtrack);
+            results.add(0, new DijkstraNode(backtrack.node, backtrack.distanceFromSource));
             backtrack = previousNode.get(backtrack);
         }
+        // TODO reset pqueueNodes and updatedPqueueNodes in a better way (i.e. only reset ones that were altered)
+        pqueueNodes.forEach(dNode -> {
+            dNode.distanceFromSource = Double.POSITIVE_INFINITY;
+            dNode.wasProcessed = false;
+        });
+        updatedPqueueNodes = new boolean[updatedPqueueNodes.length];
         return graph.new Path(results);
     }
 
     /**
-     * Initialise queue with single source. See <code>initDijkstra(Set<Node> sources)</code>.
+     * Initialise queue with single source.
      */
     private void initDijkstra(Node source) {
-        Set<Node> sources = new HashSet<>();
-        sources.add(source);
-        initDijkstra(sources);
+        pqueue.clear();
+        pqueueNodes.get(source.id).distanceFromSource = 0;
+        updatedPqueueNodes[source.id] = true;
+        pqueue.addAll(pqueueNodes);
     }
 
     /**
-     * Initialise queue with multiple sources and initialise lookup table
+     * Initialise queue with multiple sources.
      */
     private void initDijkstra(Collection<Node> sources) {
         pqueue.clear();
-        for (Node node : graph.nodes) {
-            DijkstraNode dNode;
-            if (sources.contains(node)) {
-                dNode = new DijkstraNode(node, 0);
-                pqueue.add(dNode);
-            } else {
-                dNode = new DijkstraNode(node, Double.MAX_VALUE);
-            }
-            lookup.put(node, dNode);
+        for (Node source : sources) {
+            pqueueNodes.get(source.id).distanceFromSource = 0;
         }
+        pqueue.addAll(pqueueNodes);
     }
 }

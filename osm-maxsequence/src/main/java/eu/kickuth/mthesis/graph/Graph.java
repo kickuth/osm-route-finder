@@ -192,7 +192,8 @@ public class Graph {
         public Path insert(Path toInsert, int start, int end) {
             // check if parameters are invalid. Passing this check implies that dNodes.size() > 0.
             if (dNodes.size() <= Math.max(start, end) || Math.min(start, end) < 0) {
-                throw new IllegalArgumentException("Insertion points are out of bounds!");
+                logger.error("Insertion points are out of bounds: start {}, end {}, path length {}", start, end, dNodes.size());
+                throw new IllegalArgumentException();
             }
 
             // LinkedList.subList does not create a copy. Therefore we map dNodes to new DijkstraNodes

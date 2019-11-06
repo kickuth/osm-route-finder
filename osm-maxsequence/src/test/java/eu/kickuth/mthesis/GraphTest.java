@@ -58,8 +58,8 @@ class GraphTest {
     void simpleAppendTest() {
         logger.trace("Running simplePathTest");
 
-        Path p = getShortestPath(3, 6); // 3, 2, 0, 1, 7
-        Path q = getShortestPath(0, 3); // 0, 1, 7, 3
+        Path p = getShortestPath(3, 6); // 3, 2, 0, 1, 6
+        Path q = getShortestPath(0, 3); // 0, 1, 6, 3
 
         assertThrows(IllegalArgumentException.class, () -> p.append(p)); // TODO move to own test for edge cases
 

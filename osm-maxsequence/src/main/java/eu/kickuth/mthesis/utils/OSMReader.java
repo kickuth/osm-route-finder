@@ -109,8 +109,7 @@ public class OSMReader implements Sink {
 
     @Override
     public void complete() {
-        // TODO
-        // postprocess: Remove nodes without neighbours and dead ends
+        // TODO postprocess: Remove nodes without neighbours and dead ends?
         int deadEndCount = 0;
         for (var e : osmGraph.adjList) {
             if (e.isEmpty()) {

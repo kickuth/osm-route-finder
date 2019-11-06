@@ -7,14 +7,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
-import java.util.List;
 
 public abstract class Solver {
 
     Logger logger = LogManager.getLogger(this.getClass().getName());
 
-    Graph searchGraph;
-    Dijkstra dijkstra;
+    final Graph searchGraph;
+    final Dijkstra dijkstra;
     Node source;
     Node target;
     double maxDistance;
@@ -48,15 +47,7 @@ public abstract class Solver {
      * @return number of unique classes on path
      */
     public int uniqueClassScore(Graph.Path path) {
-        return searchGraph.getPoisOnPath(path).size();
-    }
-
-    /**
-     * Simple scoring for a path, that computes the number of unique classes visited
-     * @param path The path to score
-     * @return number of unique classes on path
-     */
-    public int uniqueClassScore(List<Node> path) {
+        // TODO this is total poi count, not unique
         return searchGraph.getPoisOnPath(path).size();
     }
 

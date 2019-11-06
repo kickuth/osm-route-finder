@@ -93,6 +93,7 @@ public class OSMPreprocessor implements Sink, Source {
                     tags.add(new Tag("traffic_sign", matcher.group(0)));
                 }
                 while (matcher.find()) {
+                    // TODO do not ignore? extend regex?
                     logger.info("Ignoring additional sign: {}", matcher.group(0));
                 }
             }

@@ -9,6 +9,7 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
 
     public final Node node;
     public double distanceFromSource;
+    public boolean wasProcessed;
 
     DijkstraNode(Node node, double distanceFromSource) {
         this.node = node;
@@ -36,5 +37,10 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
     @Override
     public int hashCode() {
         return (node.hashCode() + (int) distanceFromSource) % Integer.MAX_VALUE;
+    }
+
+    @Override
+    public String toString() {
+        return node.toString() + " " + distanceFromSource;
     }
 }
