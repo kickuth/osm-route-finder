@@ -18,6 +18,7 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
 
     @Override
     public int compareTo(DijkstraNode other) {
+        // TODO Integer.compare(2,2);
         if (this.distanceFromSource < other.distanceFromSource) {
             return -1;
         }

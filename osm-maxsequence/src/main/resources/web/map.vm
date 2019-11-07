@@ -97,6 +97,12 @@
             let name = feature.properties.name;
             if (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit") {
                 return null;
+            } else  if (name === "DE:250") {
+                return L.marker(latlon, {icon: icon250});
+            } else  if (name === "DE:357") {
+                return L.marker(latlon, {icon: icon357});
+            } else  if (name === "DE:449") {
+                return L.marker(latlon, {icon: icon449});
             } else {
                 return L.circleMarker(latlon, {
                     radius: 6,

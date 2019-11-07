@@ -17,7 +17,7 @@ public class Graph {
     public final List<List<Node>> adjList;
     public final List<Node> nodes;
     public final Set<Node> pois;
-    public final HashMap<String, Integer> poiTypes = new HashMap<>(); // TODO private
+    public final Map<String, Integer> poiTypes = new TreeMap<>(); // TODO private
     private final List<List<Node>> poiGrid;
 
     // bounds related variables
