@@ -117,7 +117,7 @@ public class OSMReader implements Sink {
             }
         }
         if (deadEndCount > 0) {
-            logger.warn("DEAD ENDS IN GRAPH: " + deadEndCount);
+            logger.debug("Graph contains {} dead ends.", deadEndCount);
         }
     }
 

@@ -21,6 +21,7 @@ import spark.Response;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static eu.kickuth.mthesis.utils.Settings.*;
@@ -53,13 +54,14 @@ public class Webserver {
         solvers.put("ng", currentSolver);
         solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, g));
 
-        // get POIs from nodes
+        // get POIs from nodes, filter common (dynamically loaded) POIs
         poiJSON = GeoJSON.createPOIList(
                 graph.pois.stream().filter(
                         (node) -> !StringUtils.isEmpty(node.type)
                                 && !node.type.equals("city_limit")
                                 && !node.type.equals("DE:205")
                                 && !node.type.equals("DE:206")
+                                && !node.type.equals("DE:274")
                 ).collect(Collectors.toList())
         );
         start();
@@ -146,11 +148,13 @@ public class Webserver {
         String score = String.valueOf(currentSolver.uniqueClassScore(path));
         logger.info("Unique class score for {}: {}", currentSolver.getName(), score);
 
+        Set<Node> pathPois = graph.getPoisOnPath(path);
+
         Map<String, String> jsonArgs = new HashMap<>();
+        jsonArgs.put("pathPois", GeoJSON.createPOIList(pathPois));
         jsonArgs.put("score", score);
         jsonArgs.put("shortestpathdist", String.valueOf(
                 currentSolver.getMaxDistance()/currentSolver.getMaxDistanceFactor()));
-
         return GeoJSON.createPath(path, jsonArgs);
     }
 

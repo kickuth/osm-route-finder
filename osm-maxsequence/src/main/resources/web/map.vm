@@ -44,7 +44,7 @@
 
 <div class="navbar">  ## TODO
     <a href="/" class="active">Map</a>
-    <a href="#undefinedAnchor">Link</a>
+    <a href="https://github.com/kickuth/osm-route-finder" target="_blank" rel="noopener noreferrer">Source</a>
     <a href="https://www.google.com/search?q=cake">Cake?</a>
 </div>
 
@@ -63,9 +63,10 @@
     // Create variable to hold map element, give initial settings to map
     var map = L.map('map',{ center: [48.5, 9], zoom: 9, preferCanvas: true});
     // Add OpenStreetMap tile layer to map
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.5 }).addTo(map);
+    //L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.5 }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);
 
-    // Path and POI colours
+    // Path colours
     const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#000', '#fff', '#f70'];
     let col_idx = 0;
 
@@ -80,14 +81,10 @@
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;
-            if (name === "DE:205") {
-                return L.marker(latlon, {icon: icon205});
-            } else if (name === "DE:206") {
-                return L.marker(latlon, {icon: icon206});
-            } else if (name === "DE:274") {
-                return L.marker(latlon, {icon: icon274});
-            } else if (name === "city_limit") {
-                return L.marker(latlon, {icon: iconcity});
+            if (isCommonName(name)) {
+                return getMarker(feature.properties.name, latlon)
+            } else {
+                return null;
             }
         }
     }).addTo(map);
@@ -101,23 +98,11 @@
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;
-            if (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit") {
+            // hide most common features (which are only displayed dynamically close up))
+            if (isCommonName(name)) {
                 return null;
-            } else  if (name === "DE:250") {
-                return L.marker(latlon, {icon: icon250});
-            } else  if (name === "DE:357") {
-                return L.marker(latlon, {icon: icon357});
-            } else  if (name === "DE:449") {
-                return L.marker(latlon, {icon: icon449});
             } else {
-                return L.circleMarker(latlon, {
-                    radius: 6,
-                    fillColor: colors[name.charCodeAt(name.length - 1) % colors.length],
-                    color: '#000',
-                    weight: 1,
-                    opacity: 0.5,
-                    fillOpacity: 0.7
-                });
+                return getMarker(name, latlon);
             }
         }
     });
@@ -151,7 +136,11 @@
         }, 1000);
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
+            // add path
             L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.score + " length: " + res.length).addTo(map);
+            // add POIs on path ## TODO marker style?
+            console.log(res.pathPois);
+            L.geoJSON(JSON.parse(res.pathPois)).addTo(map);
             // var animatedMarker = L.animatedMarker(line.getLatLngs(), {
             //     distance: 100, // meters
             //     interval: 50, // milliseconds

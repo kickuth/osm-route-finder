@@ -123,7 +123,7 @@ public class Dijkstra {
         }
 
         // map to backtrack shortest path
-        Map<Integer, Integer> previousNode = new HashMap<>();
+        Map<Integer, Integer> parentMap = new HashMap<>();
 
         // the first reached node in targets
         Integer backtrackId = null;
@@ -154,7 +154,7 @@ public class Dijkstra {
                     pqueueNodes.set(neighbour.id, dNeighbour);
                     pqueue.add(dNeighbour);
                     updatedPqueueNodes.add(neighbour.id);
-                    previousNode.put(neighbour.id, currentMin.node.id); // TODO returns previous value for that key
+                    parentMap.put(neighbour.id, currentMin.node.id); // TODO returns previous value for that key
                 }
             }
         }
@@ -169,7 +169,7 @@ public class Dijkstra {
         do {
             DijkstraNode backtrack = pqueueNodes.get(backtrackId);
             results.addFirst(new DijkstraNode(backtrack.node, backtrack.distanceFromSource));
-            backtrackId = previousNode.get(backtrackId);
+            backtrackId = parentMap.get(backtrackId);
         } while (backtrackId != null);
 
         for (int index : updatedPqueueNodes) {

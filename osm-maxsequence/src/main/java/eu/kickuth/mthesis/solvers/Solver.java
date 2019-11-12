@@ -36,7 +36,7 @@ public abstract class Solver {
 
     public Graph.Path solve() {
         if (maxDistance < 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Maximal path length must not be negative!");
         }
         return searchGraph.new Path();
     }
@@ -47,8 +47,9 @@ public abstract class Solver {
      * @return number of unique classes on path
      */
     public int uniqueClassScore(Graph.Path path) {
-        // TODO this is total poi count, not unique
-        return searchGraph.getPoisOnPath(path).size();
+        int roadTypesCount = Math.toIntExact(path.getNodes().stream().map(Node::getRoadType).distinct().count());
+        int poiTypesCount = Math.toIntExact(searchGraph.getPoisOnPath(path).stream().map(node -> node.type).distinct().count());
+        return roadTypesCount + poiTypesCount;
     }
 
     /*
