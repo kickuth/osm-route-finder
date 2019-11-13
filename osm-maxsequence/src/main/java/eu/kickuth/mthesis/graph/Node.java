@@ -66,7 +66,7 @@ public class Node {
 
     @Override
     public int hashCode() {
-        return (int) ((id + Integer.MIN_VALUE) % Integer.MAX_VALUE);
+        return id;
     }
 
     @Override

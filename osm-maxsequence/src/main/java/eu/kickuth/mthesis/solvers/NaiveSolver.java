@@ -14,7 +14,6 @@ public class NaiveSolver extends Solver {
         super(source, target, maxDistance, g);
     }
 
-    // TODO improve/rewrite, comment
     public Path solve() {
         logger.debug("Solving");
         Path shortestPath = dijkstra.shortestPath(source, target);
@@ -23,7 +22,7 @@ public class NaiveSolver extends Solver {
             return searchGraph.new Path();
         }
 
-        // get a copy of all POIs
+        // get a shallow copy of all POIs
         Set<Node> targets = new HashSet<>(searchGraph.pois);
 
         // get POIs on shortest path
@@ -39,8 +38,7 @@ public class NaiveSolver extends Solver {
             targets.removeIf(possibleTarget -> possibleTarget.type.equals(visitedPoi.type));
         }
 
-        // keep adding shortest paths to new classes until we run over the maximal distance
-        // TODO will currently overshoot maximal distance
+        // keep adding shortest paths to new classes until we would run over the maximal distance
         while (shortestPath.getPathCost() < maxDistance && !targets.isEmpty()) {
             Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
             // stop if we can't find new POIs
@@ -57,10 +55,18 @@ public class NaiveSolver extends Solver {
                 continue;
             }
             sources.add(newPoi);
+
             // remove possible targets with the same class as the new node
             targets.removeIf(node -> node.type.equals(newPoi.type));
+
             // insert the detour into the previous path
             pathToNewPoi.append(backPath);
+
+            // check if the path might grow too large
+            if (pathToNewPoi.getPathCost() + shortestPath.getPathCost() > maxDistance) {
+                break;
+            }
+
             // find index for insertion
             int insertStart = shortestPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
             int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
@@ -68,11 +74,11 @@ public class NaiveSolver extends Solver {
             shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
-            status = shortestPath.getPathCost()/maxDistance;
-            logger.trace(String.format("solving: %.2f%%", status*100));
+            setStatus(shortestPath.getPathCost()/maxDistance);
+            logger.trace(String.format("solving: %.2f%%", getStatus()*100));
         }
 
-        status = 0;
+        setStatus(0.0);
         return shortestPath;
     }
 

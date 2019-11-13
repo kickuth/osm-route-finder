@@ -10,7 +10,7 @@ public class OSMNodesOnPathReader implements Sink {
 
     private Set<Long> nodes;
 
-    public OSMNodesOnPathReader() {
+    OSMNodesOnPathReader() {
         nodes = new HashSet<>();
     }
 
@@ -27,6 +27,10 @@ public class OSMNodesOnPathReader implements Sink {
         }
     }
 
+    /**
+     * Check if a way is considered drivable and if so, remember all node IDs on it.
+     * @param osmWay the currently processed way
+     */
     private void processWay(Way osmWay) {
         boolean isHighway = false;  // is road drivable?
 
@@ -47,14 +51,16 @@ public class OSMNodesOnPathReader implements Sink {
                     isHighway = true;
                     break;
             }
-            if (isHighway) {
-                nodes.addAll(osmWay.getWayNodes().stream().map(WayNode::getNodeId).collect(Collectors.toList()));
-                return;
-            }
         }
-
+        if (isHighway) {
+            nodes.addAll(osmWay.getWayNodes().stream().map(WayNode::getNodeId).collect(Collectors.toList()));
+        }
     }
 
+    /**
+     * Retrieve the set of node IDs that lie on drivable roads.
+     * @return ID set of nodes on roads
+     */
     public Set<Long> getNodes() {
         return nodes;
     }

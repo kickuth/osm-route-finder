@@ -19,13 +19,16 @@ public abstract class Solver {
     double maxDistance;
     private double maxDistanceFactor;
 
-    volatile double status;
+    // variable indicating the solvers progress. Should be within the interval [0, 1] and set to 0 when done solving.
+    private volatile double status;
 
-
-    public Solver(int sourceID, int targetID, double maxDistanceFactor, Graph g) {
-        this(g.getNode(sourceID), g.getNode(targetID), maxDistanceFactor, g);
-    }
-
+    /**
+     * Instantiate a solver.
+     * @param source initial starting node
+     * @param target initial target node
+     * @param maxDistanceFactor initial distance as a factor of the shortest path
+     * @param g the graph to search on
+     */
     public Solver(Node source, Node target, double maxDistanceFactor, Graph g) {
         searchGraph = g;
         this.source = source;
@@ -128,7 +131,15 @@ public abstract class Solver {
      * @return double [0, 1] representing the current solving progress
      */
     public double getStatus() {
-        return Math.min(status, 1);
+        return status;
+    }
+
+    /**
+     * Update the status.
+     * @param newStatus new status. Should be within the interval [0,1].
+     */
+    synchronized void setStatus(double newStatus) {
+        status = Math.max(0, Math.min(newStatus, 1));
     }
 
     /**

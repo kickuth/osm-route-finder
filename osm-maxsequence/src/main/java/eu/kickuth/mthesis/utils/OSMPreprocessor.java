@@ -81,6 +81,7 @@ public class OSMPreprocessor implements Sink, Source {
     private void processNode(Node osmNode) {
         if (!nodesOnRoads.remove(osmNode.getId())) {
             // continue if id was not present
+            // TODO why is this true after preprocessed? why OSMNodesOnPathReader: #nodes n!= #nodeIDs?
             return;
         }
         idMap.put(osmNode.getId(), mappedID);
@@ -105,7 +106,7 @@ public class OSMPreprocessor implements Sink, Source {
     private void processWay(Way osmWay) {
         boolean isHighway = false;  // is road drivable?
         boolean isOneWay = false;
-        Collection<Tag> tags = new ArrayList<>(10);
+        Collection<Tag> tags = new ArrayList<>(2);
 
         // filter for useful roads and check if the way is one way only
         for (Tag wayTag : osmWay.getTags()) {

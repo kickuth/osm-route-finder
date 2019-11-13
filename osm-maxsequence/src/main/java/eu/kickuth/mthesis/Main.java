@@ -44,22 +44,32 @@ public class Main {
             logger.fatal("Failed to load map data", e);
             System.exit(1);
         }
+
+        // retrieve graph from importer
         Graph osmGraph = myReader.getOsmGraph();
-        logger.debug("Node count: {}", osmGraph.adjList.size());
-        logger.debug("POI count: {}", osmGraph.pois.size());
-        logger.debug("Types of POIs: {}", osmGraph.poiTypes.size());
-        for (var entry : osmGraph.poiTypes.entrySet()) {  // TODO experimental
-            if (entry.getValue() > 10) {
-                System.out.println(entry.getKey() + " -- " + entry.getValue());
-            }
+
+        // output some graph stats
+        logger.info("Node count: {}", osmGraph.adjList.size());
+        logger.info("POI count: {}", osmGraph.pois.size());
+        logger.info("Types of POIs: {}", osmGraph.poiTypes.size());
+
+        logger.trace("POI classes with counts:");
+        for (var entry : osmGraph.poiTypes.entrySet()) {
+            logger.trace(entry.getKey() + " -- " + entry.getValue());
         }
 
 
-        // TODO experimental code
-        Node source = osmGraph.getNode(27182);
-        Node target = osmGraph.getNode(31415);
+        // set initial values
         double maxDistanceFactor = 1.25;
+        int sourceID = 27182;
+        int targetID = 31415;
 
+        Node source = osmGraph.getNode(sourceID);
+        Node target = osmGraph.getNode(targetID);
+        if (source == null || target == null) {
+            logger.fatal("cold not retrieve default source/target nodes (IDs {}, {}) from graph.", sourceID, targetID);
+            System.exit(1);
+        }
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);
