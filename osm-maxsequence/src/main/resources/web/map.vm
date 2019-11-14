@@ -61,7 +61,7 @@
 
 <script>
     // Create variable to hold map element, give initial settings to map
-    var map = L.map('map',{ center: [48.5, 9], zoom: 9, preferCanvas: true});
+    var map = L.map('map',{ center: [51, 10], zoom: 7, preferCanvas: true});
     // Add OpenStreetMap tile layer to map
     //L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.5 }).addTo(map);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OpenStreetMap', opacity: 0.7 }).addTo(map);

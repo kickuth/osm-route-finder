@@ -10,9 +10,9 @@ import java.text.DecimalFormat;
 
 public abstract class Solver {
 
-    Logger logger = LogManager.getLogger(this.getClass().getName());
+    final Logger logger = LogManager.getLogger(this.getClass().getName());
 
-    final Graph searchGraph;
+    final Graph graph;
     final Dijkstra dijkstra;
     Node source;
     Node target;
@@ -27,22 +27,21 @@ public abstract class Solver {
      * @param source initial starting node
      * @param target initial target node
      * @param maxDistanceFactor initial distance as a factor of the shortest path
-     * @param g the graph to search on
+     * @param graph the graph to search on
      */
-    public Solver(Node source, Node target, double maxDistanceFactor, Graph g) {
-        searchGraph = g;
+    Solver(Node source, Node target, double maxDistanceFactor, Graph graph) {
+        this.graph = graph;
         this.source = source;
         this.target = target;
-        dijkstra = new Dijkstra(searchGraph);
+        dijkstra = Dijkstra.getInstance(this.graph);
         setMaxDistanceFactor(maxDistanceFactor);
     }
 
-    public Graph.Path solve() {
-        if (maxDistance < 0) {
-            throw new IllegalArgumentException("Maximal path length must not be negative!");
-        }
-        return searchGraph.new Path();
-    }
+    /**
+     * Compute path method.
+     * @return The solution path
+     */
+    public abstract Graph.Path solve();
 
     /**
      * Simple scoring for a path, that computes the number of unique classes visited
@@ -51,7 +50,7 @@ public abstract class Solver {
      */
     public int uniqueClassScore(Graph.Path path) {
         int roadTypesCount = Math.toIntExact(path.getNodes().stream().map(Node::getRoadType).distinct().count());
-        int poiTypesCount = Math.toIntExact(searchGraph.getPoisOnPath(path).stream().map(node -> node.type).distinct().count());
+        int poiTypesCount = Math.toIntExact(graph.getPoisOnPath(path).stream().map(node -> node.type).distinct().count());
         return roadTypesCount + poiTypesCount;
     }
 
@@ -59,7 +58,7 @@ public abstract class Solver {
     getters and setters
     */
     public void setSource(int id) {
-        source = searchGraph.getNode(id);
+        source = graph.getNode(id);
     }
     public void setSource(Node source) {
         this.source = source;
@@ -70,7 +69,7 @@ public abstract class Solver {
     }
 
     public void setTarget(int id) {
-        target = searchGraph.getNode(id);
+        target = graph.getNode(id);
     }
     public void setTarget(Node target) {
         this.target = target;
@@ -142,11 +141,7 @@ public abstract class Solver {
         status = Math.max(0, Math.min(newStatus, 1));
     }
 
-    /**
-     * A name representing the solver.
-     * @return Name of solver
-     */
-    public String getName() {
+    public String toString() {
         return "Generic Solver";
     }
 }

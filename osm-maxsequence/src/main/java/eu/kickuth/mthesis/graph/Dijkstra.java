@@ -7,18 +7,34 @@ import eu.kickuth.mthesis.graph.Graph.Path;
 
 public class Dijkstra {
 
+    private static final Map<Graph, Dijkstra> instances = new HashMap<>();
+
     private final Graph graph;
     private final PriorityQueue<DijkstraNode> pqueue;
     private final List<DijkstraNode> pqueueNodes;
     private List<Integer> updatedPqueueNodes;  // keep track of which nodes need resetting after dijkstra run
 
-    public Dijkstra(Graph graph) {
-        this.graph = graph;
+    /**
+     * Get a Dijkstra instance for given graph. Will only create a single instance per graph.
+     * @param graph graph for the Dijkstra instance
+     * @return unique Dijkstra object for given graph
+     */
+    public static Dijkstra getInstance(Graph graph) {
+        Dijkstra instance = instances.get(graph);
+        return (instance == null ? new Dijkstra(graph) : instance);
+    }
+
+    /**
+     * Create a new Dijkstra instance and add it to the instance map.
+     * @param g The graph belonging to this instance
+     */
+    private Dijkstra(Graph g) {
+        graph = g;
         pqueue = new PriorityQueue<>(graph.nodes.size());
         pqueueNodes = graph.nodes.stream().map(node -> new DijkstraNode(node, Double.POSITIVE_INFINITY)).collect(Collectors.toList());
         updatedPqueueNodes = new ArrayList<>();
+        instances.put(graph, this);
     }
-
 
     /**
      * Compute the single source shortest path to all reachable nodes.

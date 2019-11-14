@@ -19,14 +19,14 @@ public class NaiveSolver extends Solver {
         Path shortestPath = dijkstra.shortestPath(source, target);
         if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
             logger.info("Target is not reachable!");
-            return searchGraph.new Path();
+            return graph.new Path();
         }
 
         // get a shallow copy of all POIs
-        Set<Node> targets = new HashSet<>(searchGraph.pois);
+        Set<Node> targets = new HashSet<>(graph.pois);
 
         // get POIs on shortest path
-        Set<Node> initialVisitedPois = searchGraph.getPoisOnPath(shortestPath);
+        Set<Node> initialVisitedPois = graph.getPoisOnPath(shortestPath);
 
         // allow path insertions at visited POIs, start and end node
         Set<Node> sources = new HashSet<>(initialVisitedPois);
@@ -83,7 +83,7 @@ public class NaiveSolver extends Solver {
     }
 
     @Override
-    public String getName() {
+    public String toString() {
         return "Naive Solver";
     }
 }

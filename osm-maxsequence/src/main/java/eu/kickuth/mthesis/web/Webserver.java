@@ -33,9 +33,9 @@ public class Webserver {
 
     private final Graph graph;
     private Solver currentSolver;
-
     private final HashMap<String, Solver> solvers = new HashMap<>(5);
-    private static final VelocityEngine ve = new VelocityEngine();
+
+    private static final VelocityEngine ve = new VelocityEngine();  // web server
     private final String poiJSON;
 
     // uncomment here (and in start()) for Cross-Origin Resource Sharing
@@ -50,14 +50,14 @@ public class Webserver {
     public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
         logger.trace("Initialising solvers");
         graph = g;
-        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, g);
+        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
         solvers.put("ng", currentSolver);
-        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, g));
+        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
-        // get POIs from nodes, filter common (dynamically loaded) POIs
+        // get POIs from nodes, filter common (later dynamically loaded) POIs
         poiJSON = GeoJSON.createPOIList(
                 graph.pois.stream().filter(
-                        (node) -> !StringUtils.isEmpty(node.type)
+                        node -> !StringUtils.isEmpty(node.type)
                                 && !node.type.equals("city_limit")
                                 && !node.type.equals("DE:205")
                                 && !node.type.equals("DE:206")
@@ -67,13 +67,14 @@ public class Webserver {
         start();
     }
 
+    /**
+     * Boot up the web-server. Will keep the thread alive and handle requests in new threads.
+     */
     private void start() {
-        logger.trace("Starting web-server: http://[::1]:{}/", PORT);
-
-        // Configure Spark
+        // Configure Spark web-server
         port(PORT);
         staticFiles.location("/web/pub");
-        //staticFiles.expireTime(600);  // cache
+        //staticFiles.expireTime(600);  // enable file caching and set duration
         //Spark.after((request, response) -> corsHeaders.forEach(response::header));  // allow CORS
 
         // initialize engine
@@ -81,13 +82,14 @@ public class Webserver {
         ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
         ve.init();
 
-
         // setup request handlers
         get("/", "application/json", this::renderMap);
         get("/path", "application/json", this::computePath);
-        get("/status", "application/json", this::computeProgress);
+        get("/status", "application/json", this::getSolverProgress);
         get("/maxdist", "application/json", this::updateMaxDist);
         post("/pois", "application/json", this::getPoisInWindow);
+
+        logger.trace("Started web-server: http://[::1]:{}/", PORT);
     }
 
     private String getPoisInWindow(Request req, Response res) {
@@ -104,15 +106,15 @@ public class Webserver {
                         * Double.parseDouble(req.queryParams("newfactor")));
     }
 
-    private String computeProgress(Request req, Response res) {
+    private String getSolverProgress(Request req, Response res) {
         return String.format("{ \"progress\":%d }", (int) (currentSolver.getStatus() * 100));
     }
 
     private String computePath(Request req, Response res) {
         String reqAlgo = req.queryParams("algo");
         if (solvers.containsKey(reqAlgo)) {
-            logger.debug("Current solver set to: " + reqAlgo);
             currentSolver = solvers.get(reqAlgo);
+            logger.debug("Current solver set to {}", currentSolver);
         } else {
             logger.warn("Ignoring requested solver/algorithm: " + reqAlgo);
         }
@@ -146,7 +148,7 @@ public class Webserver {
 
         Graph.Path path = currentSolver.solve();
         String score = String.valueOf(currentSolver.uniqueClassScore(path));
-        logger.info("Unique class score for {}: {}", currentSolver.getName(), score);
+        logger.info("Unique class score for {}: {}", currentSolver, score);
 
         Set<Node> pathPois = graph.getPoisOnPath(path);
 

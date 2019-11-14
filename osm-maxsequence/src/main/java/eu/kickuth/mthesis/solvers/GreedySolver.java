@@ -3,7 +3,6 @@ package eu.kickuth.mthesis.solvers;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Graph.Path;
 import eu.kickuth.mthesis.graph.Node;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 
@@ -22,8 +21,8 @@ public class GreedySolver extends Solver {
     public Path solve() {
         logger.debug("Solving");
         // find all nodes with classes
-        Collection<Node> poiNodes = new HashSet<>(searchGraph.pois);
-        Path sol = searchGraph.new Path();
+        Collection<Node> poiNodes = new HashSet<>(graph.pois);
+        Path sol = graph.new Path();
         Node currentEnd = source;
 
         // if the next node is too far away, how often will we look for another node, hoping it will lie more on the path
@@ -66,7 +65,7 @@ public class GreedySolver extends Solver {
     }
 
     @Override
-    public String getName() {
+    public String toString() {
         return "Greedy Solver";
     }
 }

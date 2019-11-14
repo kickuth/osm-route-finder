@@ -18,7 +18,7 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
 
-    public static void main(String[] args) {
+    public static void main(String... args) {
         // preprocessing
         if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
             logger.trace("Preprocessing file dump");
@@ -33,6 +33,7 @@ public class Main {
             }
         }
 
+        // import graph
         logger.trace("Loading graph from preprocessed file");
         OSMReader myReader = new OSMReader();
         try {
@@ -53,10 +54,9 @@ public class Main {
         logger.info("POI count: {}", osmGraph.pois.size());
         logger.info("Types of POIs: {}", osmGraph.poiTypes.size());
 
-        logger.trace("POI classes with counts:");
-        for (var entry : osmGraph.poiTypes.entrySet()) {
-            logger.trace(entry.getKey() + " -- " + entry.getValue());
-        }
+        StringBuilder poiClassesDebug = new StringBuilder();
+        osmGraph.poiTypes.forEach((key, value) -> poiClassesDebug.append("\n").append(key).append(" - ").append(value));
+        logger.trace("POI classes with counts: {}", poiClassesDebug);
 
 
         // set initial values
