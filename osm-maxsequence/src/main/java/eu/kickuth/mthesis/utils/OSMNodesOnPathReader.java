@@ -20,9 +20,9 @@ public class OSMNodesOnPathReader implements Sink {
     }
 
     @Override
-    public void process(EntityContainer entityContainer) {
-        if (entityContainer instanceof WayContainer) {
-            processWay(((WayContainer) entityContainer).getEntity());
+    public void process(EntityContainer container) {
+        if (container instanceof WayContainer) {
+            processWay((Way) container.getEntity());
 
         }
     }
@@ -36,11 +36,6 @@ public class OSMNodesOnPathReader implements Sink {
 
         for (Tag wayTag : osmWay.getTags()) {
             switch (wayTag.getKey().toLowerCase(Locale.ENGLISH)) {
-                case "access":  // can we access the road?
-                    if ("no".equalsIgnoreCase(wayTag.getValue()) || "private".equalsIgnoreCase(wayTag.getValue())) {
-                        return;
-                    }
-                    break;
                 case "highway":  // is it a (probably) drivable road?
                     String rt = wayTag.getValue();
                     if (!(rt.startsWith("motorway") || rt.startsWith("trunk") ||
@@ -49,6 +44,11 @@ public class OSMNodesOnPathReader implements Sink {
                         return;
                     }
                     isHighway = true;
+                    break;
+                case "access":  // can we access the road?
+                    if ("no".equalsIgnoreCase(wayTag.getValue()) || "private".equalsIgnoreCase(wayTag.getValue())) {
+                        return;
+                    }
                     break;
             }
         }

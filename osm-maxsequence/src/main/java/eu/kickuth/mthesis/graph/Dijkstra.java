@@ -71,19 +71,19 @@ public class Dijkstra {
                 currentMin.wasProcessed = true;
             }
             results.put(currentMin.node, currentMin.distanceFromSource);
-            for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
-                double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
+            for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
+                double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // ignore nodes outside of maxDistance
                 if (alternativeDistance > maxDistance) {
                     continue;
                 }
                 // update node, if the new path is shorter than the previous shortest
-                DijkstraNode dNeighbour = pqueueNodes.get(neighbour.id);
+                DijkstraNode dNeighbour = pqueueNodes.get(toNeighbour.dest.id);
                 if (alternativeDistance < dNeighbour.distanceFromSource) {
-                    dNeighbour = new DijkstraNode(neighbour, alternativeDistance);
-                    pqueueNodes.set(neighbour.id, dNeighbour);
+                    dNeighbour = new DijkstraNode(toNeighbour.dest, alternativeDistance);
+                    pqueueNodes.set(toNeighbour.dest.id, dNeighbour);
                     pqueue.add(dNeighbour);
-                    updatedPqueueNodes.add(neighbour.id);
+                    updatedPqueueNodes.add(toNeighbour.dest.id);
                 }
             }
         }
@@ -161,16 +161,16 @@ public class Dijkstra {
                 break;
             }
             // get and potentially update all neighbours
-            for (Node neighbour : graph.adjList.get(currentMin.node.id)) {
-                double alternativeDistance = currentMin.distanceFromSource + currentMin.node.getDistance(neighbour);
+            for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
+                double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // update node, if the new path is shorter than the previous shortest
-                DijkstraNode dNeighbour = pqueueNodes.get(neighbour.id);
+                DijkstraNode dNeighbour = pqueueNodes.get(toNeighbour.dest.id);
                 if (alternativeDistance < dNeighbour.distanceFromSource) {
-                    dNeighbour = new DijkstraNode(neighbour, alternativeDistance);
-                    pqueueNodes.set(neighbour.id, dNeighbour);
+                    dNeighbour = new DijkstraNode(toNeighbour.dest, alternativeDistance);
+                    pqueueNodes.set(toNeighbour.dest.id, dNeighbour);
                     pqueue.add(dNeighbour);
-                    updatedPqueueNodes.add(neighbour.id);
-                    parentMap.put(neighbour.id, currentMin.node.id); // TODO returns previous value for that key
+                    updatedPqueueNodes.add(toNeighbour.dest.id);
+                    parentMap.put(toNeighbour.dest.id, currentMin.node.id); // TODO returns previous value for that key
                 }
             }
         }

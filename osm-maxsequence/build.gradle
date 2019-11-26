@@ -36,8 +36,9 @@ repositories {
 }
 
 dependencies {
-    // OSM import
+    // OSM import/export
     compile 'org.openstreetmap.osmosis:osmosis-pbf:0.47'
+    //compile 'org.openstreetmap.osmosis:osmosis-xml:0.47'  // for xml import/export
 
     // StringUtils
     compile 'org.apache.commons:commons-lang3:3.9'

@@ -1,5 +1,6 @@
 package eu.kickuth.mthesis.utils;
 
+import eu.kickuth.mthesis.graph.Edge;
 import eu.kickuth.mthesis.graph.Graph;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,9 +99,9 @@ public class OSMReader implements Sink {
             wn = wayNodes.next();
             nextNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
             nextNode.setRoadType(roadType);
-            osmGraph.addEdge(currentNode, nextNode);
+            osmGraph.addEdge(new Edge(currentNode, nextNode));
             if (!isOneWay) {
-                osmGraph.addEdge(nextNode, currentNode);
+                osmGraph.addEdge(new Edge(nextNode, currentNode));
             }
             currentNode = nextNode;
         }

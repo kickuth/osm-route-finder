@@ -38,20 +38,20 @@ class GraphTest {
         g.addNode(n5);
         g.addNode(n6);
 
-        g.addEdge(n0, n1);
-        g.addEdge(n0, n2);
-        g.addEdge(n1, n0);
-        g.addEdge(n1, n4);
-        g.addEdge(n1, n6);
-        g.addEdge(n2, n0);
-        g.addEdge(n3, n2);
-        g.addEdge(n3, n5);
-        g.addEdge(n4, n1);
-        g.addEdge(n4, n5);
-        g.addEdge(n5, n4);
-        g.addEdge(n6, n3);
+        g.addEdge(new Edge(n0, n1));
+        g.addEdge(new Edge(n0, n2));
+        g.addEdge(new Edge(n1, n0));
+        g.addEdge(new Edge(n1, n4));
+        g.addEdge(new Edge(n1, n6));
+        g.addEdge(new Edge(n2, n0));
+        g.addEdge(new Edge(n3, n2));
+        g.addEdge(new Edge(n3, n5));
+        g.addEdge(new Edge(n4, n1));
+        g.addEdge(new Edge(n4, n5));
+        g.addEdge(new Edge(n5, n4));
+        g.addEdge(new Edge(n6, n3));
 
-        dijkstra = new Dijkstra(g);
+        dijkstra = Dijkstra.getInstance(g);
     }
 
     @Test

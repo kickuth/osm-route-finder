@@ -33,6 +33,8 @@ public class Main {
             }
         }
 
+        System.exit(0);
+
         // import graph
         logger.trace("Loading graph from preprocessed file");
         OSMReader myReader = new OSMReader();

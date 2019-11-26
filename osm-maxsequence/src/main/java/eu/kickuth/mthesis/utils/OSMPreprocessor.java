@@ -21,9 +21,12 @@ import static eu.kickuth.mthesis.utils.Settings.*;
 public class OSMPreprocessor implements Sink, Source {
 
     private static final Logger logger = LogManager.getLogger(OSMPreprocessor.class);
+
+    // default user and date for processed OSM file
     private static final OsmUser user = new OsmUser(0, "");
     private static final Date date = new Date();
 
+    // data writer
     private Sink sink;
 
     private final Set<Long> nodesOnRoads;
@@ -52,36 +55,35 @@ public class OSMPreprocessor implements Sink, Source {
         logger.trace("Second run: Preprocessing");
         // initialise writer
         try {
-            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(OSM_DUMP_PROCESSED))));
+//            setSink(new XmlWriter(new BufferedWriter(new FileWriter(OSM_DUMP_PROCESSED))));  // xml writer
+            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(OSM_DUMP_PROCESSED))));  // pbf writer
         } catch (FileNotFoundException e) {
             logger.fatal("Could not find File!", e);
         }
-
     }
 
     @Override
-    public void process(EntityContainer entityContainer) {
-        if (entityContainer instanceof NodeContainer) {
-            processNode(((NodeContainer) entityContainer).getEntity());
+    public void process(EntityContainer container) {
+        if (container instanceof NodeContainer) {
+            processNode((Node) container.getEntity());
 
-        } else if (entityContainer instanceof WayContainer) {
-            processWay(((WayContainer) entityContainer).getEntity());
+        } else if (container instanceof WayContainer) {
+            processWay((Way) container.getEntity());
 
-        } else if (entityContainer instanceof RelationContainer) {
+        } else if (container instanceof RelationContainer) {
             // We don't process relations
 
-        } else if (entityContainer instanceof BoundContainer) {
-            sink.process(entityContainer);
+        } else if (container instanceof BoundContainer) {
+            sink.process(container);
 
         } else {
-            logger.warn("Unknown Entity: {}", entityContainer.getEntity());
+            logger.warn("Unknown Entity: {}", container.getEntity());
         }
     }
 
     private void processNode(Node osmNode) {
         if (!nodesOnRoads.remove(osmNode.getId())) {
             // continue if id was not present
-            // TODO why is this true after preprocessed? why OSMNodesOnPathReader: #nodes n!= #nodeIDs?
             return;
         }
         idMap.put(osmNode.getId(), mappedID);
@@ -99,23 +101,21 @@ public class OSMPreprocessor implements Sink, Source {
                 }
             }
         }
-        Node node = new Node(mappedID++, 1, date, user, 0, tags, osmNode.getLatitude(), osmNode.getLongitude());
-        sink.process(new NodeContainer(node));
+
+        sink.process(new NodeContainer(new Node(
+                new CommonEntityData(mappedID++, 1, date, user, 0, tags),
+                osmNode.getLatitude(), osmNode.getLongitude()
+        )));
     }
 
     private void processWay(Way osmWay) {
         boolean isHighway = false;  // is road drivable?
         boolean isOneWay = false;
-        Collection<Tag> tags = new ArrayList<>(2);
+        Collection<Tag> newTags = new ArrayList<>();
 
         // filter for useful roads and check if the way is one way only
         for (Tag wayTag : osmWay.getTags()) {
             switch (wayTag.getKey().toLowerCase(Locale.ENGLISH)) {
-                case "access":  // can we access the road?
-                    if ("no".equalsIgnoreCase(wayTag.getValue()) || "private".equalsIgnoreCase(wayTag.getValue())) {
-                        return;
-                    }
-                    break;
                 case "highway":  // is it a (probably) drivable road?
                     String rt = wayTag.getValue();
                     if (!(rt.startsWith("motorway") || rt.startsWith("trunk") ||
@@ -123,19 +123,24 @@ public class OSMPreprocessor implements Sink, Source {
                             rt.equals("unclassified") || rt.equals("residential"))) {
                         return;
                     }
-                    tags.add(new Tag("highway", rt));
+                    newTags.add(new Tag("highway", rt));
                     isHighway = true;
-                    break;
-                case "junction":  // is it a roundabout (implies one directional)?
-                    if ("roundabout".equalsIgnoreCase(wayTag.getValue()) && !isOneWay) {
-                        isOneWay = true;
-                        tags.add(new Tag("oneway", "yes"));
-                    }
                     break;
                 case "oneway":  // is it explicitly one directional?
                     if ("yes".equalsIgnoreCase(wayTag.getValue()) && !isOneWay) {
                         isOneWay = true;
-                        tags.add(new Tag("oneway", "yes"));
+                        newTags.add(new Tag("oneway", "yes"));
+                    }
+                    break;
+                case "junction":  // is it a roundabout (implies one directional)?
+                    if ("roundabout".equalsIgnoreCase(wayTag.getValue()) && !isOneWay) {
+                        isOneWay = true;
+                        newTags.add(new Tag("oneway", "yes"));
+                    }
+                    break;
+                case "access":  // can we access the road?
+                    if ("no".equalsIgnoreCase(wayTag.getValue()) || "private".equalsIgnoreCase(wayTag.getValue())) {
+                        return;
                     }
                     break;
                 default:
@@ -149,17 +154,17 @@ public class OSMPreprocessor implements Sink, Source {
         }
 
         List<WayNode> newWayNodes = osmWay.getWayNodes().stream().map(
-                n -> new WayNode(idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
+                n -> new WayNode((long) idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
         ).collect(Collectors.toList());
 
-        Way way = new Way(osmWay.getId(), 1, date, user, 0, tags, newWayNodes);
-        sink.process(new WayContainer(way));
+        Way newWay = new Way(new CommonEntityData(osmWay.getId(), 1, date, user, 0, newTags), newWayNodes);
 
+        sink.process(new WayContainer(newWay));
     }
 
     @Override
     public void complete() {
-
+        sink.complete();  // write out remaining sink buffer
     }
 
     @Override

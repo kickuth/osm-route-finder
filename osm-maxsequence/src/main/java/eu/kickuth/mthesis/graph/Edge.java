@@ -38,7 +38,11 @@ public class Edge {
 
     @Override
     public int hashCode() {
-        return  (int) ((source.hashCode() * 3 + dest.hashCode()) % Integer.MAX_VALUE);
+        return  source.hashCode() * 3 + dest.hashCode();
+    }
+
+    public String toString() {
+        return "Edge: " + source + " to " + dest + " cost: " + cost;
     }
 
 }

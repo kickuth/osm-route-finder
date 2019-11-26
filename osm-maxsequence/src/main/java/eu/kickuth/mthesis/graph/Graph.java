@@ -14,7 +14,7 @@ public class Graph {
 
     private static final Logger logger = LogManager.getLogger(Graph.class);
 
-    public final List<List<Node>> adjList;
+    public final List<List<Edge>> adjList;
     public final List<Node> nodes;
     public final Set<Node> pois;
     public final Map<String, Integer> poiTypes = new TreeMap<>(); // TODO private
@@ -85,11 +85,11 @@ public class Graph {
     /**
      * Add an edge to the graph
      */
-    public void addEdge(Node source, Node dest) {
+    public void addEdge(Edge edge) {
         try {
-            adjList.get(source.id).add(dest);
+            adjList.get(edge.source.id).add(edge);
         } catch (IndexOutOfBoundsException e) {
-            logger.warn("Edge from non existent node {} added. Ignoring.", source);
+            logger.warn("Edge {} from non existent node {} added. Ignoring.", edge, edge.source);
         }
     }
 
@@ -117,9 +117,9 @@ public class Graph {
         // add edges present in both graphs
         for (Node node : nodeSubset) {
             var neighbours = adjList.get(node.id);
-            for (Node neighbour : neighbours) {
-                if (nodeSubset.contains(neighbour)) {
-                    subGraph.addEdge(node, neighbour);
+            for (Edge neighbour : neighbours) {
+                if (nodeSubset.contains(neighbour.dest)) {
+                    subGraph.addEdge(neighbour);
                 }
             }
         }
