@@ -3,10 +3,13 @@ package eu.kickuth.mthesis.solvers;
 import eu.kickuth.mthesis.graph.Dijkstra;
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.text.DecimalFormat;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class Solver {
 
@@ -16,6 +19,7 @@ public abstract class Solver {
     final Dijkstra dijkstra;
     Node source;
     Node target;
+    Set<Node> reachablePois;
     double maxDistance;
     private double maxDistanceFactor;
 
@@ -51,14 +55,13 @@ public abstract class Solver {
     public int uniqueClassScore(Graph.Path path) {
         int roadTypesCount = Math.toIntExact(path.getNodes().stream().map(Node::getRoadType).distinct().count());
         int poiTypesCount = Math.toIntExact(graph.getPoisOnPath(path).stream().map(node -> node.type).distinct().count());
-        return roadTypesCount + poiTypesCount;
+        int totalCount = roadTypesCount + poiTypesCount;
+        logger.info("Unique class score: {}", totalCount);
+        return totalCount;
     }
 
-    /*
-    getters and setters
-    */
     public void setSource(int id) {
-        source = graph.getNode(id);
+        setSource(graph.getNode(id));
     }
     public void setSource(Node source) {
         this.source = source;
@@ -69,7 +72,7 @@ public abstract class Solver {
     }
 
     public void setTarget(int id) {
-        target = graph.getNode(id);
+        setTarget(graph.getNode(id));
     }
     public void setTarget(Node target) {
         this.target = target;
@@ -79,12 +82,13 @@ public abstract class Solver {
         return target;
     }
 
-    /**
-     * Set the maximum distance
-     * @param maxDistance maximum distance in meters.
-     */
-    public void setAbsoluteMaxDistance(double maxDistance) {
-        this.maxDistance = maxDistance;
+    public int getUpperBound() {
+        // TODO these are only POIs, not road types
+        int distinctPoiCount = Math.toIntExact(reachablePois.stream().map(n -> n.type).distinct().count());
+        int distinctRoadCount = Math.toIntExact(reachablePois.stream().map(Node::getRoadType).distinct().count());
+        int totalCount = distinctPoiCount + distinctRoadCount;
+        logger.info("Upper bound is: {}", totalCount);
+        return totalCount;
     }
 
     /**
@@ -102,6 +106,12 @@ public abstract class Solver {
         double shortestPathDist = dijkstra.shortestPath(source, target).getPathCost();
         maxDistance = shortestPathDist * shortestPathFactor;
         logger.trace("New maxDistance is {}", maxDistance);
+        updateReachablePois();
+    }
+
+    private void updateReachablePois() {
+        reachablePois = dijkstra.getPathCandidates(source, target, maxDistance)
+                .stream().filter(n -> !StringUtils.isEmpty(n.type)).collect(Collectors.toSet());
     }
 
     public double getMaxDistanceFactor() {

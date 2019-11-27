@@ -15,6 +15,7 @@ public class Graph {
     private static final Logger logger = LogManager.getLogger(Graph.class);
 
     public final List<List<Edge>> adjList;
+    public final List<List<Edge>> adjListRev;
     public final List<Node> nodes;
     public final Set<Node> pois;
     public final Map<String, Integer> poiTypes = new TreeMap<>(); // TODO private
@@ -32,6 +33,7 @@ public class Graph {
     public Graph(double[] bounds, int nodeCountEstimate) {
         this.bounds = bounds;
         adjList = new ArrayList<>(nodeCountEstimate);
+        adjListRev = new ArrayList<>(nodeCountEstimate);
         nodes = new ArrayList<>(nodeCountEstimate);
         pois = new HashSet<>(nodeCountEstimate / 200);
 
@@ -54,6 +56,7 @@ public class Graph {
      */
     public void addNode(Node toAdd) {
         adjList.add(new ArrayList<>());
+        adjListRev.add(new ArrayList<>());
         nodes.add(toAdd);
 
         // check if the node is a POI
@@ -88,6 +91,7 @@ public class Graph {
     public void addEdge(Edge edge) {
         try {
             adjList.get(edge.source.id).add(edge);
+            adjListRev.get(edge.dest.id).add(edge);
         } catch (IndexOutOfBoundsException e) {
             logger.warn("Edge {} from non existent node {} added. Ignoring.", edge, edge.source);
         }

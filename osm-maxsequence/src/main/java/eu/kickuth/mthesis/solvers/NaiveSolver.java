@@ -23,7 +23,7 @@ public class NaiveSolver extends Solver {
         }
 
         // get a shallow copy of all POIs
-        Set<Node> targets = new HashSet<>(graph.pois);
+        Set<Node> targets = new HashSet<>(reachablePois);
 
         // get POIs on shortest path
         Set<Node> initialVisitedPois = graph.getPoisOnPath(shortestPath);
@@ -64,6 +64,7 @@ public class NaiveSolver extends Solver {
 
             // check if the path might grow too large
             if (pathToNewPoi.getPathCost() + shortestPath.getPathCost() > maxDistance) {
+                // TODO not a guarantee to stay below maxDistance (if pathToNewPoi is a back path)
                 break;
             }
 

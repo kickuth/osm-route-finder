@@ -8,6 +8,7 @@ import eu.kickuth.mthesis.utils.OSMReader;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 import java.io.*;
 
@@ -21,35 +22,24 @@ public class Main {
     public static void main(String... args) {
         // preprocessing
         if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
-            logger.trace("Preprocessing file dump");
+            logger.trace("Preprocessing OSM file");
             try {
-                InputStream osmInput = new FileInputStream(OSM_DUMP);
-                OsmosisReader reader = new OsmosisReader(osmInput);
-                reader.setSink(new OSMPreprocessor());
-                reader.run();
-            } catch (IOException e) {
-                logger.fatal("Failed to preprocess map data", e);
-                System.exit(1);
+                processData(new OSMPreprocessor(), OSM_DUMP);
+            } catch (FileNotFoundException e) {
+                logger.error("Failed to preprocess data!", e);
+            } finally {
+                if (!OSM_DUMP_PROCESSED.exists()) {
+                    logger.fatal("No preprocessed data present; exiting!");
+                    System.exit(1);
+                }
             }
         }
 
-        System.exit(0);
-
-        // import graph
+        // import/load graph
         logger.trace("Loading graph from preprocessed file");
-        OSMReader myReader = new OSMReader();
-        try {
-            InputStream inputStream = new FileInputStream(OSM_DUMP_PROCESSED);
-            OsmosisReader reader = new OsmosisReader(inputStream);
-            reader.setSink(myReader);
-            reader.run();
-        } catch (FileNotFoundException e) {
-            logger.fatal("Failed to load map data", e);
-            System.exit(1);
-        }
-
-        // retrieve graph from importer
-        Graph osmGraph = myReader.getOsmGraph();
+        OSMReader graphReader = new OSMReader();
+        processData(graphReader, OSM_DUMP_PROCESSED);
+        Graph osmGraph = graphReader.getOsmGraph();
 
         // output some graph stats
         logger.info("Node count: {}", osmGraph.adjList.size());
@@ -75,5 +65,22 @@ public class Main {
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);
+    }
+
+    /**
+     * Read binary OSM data using Osmosis
+     * @param sink OSM data processor
+     * @param dataFile Binary file
+     */
+    private static <T extends Sink> void processData(T sink, File dataFile) {
+        logger.trace("Reading File {}", dataFile);
+        try {
+            OsmosisReader reader = new OsmosisReader(new FileInputStream(dataFile));
+            reader.setSink(sink);
+            reader.run();
+        } catch (FileNotFoundException e) {
+            logger.fatal("Failed to process OSM data file!", e);
+            System.exit(1);
+        }
     }
 }

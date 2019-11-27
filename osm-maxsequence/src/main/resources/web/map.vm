@@ -137,7 +137,7 @@
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
             // add path
-            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.score + " length: " + res.length).addTo(map);
+            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.score + " (" + res.uBound + " upper bound), length: " + res.length).addTo(map);
             // add POIs on path ## TODO marker style?
             console.log(res.pathPois);
             L.geoJSON(JSON.parse(res.pathPois)).addTo(map);

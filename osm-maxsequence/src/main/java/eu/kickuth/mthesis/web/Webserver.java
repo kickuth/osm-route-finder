@@ -89,7 +89,7 @@ public class Webserver {
         get("/maxdist", "application/json", this::updateMaxDist);
         post("/pois", "application/json", this::getPoisInWindow);
 
-        logger.trace("Started web-server: http://[::1]:{}/", PORT);
+        logger.info("Started web-server: http://[::1]:{}/", PORT);
     }
 
     private String getPoisInWindow(Request req, Response res) {
@@ -147,14 +147,13 @@ public class Webserver {
         }
 
         Graph.Path path = currentSolver.solve();
-        String score = String.valueOf(currentSolver.uniqueClassScore(path));
-        logger.info("Unique class score for {}: {}", currentSolver, score);
 
         Set<Node> pathPois = graph.getPoisOnPath(path);
 
         Map<String, String> jsonArgs = new HashMap<>();
         jsonArgs.put("pathPois", GeoJSON.createPOIList(pathPois));
-        jsonArgs.put("score", score);
+        jsonArgs.put("score", String.valueOf(currentSolver.uniqueClassScore(path)));
+        jsonArgs.put("uBound", String.valueOf(currentSolver.getUpperBound()));
         jsonArgs.put("shortestpathdist", String.valueOf(
                 currentSolver.getMaxDistance()/currentSolver.getMaxDistanceFactor()));
         return GeoJSON.createPath(path, jsonArgs);
