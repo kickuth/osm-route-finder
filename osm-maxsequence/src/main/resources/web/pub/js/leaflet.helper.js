@@ -83,3 +83,29 @@ function getMarker(name, latlon) {
 function isCommonName(name) {
     return (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit");
 }
+
+function drawEllipse(feature, event) {
+    const latlngs = feature.coordinates;
+    const lat1 = latlngs[0][1];
+    const lng1 = latlngs[0][0];
+    const lat2 = latlngs[latlngs.length - 1][1];
+    const lng2 = latlngs[latlngs.length - 1][0];
+
+    // compute ellipse center and rotation ## TODO do correctly for lat/lon point pairs
+    const center = [(lat1 + lat2) / 2, (lng1 + lng2) / 2];
+    const angle = Math.atan2(lng2 - lng1, lat2 - lat1) * 180 / Math.PI;
+
+    // compute ellipse width and height
+    const minLength = feature.shortestpathdist;
+    const maxLength = minLength * document.getElementById("max_dist_factor").value;  // (= ellipseHeight)
+    const ellipseWidth = Math.sqrt(Math.pow(maxLength, 2) - Math.pow(minLength, 2)) / 2;
+
+    const pathColour = event.target.options.color;
+
+    L.ellipse(center, [ellipseWidth / 2, maxLength / 2], angle, {
+        color: pathColour,
+        fillColor: pathColour,
+        fillOpacity: 0.0625,
+        interactive: false
+    }).addTo(map);
+}

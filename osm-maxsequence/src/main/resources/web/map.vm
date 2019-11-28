@@ -53,6 +53,7 @@
 <!-- Add the Leaflet JavaScript library and plugins -->
 <script src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
 <script src="js/leaflet.uGeoJSON.js"></script>
+<script src="js/leaflet.ellipse.js"></script>
 <script src="js/leaflet.helper.js"></script>
 ## <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.AnimatedMarker/1.0.0/AnimatedMarker.js"></script>
 <!-- Add jquery library and plugins -->
@@ -117,7 +118,7 @@
     }
 
     // shortest path between source and target, i.e. allowed max dist ignoring factor.
-    var baseMaxDist = $solver.getMaxDistance();
+    let baseMaxDist = $solver.getMaxDistance();
 
     // path style/colour
     const lineStyle = {
@@ -137,7 +138,10 @@
 
         $('#panelForm').ajaxSubmit("path", null, "json", function (res) {
             // add path
-            L.geoJSON(res, {style: lineStyle}).bindPopup("score: " + res.score + " (" + res.uBound + " upper bound), length: " + res.length).addTo(map);
+            L.geoJSON(res, {
+                style: lineStyle,
+                onEachFeature: function onEachFeature(feature, layer) { layer.on('click', function(e){ drawEllipse(feature, e) }); }
+            }).bindPopup("score: " + res.score + " (" + res.uBound + " upper bound), length: " + res.length).addTo(map);
             // add POIs on path ## TODO marker style?
             console.log(res.pathPois);
             L.geoJSON(JSON.parse(res.pathPois)).addTo(map);
