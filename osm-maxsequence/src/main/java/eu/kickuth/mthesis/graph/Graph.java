@@ -238,6 +238,10 @@ public class Graph {
             return dNodes.isEmpty();
         }
 
+        public Path copy() {
+            return new Path(dNodes.stream().map(dNode -> new DijkstraNode(dNode.node, dNode.distanceFromSource)).collect(Collectors.toCollection(LinkedList::new)));
+        }
+
         @Override
         public String toString() {
             StringBuilder s = new StringBuilder("Path: ");

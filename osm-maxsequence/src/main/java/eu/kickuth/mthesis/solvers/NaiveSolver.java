@@ -16,8 +16,8 @@ public class NaiveSolver extends Solver {
 
     public Path solve() {
         logger.debug("Solving");
-        Path shortestPath = dijkstra.shortestPath(source, target);
-        if (shortestPath.isEmpty() || shortestPath.getPathCost() > maxDistance) {
+        Path solutionPath = dijkstra.getShortestPath().copy();
+        if (solutionPath.isEmpty() || solutionPath.getPathCost() > maxDistance) {
             logger.info("Target is not reachable!");
             return graph.new Path();
         }
@@ -26,12 +26,12 @@ public class NaiveSolver extends Solver {
         Set<Node> targets = new HashSet<>(reachablePois);
 
         // get POIs on shortest path
-        Set<Node> initialVisitedPois = graph.getPoisOnPath(shortestPath);
+        Set<Node> initialVisitedPois = graph.getPoisOnPath(solutionPath);
 
         // allow path insertions at visited POIs, start and end node
         Set<Node> sources = new HashSet<>(initialVisitedPois);
-        sources.add(shortestPath.getFirst());
-        sources.add(shortestPath.getLast());
+        sources.add(solutionPath.getFirst());
+        sources.add(solutionPath.getLast());
 
         // remove nodes with classes we have already visited
         for (Node visitedPoi : initialVisitedPois) {
@@ -39,7 +39,7 @@ public class NaiveSolver extends Solver {
         }
 
         // keep adding shortest paths to new classes until we would run over the maximal distance
-        while (shortestPath.getPathCost() < maxDistance && !targets.isEmpty()) {
+        while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty()) {
             Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
@@ -63,24 +63,24 @@ public class NaiveSolver extends Solver {
             pathToNewPoi.append(backPath);
 
             // check if the path might grow too large
-            if (pathToNewPoi.getPathCost() + shortestPath.getPathCost() > maxDistance) {
+            if (pathToNewPoi.getPathCost() + solutionPath.getPathCost() > maxDistance) {
                 // TODO not a guarantee to stay below maxDistance (if pathToNewPoi is a back path)
                 break;
             }
 
             // find index for insertion
-            int insertStart = shortestPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
-            int insertEnd = shortestPath.getNodes().indexOf(pathToNewPoi.getLast());
+            int insertStart = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
+            int insertEnd = solutionPath.getNodes().indexOf(pathToNewPoi.getLast());
 
-            shortestPath.insert(pathToNewPoi, insertStart, insertEnd);
+            solutionPath.insert(pathToNewPoi, insertStart, insertEnd);
 
             // print estimated progress
-            setStatus(shortestPath.getPathCost()/maxDistance);
+            setStatus(solutionPath.getPathCost()/maxDistance);
             logger.trace(String.format("solving: %.2f%%", getStatus()*100));
         }
 
         setStatus(0.0);
-        return shortestPath;
+        return solutionPath;
     }
 
     @Override

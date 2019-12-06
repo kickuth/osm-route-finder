@@ -1,7 +1,6 @@
 package eu.kickuth.mthesis.graph;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import eu.kickuth.mthesis.graph.Graph.Path;
 
@@ -11,8 +10,17 @@ public class Dijkstra {
 
     private final Graph graph;
     private final PriorityQueue<DijkstraNode> pqueue;
-    private final List<DijkstraNode> pqueueNodes;
+    private final DijkstraNode[] pqueueNodes;
     private List<Integer> updatedPqueueNodes;  // keep track of which nodes need resetting after dijkstra run
+    private int[] parentMap;  // keep track of a nodes Parent for a dijkstra run
+    private boolean[] isTarget;  // mark dijkstra targets in array to quickly check if a node is a target
+    private Set<Node> pathCandidates = new HashSet<>();
+
+    private double shortestPathCost;  // target distance
+    private double maxDistance;
+    private Graph.Path stPath;  // shortest st path
+
+    private double[] updateForwardCosts;
 
     /**
      * Get a Dijkstra instance for given graph. Will only create a single instance per graph.
@@ -30,59 +38,95 @@ public class Dijkstra {
      */
     private Dijkstra(Graph g) {
         graph = g;
-        pqueue = new PriorityQueue<>(graph.nodes.size());
-        pqueueNodes = graph.nodes.stream().map(node -> new DijkstraNode(node, Double.POSITIVE_INFINITY)).collect(Collectors.toList());
-        updatedPqueueNodes = new ArrayList<>();
+        int nodeCount = graph.nodes.size();
+        pqueue = new PriorityQueue<>(nodeCount);
+        pqueueNodes = graph.nodes.stream().map(node -> new DijkstraNode(node, Double.POSITIVE_INFINITY)).toArray(DijkstraNode[]::new);
+        updatedPqueueNodes = new ArrayList<>(10_000);
+        parentMap = new int[nodeCount];
+        Arrays.fill(parentMap, -1);
+        isTarget = new boolean[nodeCount];
         instances.put(graph, this);
+        stPath = graph.new Path();
+        updateForwardCosts = new double[nodeCount];
+        Arrays.fill(updateForwardCosts, Double.POSITIVE_INFINITY);
     }
 
-    /**
-     * Compute the single source shortest path to all reachable nodes.
-     * @param source the node to start with
-     * @return map of reachable nodes to their minimal distance from the source
-     */
-    public Map<Node, Double> sssp(final Node source) {
-        return sssp(source, Double.POSITIVE_INFINITY);
-    }
 
-    /**
-     * Compute the single source shortest path to all nodes within the maxDistance.
-     * @param source the node to start with
-     * @param maxDistance maximal distance from source; nodes with larger distance are ignored
-     * @return map of reachable nodes within maxDistance to their minimal distance from the source.
-     */
-    public Map<Node, Double> sssp(final Node source, final double maxDistance) {
+    public void update(final Node source, final Node target, final double maxDistanceFactor) {
         clean();
 
         // initialise queue
-        pqueueNodes.get(source.id).distanceFromSource = 0;
+        pqueueNodes[source.id].distanceFromSource = 0;
         updatedPqueueNodes.add(source.id);
-        pqueue.add(pqueueNodes.get(source.id));
-
-        Map<Node, Double> results = new HashMap<>();
+        pqueue.add(pqueueNodes[source.id]);
 
         // main loop
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
+
             // check whether an updated node has already been processed
             if (currentMin.wasProcessed) {
                 continue;
             } else {
                 currentMin.wasProcessed = true;
+                updateForwardCosts[currentMin.node.id] = currentMin.distanceFromSource;
             }
-            results.put(currentMin.node, currentMin.distanceFromSource);
+
+            // are we passing the target? --> set shortest path and s-t distance
+            if (currentMin.node.id == target.id) {
+                shortestPathCost = currentMin.distanceFromSource;
+                maxDistance = shortestPathCost * maxDistanceFactor;
+                retrieveShortestPath(target.id);
+            }
+            // get and potentially update all neighbours
             for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
-                // ignore nodes outside of maxDistance
+
+                // ignore neighbours that are too far
                 if (alternativeDistance > maxDistance) {
                     continue;
                 }
+
+                Node neighbour = toNeighbour.dest;
+
+                // check that b-line to target is short enough
+                if (maxDistance < Double.POSITIVE_INFINITY &&
+                        alternativeDistance + neighbour.getDistance(target) > maxDistance) {
+                    continue;
+                }
+
                 // update queue, if the new path is shorter than the previous shortest
-                checkNewDistance(pqueueNodes.get(toNeighbour.dest.id), alternativeDistance);
+                if (checkNewDistance(pqueueNodes[neighbour.id], alternativeDistance)) {
+                    parentMap[neighbour.id] = currentMin.node.id;
+                }
             }
         }
 
-        return results;
+        computePathCandidates(target, updateForwardCosts);
+    }
+
+    private void retrieveShortestPath(int targetId) {
+        LinkedList<DijkstraNode> results = new LinkedList<>();
+        while (targetId != -1) {
+            DijkstraNode backtrack = pqueueNodes[targetId];
+            results.addFirst(new DijkstraNode(backtrack.node, backtrack.distanceFromSource));
+            targetId = parentMap[targetId];
+        }
+        stPath = graph.new Path(results);
+    }
+
+    public double getShortestPathCost() {
+        return shortestPathCost;
+    }
+
+    // TODO getter for maxDistance?!
+
+    public Graph.Path getShortestPath() {
+        return stPath;
+    }
+
+    public Set<Node> getPathCandidates() {
+        return pathCandidates;
     }
 
     /**
@@ -120,18 +164,17 @@ public class Dijkstra {
      */
     public Path shortestPath(final Collection<Node> sources, final Collection<Node> targets) {
         clean();
-        // initialise queue
+        // initialise
         for (Node source : sources) {
-            pqueueNodes.get(source.id).distanceFromSource = 0;
+            pqueueNodes[source.id].distanceFromSource = 0;
             updatedPqueueNodes.add(source.id);
-            pqueue.add(pqueueNodes.get(source.id));
+            pqueue.add(pqueueNodes[source.id]);
+            parentMap[source.id] = -1;
         }
-
-        // map to backtrack shortest path
-        Map<Integer, Integer> parentMap = new HashMap<>();
+        targets.forEach(node -> isTarget[node.id] = true);
 
         // the first reached node in targets
-        Integer backtrackId = null;
+        int backtrackId = -1;
 
         // main loop
         while (!pqueue.isEmpty()) {
@@ -145,7 +188,7 @@ public class Dijkstra {
             }
 
             // are we at the target yet?
-            if (targets.contains(currentMin.node)) { // TODO find better test than targets.contains --> bool array
+            if (isTarget[currentMin.node.id]) {
                 backtrackId = currentMin.node.id;
                 break;
             }
@@ -154,42 +197,34 @@ public class Dijkstra {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // update queue, if the new path is shorter than the previous shortest
                 Node neighbour = toNeighbour.dest;
-                if (checkNewDistance(pqueueNodes.get(neighbour.id), alternativeDistance)) {
-                    parentMap.put(neighbour.id, currentMin.node.id);
+                if (checkNewDistance(pqueueNodes[neighbour.id], alternativeDistance)) {
+                    parentMap[neighbour.id] = currentMin.node.id;
                 }
             }
         }
 
-        if (backtrackId == null) {
-            // no route found
-            return graph.new Path();
-        }
+        // reset target array
+        targets.forEach(node -> isTarget[node.id] = false);
 
         // reconstruct the path from the target
-        LinkedList<DijkstraNode> results = new LinkedList<>();
-        do {
-            DijkstraNode backtrack = pqueueNodes.get(backtrackId);
-            results.addFirst(new DijkstraNode(backtrack.node, backtrack.distanceFromSource));
-            backtrackId = parentMap.get(backtrackId);
-        } while (backtrackId != null);
+        retrieveShortestPath(backtrackId);
 
-        return graph.new Path(results);
+        return stPath;
     }
 
-    public Set<Node> getPathCandidates(Node source, Node target, double maxDistance) {
-        Map<Node, Double> reachableFromSource = sssp(source, maxDistance);
+    private void computePathCandidates(Node target, double[] forwardRunCosts) {
+        // TODO logs (or rewrite first)
         clean();
-        Set<Node> pathCandidates = new HashSet<>();
 
-        pqueueNodes.get(target.id).distanceFromSource = 0;
+        pqueueNodes[target.id].distanceFromSource = 0;
         updatedPqueueNodes.add(target.id);
-        pqueue.add(pqueueNodes.get(target.id));
+        pqueue.add(pqueueNodes[target.id]);
 
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
 
             // check whether an updated node has already been processed
-            if (currentMin.wasProcessed || maxDistance < currentMin.distanceFromSource + reachableFromSource.getOrDefault(currentMin.node, Double.POSITIVE_INFINITY)) {
+            if (currentMin.wasProcessed || maxDistance < currentMin.distanceFromSource + forwardRunCosts[currentMin.node.id]) {
                 continue;
             } else {
                 currentMin.wasProcessed = true;
@@ -200,11 +235,10 @@ public class Dijkstra {
             for (Edge toNeighbour : graph.adjListRev.get(currentMin.node.id)) {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // update queue, if the new path is shorter than the previous shortest
-                checkNewDistance(pqueueNodes.get(toNeighbour.source.id), alternativeDistance);
+                checkNewDistance(pqueueNodes[toNeighbour.source.id], alternativeDistance);
             }
         }
-
-        return pathCandidates;
+        Arrays.fill(forwardRunCosts, Double.POSITIVE_INFINITY);
     }
 
     /**
@@ -212,12 +246,14 @@ public class Dijkstra {
      */
     private void clean() {
         for (int index : updatedPqueueNodes) {
-            DijkstraNode dNode = pqueueNodes.get(index);
+            DijkstraNode dNode = pqueueNodes[index];
             dNode.distanceFromSource = Double.POSITIVE_INFINITY;
             dNode.wasProcessed = false;
         }
+        maxDistance = Double.POSITIVE_INFINITY;
         updatedPqueueNodes.clear();
         pqueue.clear();
+        pathCandidates.clear();
     }
 
     /**
@@ -234,7 +270,7 @@ public class Dijkstra {
                 updatedPqueueNodes.add(dNode.node.id);
             }
             dNode = new DijkstraNode(dNode.node, altDist);
-            pqueueNodes.set(dNode.node.id, dNode);
+            pqueueNodes[dNode.node.id] = dNode;
             pqueue.add(dNode);
             return true;
         }

@@ -47,6 +47,19 @@ public abstract class Solver {
      */
     public abstract Graph.Path solve();
 
+    public void update(Node source, Node target, double maxDistanceFactor) {
+        setSource(source);
+        setTarget(target);
+        setMaxDistanceFactor(maxDistanceFactor);
+
+        dijkstra.update(source, target, maxDistanceFactor);
+
+        reachablePois = dijkstra.getPathCandidates().stream()
+                .filter(n -> !StringUtils.isEmpty(n.type)).collect(Collectors.toSet());
+        maxDistance = dijkstra.getShortestPathCost() * maxDistanceFactor;
+        logger.trace("New maxDistance is {}", maxDistance);
+    }
+
     /**
      * Simple scoring for a path, that computes the number of unique classes visited
      * @param path The path to score
@@ -83,9 +96,9 @@ public abstract class Solver {
     }
 
     public int getUpperBound() {
-        // TODO these are only POIs, not road types
+        // TODO ROAD TYPES ARE ONLY OF POIS, NOT ALL REACHABLE NODES --> possible underestimate, especially if few POIs on path
         int distinctPoiCount = Math.toIntExact(reachablePois.stream().map(n -> n.type).distinct().count());
-        int distinctRoadCount = Math.toIntExact(reachablePois.stream().map(Node::getRoadType).distinct().count());
+        int distinctRoadCount = Math.max(Math.toIntExact(reachablePois.stream().map(Node::getRoadType).distinct().count()), 12);  // TODO probably <= 12
         int totalCount = distinctPoiCount + distinctRoadCount;
         logger.info("Upper bound is: {}", totalCount);
         return totalCount;
@@ -95,7 +108,7 @@ public abstract class Solver {
      * Set the maximum distance as a factor of the shortest path
      * @param shortestPathFactor Length as a factor of the shortest path (i.e. should be > 1)
      */
-    public void setMaxDistanceFactor(double shortestPathFactor) {
+    private void setMaxDistanceFactor(double shortestPathFactor) {
         if (shortestPathFactor < 1) {
             logger.error("Solver distance is too short! Setting to shortest path length");
             shortestPathFactor = 1;
@@ -103,15 +116,6 @@ public abstract class Solver {
             logger.warn("Solver distance is being set very high!");
         }
         maxDistanceFactor = shortestPathFactor;
-        double shortestPathDist = dijkstra.shortestPath(source, target).getPathCost();
-        maxDistance = shortestPathDist * shortestPathFactor;
-        logger.trace("New maxDistance is {}", maxDistance);
-        updateReachablePois();
-    }
-
-    private void updateReachablePois() {
-        reachablePois = dijkstra.getPathCandidates(source, target, maxDistance)
-                .stream().filter(n -> !StringUtils.isEmpty(n.type)).collect(Collectors.toSet());
     }
 
     public double getMaxDistanceFactor() {

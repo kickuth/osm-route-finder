@@ -2,7 +2,6 @@ package eu.kickuth.mthesis.web;
 
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import eu.kickuth.mthesis.solvers.GreedySolver;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
 import eu.kickuth.mthesis.solvers.Solver;
 import eu.kickuth.mthesis.utils.GeoJSON;
@@ -52,7 +51,7 @@ public class Webserver {
         graph = g;
         currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
         solvers.put("ng", currentSolver);
-        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
+        // TODO solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
         // get POIs from nodes, filter common (later dynamically loaded) POIs
         poiJSON = GeoJSON.createPOIList(
@@ -135,9 +134,7 @@ public class Webserver {
                 if (newSource == null || newTarget == null) {
                     logger.error("Invalid source or sink/target requested!");
                 } else {
-                    currentSolver.setSource(newSource);
-                    currentSolver.setTarget(newTarget);
-                    currentSolver.setMaxDistanceFactor(newRelativeMaxDistance);
+                    currentSolver.update(newSource, newTarget, newRelativeMaxDistance);
                 }
             } catch (NumberFormatException e) {
                 logger.error("Failed to convert user input to long:\nsource: '{}'\ntarget: '{}'\nmax distance: '{}'",
