@@ -96,9 +96,8 @@ public abstract class Solver {
     }
 
     public int getUpperBound() {
-        // TODO ROAD TYPES ARE ONLY OF POIS, NOT ALL REACHABLE NODES --> possible underestimate, especially if few POIs on path
         int distinctPoiCount = Math.toIntExact(reachablePois.stream().map(n -> n.type).distinct().count());
-        int distinctRoadCount = Math.max(Math.toIntExact(reachablePois.stream().map(Node::getRoadType).distinct().count()), 12);  // TODO probably <= 12
+        int distinctRoadCount = Math.max(Math.toIntExact(dijkstra.getPathCandidates().stream().map(Node::getRoadType).distinct().count()), 12);
         int totalCount = distinctPoiCount + distinctRoadCount;
         logger.info("Upper bound is: {}", totalCount);
         return totalCount;

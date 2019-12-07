@@ -245,11 +245,11 @@ public class Dijkstra {
      * reset instance arrays for new dijkstra computation
      */
     private void clean() {
-        for (int index : updatedPqueueNodes) {
+        updatedPqueueNodes.parallelStream().forEach(index -> {
             DijkstraNode dNode = pqueueNodes[index];
             dNode.distanceFromSource = Double.POSITIVE_INFINITY;
             dNode.wasProcessed = false;
-        }
+        });
         maxDistance = Double.POSITIVE_INFINITY;
         updatedPqueueNodes.clear();
         pqueue.clear();
