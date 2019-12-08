@@ -2,10 +2,14 @@ package eu.kickuth.mthesis.graph;
 
 import java.util.*;
 
+import eu.kickuth.mthesis.Main;
 import eu.kickuth.mthesis.graph.Graph.Path;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class Dijkstra {
 
+    private static final Logger logger = LogManager.getLogger(Dijkstra.class);
     private static final Map<Graph, Dijkstra> instances = new HashMap<>();
 
     private final Graph graph;
@@ -17,7 +21,7 @@ public class Dijkstra {
     private Set<Node> pathCandidates = new HashSet<>();
 
     private double shortestPathCost;  // target distance
-    private double maxDistance;
+    private double maxDistance = Double.POSITIVE_INFINITY;
     private Graph.Path stPath;  // shortest st path
 
     private double[] updateForwardCosts;
@@ -77,6 +81,7 @@ public class Dijkstra {
                 shortestPathCost = currentMin.distanceFromSource;
                 maxDistance = shortestPathCost * maxDistanceFactor;
                 retrieveShortestPath(target.id);
+                logger.debug("found target. Shortest path dist is {}.", shortestPathCost);
             }
             // get and potentially update all neighbours
             for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
@@ -89,7 +94,7 @@ public class Dijkstra {
 
                 Node neighbour = toNeighbour.dest;
 
-                // check that b-line to target is short enough
+                // check that b-line to target is short enough (starting after we know the max distance)
                 if (maxDistance < Double.POSITIVE_INFINITY &&
                         alternativeDistance + neighbour.getDistance(target) > maxDistance) {
                     continue;
@@ -101,8 +106,9 @@ public class Dijkstra {
                 }
             }
         }
+        logger.trace("Finished forward pass of update.");
 
-        computePathCandidates(target, updateForwardCosts);
+        computePathCandidates(target);
     }
 
     private void retrieveShortestPath(int targetId) {
@@ -118,8 +124,6 @@ public class Dijkstra {
     public double getShortestPathCost() {
         return shortestPathCost;
     }
-
-    // TODO getter for maxDistance?!
 
     public Graph.Path getShortestPath() {
         return stPath;
@@ -212,7 +216,7 @@ public class Dijkstra {
         return stPath;
     }
 
-    private void computePathCandidates(Node target, double[] forwardRunCosts) {
+    private void computePathCandidates(Node target) {
         // TODO logs (or rewrite first)
         clean();
 
@@ -224,7 +228,7 @@ public class Dijkstra {
             DijkstraNode currentMin = pqueue.poll();
 
             // check whether an updated node has already been processed
-            if (currentMin.wasProcessed || maxDistance < currentMin.distanceFromSource + forwardRunCosts[currentMin.node.id]) {
+            if (currentMin.wasProcessed || maxDistance < currentMin.distanceFromSource + updateForwardCosts[currentMin.node.id]) {
                 continue;
             } else {
                 currentMin.wasProcessed = true;
@@ -238,7 +242,10 @@ public class Dijkstra {
                 checkNewDistance(pqueueNodes[toNeighbour.source.id], alternativeDistance);
             }
         }
-        Arrays.fill(forwardRunCosts, Double.POSITIVE_INFINITY);
+        System.err.println(pathCandidates.size());
+        Arrays.fill(updateForwardCosts, Double.POSITIVE_INFINITY);
+        maxDistance = Double.POSITIVE_INFINITY;
+        logger.trace("Dijkstra update complete.");
     }
 
     /**
@@ -249,8 +256,8 @@ public class Dijkstra {
             DijkstraNode dNode = pqueueNodes[index];
             dNode.distanceFromSource = Double.POSITIVE_INFINITY;
             dNode.wasProcessed = false;
+            parentMap[index] = -1;
         });
-        maxDistance = Double.POSITIVE_INFINITY;
         updatedPqueueNodes.clear();
         pqueue.clear();
         pathCandidates.clear();

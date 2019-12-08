@@ -91,9 +91,9 @@ function drawEllipse(feature, event) {
     const lat2 = latlngs[latlngs.length - 1][1];
     const lng2 = latlngs[latlngs.length - 1][0];
 
-    // compute ellipse center and rotation ## TODO do correctly for lat/lon point pairs
+    // compute ellipse center and rotation ## TODO calc center correctly for lat/lon point pairs
     const center = [(lat1 + lat2) / 2, (lng1 + lng2) / 2];
-    const angle = Math.atan2(lng2 - lng1, lat2 - lat1) * 180 / Math.PI;
+    const angle = getAngle([lat1, lng1], [lat2, lng2]);
 
     // compute ellipse width and height
     const minLength = feature.shortestpathdist;
@@ -108,4 +108,18 @@ function drawEllipse(feature, event) {
         fillOpacity: 0.0625,
         interactive: false
     }).addTo(map);
+}
+
+// as computed in http://makinacorpus.github.io/Leaflet.GeometryUtil/
+function getAngle(latlng1, latlng2) {
+    const rad = Math.PI / 180,
+        lat1 = latlng1[0] * rad,
+        lat2 = latlng2[0] * rad,
+        lon1 = latlng1[1] * rad,
+        lon2 = latlng2[1] * rad,
+        y = Math.sin(lon2 - lon1) * Math.cos(lat2),
+        x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+    const bearing = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+    return bearing >= 180 ? bearing-360 : bearing;
 }
