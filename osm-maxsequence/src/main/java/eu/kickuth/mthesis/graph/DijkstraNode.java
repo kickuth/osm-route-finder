@@ -9,7 +9,6 @@ public class DijkstraNode implements Comparable<DijkstraNode> {
 
     public final Node node;
     public double distanceFromSource;
-    public boolean wasProcessed;
 
     DijkstraNode(Node node, double distanceFromSource) {
         this.node = node;

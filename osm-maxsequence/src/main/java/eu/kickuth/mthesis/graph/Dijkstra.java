@@ -2,7 +2,6 @@ package eu.kickuth.mthesis.graph;
 
 import java.util.*;
 
-import eu.kickuth.mthesis.Main;
 import eu.kickuth.mthesis.graph.Graph.Path;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,6 +16,7 @@ public class Dijkstra {
     private final DijkstraNode[] pqueueNodes;
     private List<Integer> updatedPqueueNodes;  // keep track of which nodes need resetting after dijkstra run
     private int[] parentMap;  // keep track of a nodes Parent for a dijkstra run
+    private boolean[] settledNodes;  // keep track of already extracted nodes
     private boolean[] isTarget;  // mark dijkstra targets in array to quickly check if a node is a target
     private Set<Node> pathCandidates = new HashSet<>();
 
@@ -48,16 +48,17 @@ public class Dijkstra {
         updatedPqueueNodes = new ArrayList<>(10_000);
         parentMap = new int[nodeCount];
         Arrays.fill(parentMap, -1);
+        settledNodes = new boolean[nodeCount];
         isTarget = new boolean[nodeCount];
         instances.put(graph, this);
         stPath = graph.new Path();
         updateForwardCosts = new double[nodeCount];
-        Arrays.fill(updateForwardCosts, Double.POSITIVE_INFINITY);
     }
 
 
     public void update(final Node source, final Node target, final double maxDistanceFactor) {
         clean();
+        Arrays.fill(updateForwardCosts, Double.POSITIVE_INFINITY);
 
         // initialise queue
         pqueueNodes[source.id].distanceFromSource = 0;
@@ -67,24 +68,25 @@ public class Dijkstra {
         // main loop
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
+            int currentId = currentMin.node.id;
 
             // check whether an updated node has already been processed
-            if (currentMin.wasProcessed) {
+            if (settledNodes[currentId]) {
                 continue;
             } else {
-                currentMin.wasProcessed = true;
-                updateForwardCosts[currentMin.node.id] = currentMin.distanceFromSource;
+                settledNodes[currentId] = true;
+                updateForwardCosts[currentId] = currentMin.distanceFromSource;
             }
 
             // are we passing the target? --> set shortest path and s-t distance
-            if (currentMin.node.id == target.id) {
+            if (currentId == target.id) {
                 shortestPathCost = currentMin.distanceFromSource;
                 maxDistance = shortestPathCost * maxDistanceFactor;
                 retrieveShortestPath(target.id);
                 logger.debug("found target. Shortest path dist is {}.", shortestPathCost);
             }
             // get and potentially update all neighbours
-            for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
+            for (Edge toNeighbour : graph.adjList.get(currentId)) {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
 
                 // ignore neighbours that are too far
@@ -102,7 +104,7 @@ public class Dijkstra {
 
                 // update queue, if the new path is shorter than the previous shortest
                 if (checkNewDistance(pqueueNodes[neighbour.id], alternativeDistance)) {
-                    parentMap[neighbour.id] = currentMin.node.id;
+                    parentMap[neighbour.id] = currentId;
                 }
             }
         }
@@ -183,26 +185,27 @@ public class Dijkstra {
         // main loop
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
+            int currentId = currentMin.node.id;
 
             // check whether an updated node has already been processed
-            if (currentMin.wasProcessed) {
+            if (settledNodes[currentId]) {
                 continue;
             } else {
-                currentMin.wasProcessed = true;
+                settledNodes[currentId] = true;
             }
 
             // are we at the target yet?
-            if (isTarget[currentMin.node.id]) {
-                backtrackId = currentMin.node.id;
+            if (isTarget[currentId]) {
+                backtrackId = currentId;
                 break;
             }
             // get and potentially update all neighbours
-            for (Edge toNeighbour : graph.adjList.get(currentMin.node.id)) {
+            for (Edge toNeighbour : graph.adjList.get(currentId)) {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // update queue, if the new path is shorter than the previous shortest
                 Node neighbour = toNeighbour.dest;
                 if (checkNewDistance(pqueueNodes[neighbour.id], alternativeDistance)) {
-                    parentMap[neighbour.id] = currentMin.node.id;
+                    parentMap[neighbour.id] = currentId;
                 }
             }
         }
@@ -226,24 +229,24 @@ public class Dijkstra {
 
         while (!pqueue.isEmpty()) {
             DijkstraNode currentMin = pqueue.poll();
+            int currentId = currentMin.node.id;
 
             // check whether an updated node has already been processed
-            if (currentMin.wasProcessed || maxDistance < currentMin.distanceFromSource + updateForwardCosts[currentMin.node.id]) {
+            if (settledNodes[currentId] || maxDistance < currentMin.distanceFromSource + updateForwardCosts[currentId]) {
                 continue;
             } else {
-                currentMin.wasProcessed = true;
+                settledNodes[currentId] = true;
                 pathCandidates.add(currentMin.node);
             }
 
             // get and potentially update all neighbours
-            for (Edge toNeighbour : graph.adjListRev.get(currentMin.node.id)) {
+            for (Edge toNeighbour : graph.adjListRev.get(currentId)) {
                 double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
                 // update queue, if the new path is shorter than the previous shortest
                 checkNewDistance(pqueueNodes[toNeighbour.source.id], alternativeDistance);
             }
         }
-        System.err.println(pathCandidates.size());
-        Arrays.fill(updateForwardCosts, Double.POSITIVE_INFINITY);
+        logger.trace("Number of reachable nodes: {}", pathCandidates.size());
         maxDistance = Double.POSITIVE_INFINITY;
         logger.trace("Dijkstra update complete.");
     }
@@ -255,7 +258,7 @@ public class Dijkstra {
         updatedPqueueNodes.parallelStream().forEach(index -> {
             DijkstraNode dNode = pqueueNodes[index];
             dNode.distanceFromSource = Double.POSITIVE_INFINITY;
-            dNode.wasProcessed = false;
+            settledNodes[index] = false;
             parentMap[index] = -1;
         });
         updatedPqueueNodes.clear();
