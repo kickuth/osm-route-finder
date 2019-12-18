@@ -128,7 +128,7 @@ public class Dijkstra {
     }
 
     public Graph.Path getShortestPath() {
-        return stPath;
+        return stPath.copy();
     }
 
     public Set<Node> getPathCandidates() {
@@ -136,40 +136,35 @@ public class Dijkstra {
     }
 
     /**
-     * Compute a single source shortest path to the closest target node
+     * Compute the shortest s-t-path
      * @param source the node to start with
      * @param targets set of target nodes
-     * @return path from source to closest target
+     * @param reverse reverse computing direction (t to s)?
+     * @return Shortest path from a source to a target, empty Path if no path exists
      */
-    public Path shortestPath(final Node source, final Collection<Node> targets) {
-        ArrayList<Node> sources = new ArrayList<>(1);
-        sources.add(source);
-        return shortestPath(sources, targets);
-
+    public Path shortestPath(final Node source, final Collection<Node> targets, boolean reverse) {
+        return shortestPath(Collections.singletonList(source), targets, reverse);
     }
-
-    /**
-     * Compute the shortest s-t-path
-     * @param source the source node
-     * @param target the target node
-     * @return Path of nodes from source to target, empty Path if no path exists
-     */
-    public Path shortestPath(final Node source, final Node target) {
-        List<Node> sources = new ArrayList<>(1);
-        List<Node> targets = new ArrayList<>(1);
-        sources.add(source);
-        targets.add(target);
-        return shortestPath(sources, targets);
+    public Path shortestPath(final Node source, final Node target, final boolean reverse) {
+        return shortestPath(Collections.singletonList(source), Collections.singletonList(target), reverse);
+    }
+    public Path shortestPath(final Collection<Node> sources, final Node target, final boolean reverse) {
+        return shortestPath(sources, Collections.singletonList(target), reverse);
     }
 
     /**
      * Compute the shortest path from any source to any target node
      * @param sources the set of source nodes
      * @param targets the set of target nodes
+     * @param reverse reverse computing direction (t to s)?
      * @return Path of nodes for the shortest s-t-path, empty Path if no path exists
      */
-    public Path shortestPath(final Collection<Node> sources, final Collection<Node> targets) {
+    public Path shortestPath(final Collection<Node> sources, final Collection<Node> targets, final boolean reverse) {
         clean();
+
+        if (reverse) {
+            return shortestPathRev(sources, targets);
+        }
         // initialise
         for (Node source : sources) {
             pqueueNodes[source.id].distanceFromSource = 0;
@@ -219,8 +214,70 @@ public class Dijkstra {
         return stPath;
     }
 
+    private Path shortestPathRev(Collection<Node> sources, Collection<Node> targets) {
+        // initialise
+        for (Node target : targets) {
+            pqueueNodes[target.id].distanceFromSource = 0;
+            updatedPqueueNodes.add(target.id);
+            pqueue.add(pqueueNodes[target.id]);
+            parentMap[target.id] = -1;
+        }
+        sources.forEach(node -> isTarget[node.id] = true);
+
+        // the first reached source node
+        int backtrackId = -1;
+
+        // main loop
+        while (!pqueue.isEmpty()) {
+            DijkstraNode currentMin = pqueue.poll();
+            int currentId = currentMin.node.id;
+
+            // check whether an updated node has already been processed
+            if (settledNodes[currentId]) {
+                continue;
+            } else {
+                settledNodes[currentId] = true;
+            }
+
+            // are we at a source yet?
+            if (isTarget[currentId]) {
+                backtrackId = currentId;
+                break;
+            }
+            // get and potentially update all (back edge) neighbours
+            for (Edge toNeighbour : graph.adjListRev.get(currentId)) {
+                double alternativeDistance = currentMin.distanceFromSource + toNeighbour.cost;
+                // update queue, if the new path is shorter than the previous shortest
+                Node neighbour = toNeighbour.source;
+                if (checkNewDistance(pqueueNodes[neighbour.id], alternativeDistance)) {
+                    parentMap[neighbour.id] = currentId;
+                }
+            }
+        }
+
+        // reset target array
+        sources.forEach(node -> isTarget[node.id] = false);
+
+        // reconstruct the path from the target
+        LinkedList<DijkstraNode> results = new LinkedList<>();
+        DijkstraNode backtrack;
+        double pathCost;
+        if (backtrackId != -1) {
+            pathCost = pqueueNodes[backtrackId].distanceFromSource;
+            do {
+                backtrack = pqueueNodes[backtrackId];
+                results.addLast(new DijkstraNode(backtrack.node, pathCost - backtrack.distanceFromSource));
+                backtrackId = parentMap[backtrackId];
+            } while (backtrackId != -1);
+        }
+        stPath = graph.new Path(results);
+
+        return stPath;
+    }
+
     private void computePathCandidates(Node target) {
-        // TODO logs (or rewrite first)
+        // TODO logs/comments (or rewrite first)
+        // TODO pathCandidates as bool array? --> shortest path only look at pathCandidates
         clean();
 
         pqueueNodes[target.id].distanceFromSource = 0;
@@ -285,5 +342,9 @@ public class Dijkstra {
             return true;
         }
         return false;
+    }
+
+    public double[] getUpdateForwardCosts() {
+        return updateForwardCosts;
     }
 }

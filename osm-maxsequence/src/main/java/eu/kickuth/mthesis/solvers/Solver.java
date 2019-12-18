@@ -17,8 +17,8 @@ public abstract class Solver {
 
     final Graph graph;
     final Dijkstra dijkstra;
-    Node source;
-    Node target;
+    private Node source;
+    private Node target;
     Set<Node> reachablePois;
     double maxDistance;
     private double maxDistanceFactor;
@@ -34,11 +34,19 @@ public abstract class Solver {
      * @param graph the graph to search on
      */
     Solver(Node source, Node target, double maxDistanceFactor, Graph graph) {
-        this.graph = graph;
+        this(graph);
         this.source = source;
         this.target = target;
-        dijkstra = Dijkstra.getInstance(this.graph);
         setMaxDistanceFactor(maxDistanceFactor);
+    }
+
+    /**
+     * Instantiate a solver. Must be updated before solving.
+     * @param graph the graph to search on
+     */
+    Solver(Graph graph) {
+        this.graph = graph;
+        dijkstra = Dijkstra.getInstance(this.graph);
     }
 
     /**
@@ -48,6 +56,8 @@ public abstract class Solver {
     public abstract Graph.Path solve();
 
     public void update(Node source, Node target, double maxDistanceFactor) {
+        logger.trace("Updating solver: source {}; target {}; maxDistanceFactor {}",
+                source.id, target.id, maxDistanceFactor);
         setSource(source);
         setTarget(target);
         setMaxDistanceFactor(maxDistanceFactor);

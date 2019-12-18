@@ -20,26 +20,9 @@ public class Main {
 
 
     public static void main(String... args) {
-        // preprocessing
-        if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
-            logger.trace("Preprocessing OSM file");
-            try {
-                processData(new OSMPreprocessor(), OSM_DUMP);
-            } catch (FileNotFoundException e) {
-                logger.error("Failed to preprocess data!", e);
-            } finally {
-                if (!OSM_DUMP_PROCESSED.exists()) {
-                    logger.fatal("No preprocessed data present; exiting!");
-                    System.exit(1);
-                }
-            }
-        }
+        preprocess();
 
-        // import/load graph
-        logger.trace("Loading graph from preprocessed file");
-        OSMReader graphReader = new OSMReader();
-        processData(graphReader, OSM_DUMP_PROCESSED);
-        Graph osmGraph = graphReader.getOsmGraph();
+        Graph osmGraph = loadGraph();
 
         // output some graph stats
         logger.info("Node count: {}", osmGraph.adjList.size());
@@ -65,6 +48,29 @@ public class Main {
 
         // start interactive web visualization
         new Webserver(source, target, maxDistanceFactor, osmGraph);
+    }
+
+    public static void preprocess() {
+        if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
+            logger.trace("Preprocessing OSM file");
+            try {
+                processData(new OSMPreprocessor(), OSM_DUMP);
+            } catch (FileNotFoundException e) {
+                logger.error("Failed to preprocess data!", e);
+            } finally {
+                if (!OSM_DUMP_PROCESSED.exists()) {
+                    logger.fatal("No preprocessed data present; exiting!");
+                    System.exit(1);
+                }
+            }
+        }
+    }
+
+    public static Graph loadGraph() {
+        logger.trace("Loading graph from preprocessed file");
+        OSMReader graphReader = new OSMReader();
+        processData(graphReader, OSM_DUMP_PROCESSED);
+        return graphReader.getOsmGraph();
     }
 
     /**

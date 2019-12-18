@@ -14,9 +14,13 @@ public class NaiveSolver extends Solver {
         super(source, target, maxDistance, g);
     }
 
+    public NaiveSolver(Graph g) {
+        super(g);
+    }
+
     public Path solve() {
         logger.debug("Solving");
-        Path solutionPath = dijkstra.getShortestPath().copy();
+        Path solutionPath = dijkstra.getShortestPath();
         if (solutionPath.isEmpty() || solutionPath.getPathCost() > maxDistance) {
             logger.info("Target is not reachable!");
             return graph.new Path();
@@ -40,7 +44,7 @@ public class NaiveSolver extends Solver {
 
         // keep adding shortest paths to new classes until we would run over the maximal distance
         while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty()) {
-            Path pathToNewPoi = dijkstra.shortestPath(sources, targets);
+            Path pathToNewPoi = dijkstra.shortestPath(sources, targets, false);
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
                 logger.trace("No new POI classes are reachable!");
@@ -48,7 +52,7 @@ public class NaiveSolver extends Solver {
             }
             Node newPoi = pathToNewPoi.getLast();
             // find shortest way back
-            Path backPath = dijkstra.shortestPath(newPoi, sources);
+            Path backPath = dijkstra.shortestPath(newPoi, sources, false);
             // remove target POI, if no path back exists
             if (backPath.isEmpty()) {
                 targets.remove(newPoi);
@@ -65,6 +69,7 @@ public class NaiveSolver extends Solver {
             // check if the path might grow too large
             if (pathToNewPoi.getPathCost() + solutionPath.getPathCost() > maxDistance) {
                 // TODO not a guarantee to stay below maxDistance (if pathToNewPoi is a back path)
+                // TODO fix losing pois/sources bug.
                 break;
             }
 

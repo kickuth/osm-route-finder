@@ -106,7 +106,7 @@ public class Graph {
         try {
             return nodes.get(id);
         } catch (IndexOutOfBoundsException e) {
-            logger.debug("Non-existent node requested (id: {}).", id);
+            logger.error("Non-existent node requested (id: {}).", id);
             return null;
         }
     }
@@ -175,21 +175,18 @@ public class Graph {
         public Path append(Path toAppend) {
             if (toAppend.dNodes.isEmpty()) {
                 // do nothing
-                return this;
-            }
-            if (dNodes.isEmpty()) {
+            } else if (dNodes.isEmpty()) {
                 // copy everything from toAppend
                 dNodes.addAll(toAppend.dNodes);
                 pathCost = toAppend.pathCost;
-                return this;
-            }
-            if(!dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
+            } else if(!dNodes.getLast().node.equals(toAppend.dNodes.getFirst().node)) {
                 throw new IllegalArgumentException("Appended path does not start with end node of previous path!");
+            } else {
+                toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
+                dNodes.removeLast();
+                dNodes.addAll(toAppend.dNodes);
+                pathCost = dNodes.getLast().distanceFromSource;
             }
-            toAppend.dNodes.forEach(dNode -> dNode.distanceFromSource += pathCost);
-            dNodes.removeLast();
-            dNodes.addAll(toAppend.dNodes);
-            pathCost = dNodes.getLast().distanceFromSource;
             return this;
         }
 

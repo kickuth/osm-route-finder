@@ -26,7 +26,9 @@ application {
 test {
     useJUnitPlatform()
     minHeapSize = "1G"
-    maxHeapSize = "10G"
+    maxHeapSize = "15G"
+
+    testLogging.showStandardStreams = true
 
     if (System.getenv('CI')) {
         failFast = true
