@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
@@ -40,9 +41,16 @@ class IntegrationTest {
 
     @Test
     void randomQueries() throws IOException {
-        int testCount = 100;
+        int testCount = 30;
+
+        // ensure logfile path exists and open file writer
+        File logFile = new File("out/logs/sameRandomQueries.txt");
+        if (!logFile.exists()){
+            File logPath = new File(logFile.getParent());
+            logPath.mkdirs();
+        }
         BufferedWriter writer = new BufferedWriter(
-                new FileWriter("out/logs/sameRandomQueries.txt", true)
+                new FileWriter(logFile, true)
         );
 
         Main.preprocess();
