@@ -4,6 +4,7 @@ import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.solvers.GreedySolver;
 import eu.kickuth.mthesis.solvers.NaiveSolver;
+import eu.kickuth.mthesis.solvers.SPSolver;
 import eu.kickuth.mthesis.solvers.Solver;
 import eu.kickuth.mthesis.utils.GeoJSON;
 import org.apache.commons.lang3.StringUtils;
@@ -53,6 +54,7 @@ public class Webserver {
         currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
         solvers.put("ng", currentSolver);
         solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
+        solvers.put("sp", new SPSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
         // get POIs from nodes, filter common (later dynamically loaded) POIs
         poiJSON = GeoJSON.createPOIList(
