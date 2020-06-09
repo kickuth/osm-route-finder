@@ -9,9 +9,11 @@ import java.util.stream.Collectors;
 public class OSMNodesOnPathReader implements Sink {
 
     private Set<Long> nodes;
+    private Set<Long> junctions;
 
     OSMNodesOnPathReader() {
         nodes = new HashSet<>();
+        junctions = new HashSet<>();
     }
 
     @Override
@@ -53,7 +55,11 @@ public class OSMNodesOnPathReader implements Sink {
             }
         }
         if (isHighway) {
-            nodes.addAll(osmWay.getWayNodes().stream().map(WayNode::getNodeId).collect(Collectors.toList()));
+            for (Long nodeID : osmWay.getWayNodes().stream().map(WayNode::getNodeId).collect(Collectors.toList())) {
+                if (!nodes.add(nodeID)) {
+                    junctions.add(nodeID);
+                }
+            }
         }
     }
 
@@ -61,8 +67,12 @@ public class OSMNodesOnPathReader implements Sink {
      * Retrieve the set of node IDs that lie on drivable roads.
      * @return ID set of nodes on roads
      */
-    public Set<Long> getNodes() {
+    public Set<Long> getNodeIDs() {
         return nodes;
+    }
+
+    public Set<Long> getJunctionIDs() {
+        return junctions;
     }
 
     @Override
