@@ -2,8 +2,8 @@ package eu.kickuth.mthesis.web;
 
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import eu.kickuth.mthesis.solvers.GreedySolver;
-import eu.kickuth.mthesis.solvers.NaiveSolver;
+import eu.kickuth.mthesis.solvers.GASolver;
+import eu.kickuth.mthesis.solvers.SPESolver;
 import eu.kickuth.mthesis.solvers.SPSolver;
 import eu.kickuth.mthesis.solvers.Solver;
 import eu.kickuth.mthesis.utils.GeoJSON;
@@ -51,9 +51,9 @@ public class Webserver {
     public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
         logger.trace("Initialising solvers");
         graph = g;
-        currentSolver = new NaiveSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
+        currentSolver = new SPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
         solvers.put("ng", currentSolver);
-        solvers.put("gr", new GreedySolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
+        solvers.put("gr", new GASolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
         solvers.put("sp", new SPSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
         // get POIs from nodes, filter common (later dynamically loaded) POIs

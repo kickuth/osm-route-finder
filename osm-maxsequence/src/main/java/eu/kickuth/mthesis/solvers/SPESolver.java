@@ -7,14 +7,14 @@ import eu.kickuth.mthesis.graph.Node;
 import java.util.HashSet;
 import java.util.Set;
 
-public class NaiveSolver extends Solver {
+public class SPESolver extends Solver {
 
 
-    public NaiveSolver(Node source, Node target, double maxDistance, Graph g) {
+    public SPESolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
     }
 
-    public NaiveSolver(Graph g) {
+    public SPESolver(Graph g) {
         super(g);
     }
 
