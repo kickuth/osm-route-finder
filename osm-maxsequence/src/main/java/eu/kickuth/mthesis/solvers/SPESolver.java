@@ -7,14 +7,14 @@ import eu.kickuth.mthesis.graph.Node;
 import java.util.HashSet;
 import java.util.Set;
 
-public class NaiveSolver extends Solver {
+public class SPESolver extends Solver {
 
 
-    public NaiveSolver(Node source, Node target, double maxDistance, Graph g) {
+    public SPESolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
     }
 
-    public NaiveSolver(Graph g) {
+    public SPESolver(Graph g) {
         super(g);
     }
 
@@ -74,8 +74,8 @@ public class NaiveSolver extends Solver {
             }
 
             // find index for insertion
-            int insertStart = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
-            int insertEnd = solutionPath.getNodes().indexOf(pathToNewPoi.getLast());
+            int insertStart = solutionPath.getNodes().indexOf(pathToNewPoi.getFirst());
+            int insertEnd = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getLast());
 
             solutionPath.insert(pathToNewPoi, insertStart, insertEnd);
 
@@ -90,6 +90,6 @@ public class NaiveSolver extends Solver {
 
     @Override
     public String toString() {
-        return "Naive Solver";
+        return "SPE Solver";
     }
 }

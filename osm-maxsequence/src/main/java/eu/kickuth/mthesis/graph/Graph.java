@@ -157,6 +157,14 @@ public class Graph {
         return p.stream().filter(pois::contains).collect(Collectors.toSet());
     }
 
+    public List<Node> getOrderedPoisOnPath(Path p) {
+        return getOrderedPoisOnPath(p.getNodes());
+    }
+
+    public List<Node> getOrderedPoisOnPath(List<Node> p) {
+        return p.stream().filter(pois::contains).collect(Collectors.toList());
+    }
+
     public class Path {
 
         private final LinkedList<DijkstraNode> dNodes;
@@ -233,6 +241,10 @@ public class Graph {
 
         public boolean isEmpty() {
             return dNodes.isEmpty();
+        }
+
+        public int size() {
+            return dNodes.size();
         }
 
         public Path copy() {

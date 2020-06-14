@@ -7,13 +7,13 @@ import eu.kickuth.mthesis.graph.Node;
 import java.util.HashSet;
 import java.util.Set;
 
-public class GreedySolver extends Solver {
+public class GASolver extends Solver {
 
-    public GreedySolver(Node source, Node target, double maxDistance, Graph g) {
+    public GASolver(Node source, Node target, double maxDistance, Graph g) {
         super(source, target, maxDistance, g);
     }
 
-    public GreedySolver(Graph g) {
+    public GASolver(Graph g) {
         super(g);
     }
 
@@ -60,6 +60,6 @@ public class GreedySolver extends Solver {
 
     @Override
     public String toString() {
-        return "Greedy Solver";
+        return "GA Solver";
     }
 }

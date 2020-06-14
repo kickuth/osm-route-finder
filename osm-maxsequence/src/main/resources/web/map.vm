@@ -16,8 +16,9 @@
 <div class="sidenav">
     <form id="panelForm">
         <select id="algo" name="algo">
-            <option value="ng">SPE</option>
-            <option value="gr">GA</option>
+            <option value="sspe">SmartSPE</option>
+            <option value="spe">SPE</option>
+            <option value="ga">GA</option>
             <option value="sp">shortest path</option>
             ## <option value="ot">other</option>
         </select>

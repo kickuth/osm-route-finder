@@ -38,7 +38,7 @@ public class Main {
         // set initial values
         double maxDistanceFactor = 1.25;
         int sourceID = 27182;
-        int targetID = 31415;
+        int targetID = 9097402; //31415;
 
         Node source = osmGraph.getNode(sourceID);
         Node target = osmGraph.getNode(targetID);
