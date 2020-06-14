@@ -62,9 +62,10 @@ public class SmartSPESolver extends Solver {
                 break;
             }
             Node newPOI = pathToNewPoi.getLast();
-            int insertStart = solutionPath.getNodes().indexOf(pathToNewPoi.getFirst());
+            LinkedList<Node> solutionNodes = solutionPath.getNodes();
+            int insertStart = solutionNodes.indexOf(pathToNewPoi.getFirst());
 
-            ListIterator<Node> iter = solutionPath.getNodes().listIterator(insertStart+1);
+            ListIterator<Node> iter = solutionNodes.listIterator(insertStart+1);
             int insertEnd = insertStart;
 
             Node current = getTarget();  // initialize as target, in case our insert start is the target
@@ -78,6 +79,7 @@ public class SmartSPESolver extends Solver {
                 if (currentCount != 1) {
                     // we will drop this POI by inserting a new path around it, so reduce class count
                     pathClassCount.put(current.type, currentCount-1);
+                    sources.remove(current);
                 } else {
                     // this is where we want our insertion path to end, to avoid losing already collected classes
                     break;
@@ -103,8 +105,6 @@ public class SmartSPESolver extends Solver {
 //                break;
 //            }
 
-            // remove possible targets with the same class as the new node
-            targets.removeIf(node -> node.type.equals(newPOI.type));
 
 
             // add newly encountered classes to our map or adjust their count, if already present
@@ -114,6 +114,10 @@ public class SmartSPESolver extends Solver {
                 Node newPathNode = newPathIter.next();
                 if (newPathNode.type != null) {
                     int count = pathClassCount.getOrDefault(newPathNode.type, 0);
+                    if (count == 0) {
+                        // remove possible targets with the same class as the new node
+                        targets.removeIf(node -> node.type.equals(newPathNode.type));
+                    }
                     pathClassCount.put(newPathNode.type, count+1);
                 }
             }
