@@ -146,11 +146,11 @@
             // add path
             L.geoJSON(res, {
                 style: lineStyle,
-                onEachFeature: function onEachFeature(feature, layer) { layer.on('click', function(e){ drawEllipse(feature, e) }); }
-            }).bindPopup("score: " + res.score + " (" + res.uBound + " upper bound), length: " + res.length).addTo(map);
+                onEachFeature: function onEachFeature(feature, layer) { layer.once('click', function(e){ drawEllipse(feature, e) }); }
+            }).bindPopup(pathPopup).addTo(map);
             // add POIs on path ## TODO marker style?
             console.log(res.pathPois);
-            L.geoJSON(JSON.parse(res.pathPois)).addTo(map);
+            L.geoJSON(JSON.parse(res.pathPois)).addTo(map);  // add markers for POIs on path
             // var animatedMarker = L.animatedMarker(line.getLatLngs(), {
             //     distance: 100, // meters
             //     interval: 50, // milliseconds

@@ -84,6 +84,12 @@ function isCommonName(name) {
     return (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit");
 }
 
+function pathPopup(layer) {
+    const res = layer.feature.geometry;
+    return ('score: ' + res.score + ' (' + res.uBound + ' upper bound), length: ' + res.length
+        + '<br/>TODO common classes here.'); // ## TODO
+}
+
 function drawEllipse(feature, event) {
     const latlngs = feature.coordinates;
     const lat1 = latlngs[0][1];
@@ -100,11 +106,11 @@ function drawEllipse(feature, event) {
     const maxLength = minLength * document.getElementById("max_dist_factor").value;  // (= ellipseHeight)
     const ellipseWidth = Math.sqrt(Math.pow(maxLength, 2) - Math.pow(minLength, 2)) / 2;
 
-    const pathColour = event.target.options.color;
+    const pathColor = event.target.options.color;
 
     L.ellipse(center, [ellipseWidth / 2, maxLength / 2], angle, {
-        color: pathColour,
-        fillColor: pathColour,
+        color: pathColor,
+        fillColor: pathColor,
         fillOpacity: 0.0625,
         interactive: false
     }).addTo(map);
