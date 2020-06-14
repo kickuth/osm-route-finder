@@ -38,12 +38,12 @@ public class Main {
         // set initial values
         double maxDistanceFactor = 1.25;
         int sourceID = 27182;
-        int targetID = 9097402; //31415;
+        int targetID = 31415;
 
         Node source = osmGraph.getNode(sourceID);
         Node target = osmGraph.getNode(targetID);
         if (source == null || target == null) {
-            logger.fatal("cold not retrieve default source/target nodes (IDs {}, {}) from graph.", sourceID, targetID);
+            logger.fatal("could not retrieve default source/target nodes (IDs {}, {}) from graph.", sourceID, targetID);
             System.exit(1);
         }
 

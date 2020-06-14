@@ -112,7 +112,7 @@ public class OSMPreprocessor implements Sink, Source {
                         // get a random number, between 0 and 90
                         int randomInt = random.nextInt(91);
                         if (randomInt >= 65) {  // A=65 to Z=90
-                            type = "Fake " + (char) randomInt;
+                            type = String.valueOf((char) randomInt);
                         }
                     }
                     tags.add(new Tag("traffic_sign", type));
