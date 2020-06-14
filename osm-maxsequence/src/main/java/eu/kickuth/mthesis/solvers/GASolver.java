@@ -60,6 +60,6 @@ public class GASolver extends Solver {
 
     @Override
     public String toString() {
-        return "Greedy Solver";
+        return "GA Solver";
     }
 }

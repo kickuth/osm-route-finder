@@ -6,9 +6,9 @@ public final class Settings {
 
     public static final boolean FORCE_PREPROCESS = false;  // preprocess the .pbf file, even if preprocessed version exists?
 
-//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/tue.osm.pbf");  // TUE OSM data file
+    public static final File OSM_DUMP = new File("src/main/resources/osm_data/tue.osm.pbf");  // TUE OSM data file
 //    public static final File OSM_DUMP = new File("src/main/resources/osm_data/bw.osm.pbf");  // BW OSM data file
-    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_proc.osm.pbf");  // DE (preprocessed) data file
+//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_proc.osm.pbf");  // DE (preprocessed) data file
 
     public static final File OSM_DUMP_PROCESSED = new File(OSM_DUMP.getPath() + "_processed.osm.pbf");  // preprocessed OSM data file
 
