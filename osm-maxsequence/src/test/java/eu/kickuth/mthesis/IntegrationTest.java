@@ -2,10 +2,7 @@ package eu.kickuth.mthesis;
 
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import eu.kickuth.mthesis.solvers.GreedySolver;
-import eu.kickuth.mthesis.solvers.NaiveSolver;
-import eu.kickuth.mthesis.solvers.SPSolver;
-import eu.kickuth.mthesis.solvers.Solver;
+import eu.kickuth.mthesis.solvers.*;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +38,7 @@ class IntegrationTest {
 
     @Test
     void randomQueries() throws IOException {
-        int testCount = 30;
+        int testCount = 10;
 
         // ensure logfile path exists and open file writer
         File logFile = new File("out/logs/sameRandomQueries.txt");
@@ -55,17 +52,17 @@ class IntegrationTest {
 
         Main.preprocess();
         Graph g = Main.loadGraph();
-        Solver s1 = new NaiveSolver(g);
-        Solver s2 = new GreedySolver(g);
-        //Solver s3 = new SPSolver(g);
+        Solver s1 = new SPESolver(g);
+        Solver s2 = new GASolver(g);
+        Solver s3 = new SmartSPESolver(g);
         int nodeCount = g.nodes.size();
         double totalDuration1 = 0;
         double totalDuration2 = 0;
-        //double totalDuration3 = 0;
+        double totalDuration3 = 0;
         int totalUB = 0;
         int totalLB1 = 0;
         int totalLB2 = 0;
-        //int totalLB3 = 0;
+        int totalLB3 = 0;
         try {
             for (int i = 1; i <= testCount; i++) {
                 Random r = new Random();
@@ -75,7 +72,7 @@ class IntegrationTest {
 
                 Graph.Path solverPath1;
                 Graph.Path solverPath2;
-                //Graph.Path solverPath3;
+                Graph.Path solverPath3;
                 float duration1 = 0;
                 float duration2 = 0;
                 float duration3 = 0;
@@ -91,10 +88,10 @@ class IntegrationTest {
                     solverPath2 = s2.solve();
                     duration2 = (System.currentTimeMillis() - startTime) / 1000.0f;
 
-                    //s3.update(source, target, maxDistFactor);
-                    //startTime = System.currentTimeMillis();
-                    //solverPath3 = s3.solve();
-                    //duration3 = (System.currentTimeMillis() - startTime) / 1000.0f;
+                    s3.update(source, target, maxDistFactor);
+                    startTime = System.currentTimeMillis();
+                    solverPath3 = s3.solve();
+                    duration3 = (System.currentTimeMillis() - startTime) / 1000.0f;
 
                 } catch (IllegalArgumentException e) {
                     writer.append("solver bug. trying new setting.");
@@ -106,8 +103,7 @@ class IntegrationTest {
                 double shortestPathLength = maxDistance / maxDistFactor;
                 int lowerBound1 = s1.uniqueClassScore(solverPath1);
                 int lowerBound2 = s2.uniqueClassScore(solverPath2);
-                //int lowerBound3 = s3.uniqueClassScore(solverPath3);
-                int lowerBound3 = 0;
+                int lowerBound3 = s3.uniqueClassScore(solverPath3);
                 int upperBound = s1.getUpperBound();
 
                 String current = String.format("run %d: s: %s; t: %s; st factor: %.3f duration1: %.2f; duration2: %.2f; duration3: %.2f; min st: %.3f; ub: %d; lb1: %d; lb2: %d; lb3: %d\n",
@@ -116,24 +112,24 @@ class IntegrationTest {
                 writer.append(current);
                 totalDuration1 += duration1;
                 totalDuration2 += duration2;
-                //totalDuration3 += duration3;
+                totalDuration3 += duration3;
                 totalUB += upperBound;
                 totalLB1 += lowerBound1;
                 totalLB2 += lowerBound2;
-                //totalLB3 += lowerBound3;
+                totalLB3 += lowerBound3;
             }
             String total1 = String.format("total runs: %d: avg duration: %.3f; avg ub: %.3f; avg lb: %.3f\n\n\n",
                     testCount, totalDuration1/testCount, totalUB/(double)testCount, totalLB1/(double)testCount);
             String total2 = String.format("total runs: %d: avg duration: %.3f; avg ub: %.3f; avg lb: %.3f\n\n\n",
                     testCount, totalDuration2/testCount, totalUB/(double)testCount, totalLB2/(double)testCount);
-            //String total3 = String.format("total runs: %d: avg duration: %.3f; avg ub: %.3f; avg lb: %.3f\n\n\n",
-            //        testCount, totalDuration3/testCount, totalUB/(double)testCount, totalLB3/(double)testCount);
+            String total3 = String.format("total runs: %d: avg duration: %.3f; avg ub: %.3f; avg lb: %.3f\n\n\n",
+                    testCount, totalDuration3/testCount, totalUB/(double)testCount, totalLB3/(double)testCount);
             logger.info(total1);
             writer.append(total1);
             logger.info(total2);
             writer.append(total2);
-            //logger.info(total3);
-            //writer.append(total3);
+            logger.info(total3);
+            writer.append(total3);
         } finally {
             writer.close();
         }
