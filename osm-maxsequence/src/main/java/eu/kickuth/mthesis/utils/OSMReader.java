@@ -9,15 +9,15 @@ import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 public class OSMReader implements Sink {
 
     private static final Logger logger = LogManager.getLogger(OSMReader.class);
 
-
     private Graph osmGraph;
-
 
     @Override
     public void initialize(Map<String, Object> metaData) {
@@ -48,12 +48,15 @@ public class OSMReader implements Sink {
     private void processNode(Node osmNode) {
         String type = null;
         for (Tag tag : osmNode.getTags()) {
-            if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
+            if ("traffic_sign".equals(tag.getKey())) {
                 type = tag.getValue().intern();
-                break;
+                break;  // don't override type later as junction
+            } else if ("is_junction".equals(tag.getKey())) {
+                type = "";  // this is not null, but the empty string shouldn't be counted as road sign
             }
             // TODO add fake classes? Other type sources?
         }
+        // TODO after preprocessing, IDs should be ordered. Implement a test to check, or check here.
         int id = -1;
         try {
             id = Math.toIntExact(osmNode.getId());
@@ -68,6 +71,7 @@ public class OSMReader implements Sink {
     private void processWay(Way osmWay) {
         boolean isOneWay = false;
         String roadType = null;  // what type of road is it?
+        ArrayList<Double> distanceList = new ArrayList<>();
 
         // get road tag and check if the way is one way only
         for (Tag wayTag : osmWay.getTags()) {
@@ -78,6 +82,8 @@ public class OSMReader implements Sink {
                 case "oneway":  // is it explicitly one directional?
                     isOneWay = "yes".equalsIgnoreCase(wayTag.getValue());
                     break;
+                case "distance_list": // is this a pruned way, with distances given rather than computed using lat/lon?
+                    distanceList = Arrays.stream(wayTag.getValue().split(";")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
                 default:
                     // ignore all other tags
                     // TODO include maxspeed? (see also preprocessing)
@@ -89,6 +95,8 @@ public class OSMReader implements Sink {
             return;
         }
 
+        ListIterator<Double> distanceListIterator= distanceList.listIterator();
+
         // iterate through all way nodes and add them to the graph
         ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
         WayNode wn = wayNodes.next();
@@ -99,15 +107,26 @@ public class OSMReader implements Sink {
             wn = wayNodes.next();
             nextNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
             nextNode.setRoadType(roadType);
-            osmGraph.addEdge(new Edge(currentNode, nextNode));
-            if (!isOneWay) {
-                osmGraph.addEdge(new Edge(nextNode, currentNode));
+
+            if (distanceListIterator.hasNext()) {
+                double nextDistance = distanceListIterator.next();
+                osmGraph.addEdge(new Edge(currentNode, nextNode, nextDistance));
+                if (!isOneWay) {
+                    osmGraph.addEdge(new Edge(nextNode, currentNode, nextDistance));
+                }
+            } else {
+                osmGraph.addEdge(new Edge(currentNode, nextNode));
+                if (!isOneWay) {
+                    osmGraph.addEdge(new Edge(nextNode, currentNode));
+                }
             }
             currentNode = nextNode;
         }
-
     }
 
+    /**
+     * This method is called, once the input file has been completely read.
+     */
     @Override
     public void complete() {
         // TODO postprocess: Remove nodes without neighbours and dead ends?
@@ -117,9 +136,7 @@ public class OSMReader implements Sink {
                 deadEndCount++;
             }
         }
-        if (deadEndCount > 0) {
-            logger.debug("Graph contains {} dead ends.", deadEndCount);
-        }
+        logger.debug("Graph contains {} dead ends.", deadEndCount);
     }
 
     @Override

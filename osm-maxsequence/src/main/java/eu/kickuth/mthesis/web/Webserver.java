@@ -2,10 +2,7 @@ package eu.kickuth.mthesis.web;
 
 import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
-import eu.kickuth.mthesis.solvers.GASolver;
-import eu.kickuth.mthesis.solvers.SPESolver;
-import eu.kickuth.mthesis.solvers.SPSolver;
-import eu.kickuth.mthesis.solvers.Solver;
+import eu.kickuth.mthesis.solvers.*;
 import eu.kickuth.mthesis.utils.GeoJSON;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -51,8 +48,9 @@ public class Webserver {
     public Webserver(Node defaultSource, Node defaultTarget, double defaultMaxDistFactor, Graph g) {
         logger.trace("Initialising solvers");
         graph = g;
-        currentSolver = new SPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
-        solvers.put("ng", currentSolver);
+        currentSolver = new SmartSPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
+        solvers.put("sspe", currentSolver);
+        solvers.put("spe", new SPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
         solvers.put("gr", new GASolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
         solvers.put("sp", new SPSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 

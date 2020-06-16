@@ -5,6 +5,7 @@ import eu.kickuth.mthesis.graph.Graph;
 import eu.kickuth.mthesis.graph.Node;
 import eu.kickuth.mthesis.utils.OSMPreprocessor;
 import eu.kickuth.mthesis.utils.OSMReader;
+import eu.kickuth.mthesis.utils.OSMRoadSimplification;
 import eu.kickuth.mthesis.web.Webserver;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
@@ -37,12 +38,12 @@ public class Main {
         // set initial values
         double maxDistanceFactor = 1.25;
         int sourceID = 27182;
-        int targetID = 9097402;//31415;
+        int targetID = 31415;
 
         Node source = osmGraph.getNode(sourceID);
         Node target = osmGraph.getNode(targetID);
         if (source == null || target == null) {
-            logger.fatal("cold not retrieve default source/target nodes (IDs {}, {}) from graph.", sourceID, targetID);
+            logger.fatal("could not retrieve default source/target nodes (IDs {}, {}) from graph.", sourceID, targetID);
             System.exit(1);
         }
 
@@ -54,7 +55,9 @@ public class Main {
         if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
             logger.trace("Preprocessing OSM file");
             try {
-                processData(new OSMPreprocessor(), OSM_DUMP);
+                final File temporary_dump = new File(OSM_DUMP.getPath() + "_TEMP");
+                processData(new OSMPreprocessor(temporary_dump), OSM_DUMP);
+                processData(new OSMRoadSimplification(OSM_DUMP_PROCESSED), temporary_dump);
             } catch (FileNotFoundException e) {
                 logger.error("Failed to preprocess data!", e);
             } finally {

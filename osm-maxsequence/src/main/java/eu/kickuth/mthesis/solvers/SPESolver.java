@@ -74,8 +74,8 @@ public class SPESolver extends Solver {
             }
 
             // find index for insertion
-            int insertStart = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getFirst());
-            int insertEnd = solutionPath.getNodes().indexOf(pathToNewPoi.getLast());
+            int insertStart = solutionPath.getNodes().indexOf(pathToNewPoi.getFirst());
+            int insertEnd = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getLast());
 
             solutionPath.insert(pathToNewPoi, insertStart, insertEnd);
 
@@ -90,6 +90,6 @@ public class SPESolver extends Solver {
 
     @Override
     public String toString() {
-        return "Naive Solver";
+        return "SPE Solver";
     }
 }

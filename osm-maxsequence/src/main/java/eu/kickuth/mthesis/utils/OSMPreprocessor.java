@@ -9,6 +9,7 @@ import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import org.openstreetmap.osmosis.core.task.v0_6.Source;
 import org.openstreetmap.osmosis.osmbinary.file.BlockOutputStream;
+//import org.openstreetmap.osmosis.xml.v0_6.XmlWriter;
 
 import java.io.*;
 import java.util.*;
@@ -24,24 +25,32 @@ public class OSMPreprocessor implements Sink, Source {
 
     // default user and date for processed OSM file
     private static final OsmUser user = new OsmUser(0, "");
-    private static final Date date = new Date();
+    private static final Date date = new Date(0L);
+
+    // repeatable random numbers for fake classes
+    private final Random random = new Random(12345);
 
     // data writer
     private Sink sink;
 
     private final Set<Long> nodesOnRoads;
+    private final Set<Long> nodesOnJunctions;
 
     private final Map<Long, Integer> idMap;
     private int mappedID = 0;
 
-    public OSMPreprocessor() throws FileNotFoundException {
+    private final File outputFile;
+
+    public OSMPreprocessor(final File outputFile) throws FileNotFoundException {
         logger.trace("First run: Finding node IDs on paths");
+        this.outputFile = outputFile;
         OSMNodesOnPathReader nodesReader = new OSMNodesOnPathReader();
         InputStream inputStream = new FileInputStream(OSM_DUMP);
         OsmosisReader reader = new OsmosisReader(inputStream);
         reader.setSink(nodesReader);
         reader.run();
-        nodesOnRoads = nodesReader.getNodes();
+        nodesOnRoads = nodesReader.getNodeIDs();
+        nodesOnJunctions = nodesReader.getJunctionIDs();
         idMap = new HashMap<>((nodesOnRoads.size() * 4) / 3);
     }
 
@@ -55,10 +64,12 @@ public class OSMPreprocessor implements Sink, Source {
         logger.trace("Second run: Preprocessing");
         // initialise writer
         try {
-//            setSink(new XmlWriter(new BufferedWriter(new FileWriter(OSM_DUMP_PROCESSED))));  // xml writer
-            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(OSM_DUMP_PROCESSED))));  // pbf writer
+//            setSink(new XmlWriter(new BufferedWriter(new FileWriter(outputFile))));  // xml writer
+            setSink(new OsmosisSerializer(new BlockOutputStream(new FileOutputStream(outputFile))));  // pbf writer
         } catch (FileNotFoundException e) {
             logger.fatal("Could not find File!", e);
+//        } catch (IOException e) {  // for FileWriter in XmlWriter
+//            logger.fatal("Error using FileWriter!", e);
         }
     }
 
@@ -82,24 +93,38 @@ public class OSMPreprocessor implements Sink, Source {
     }
 
     private void processNode(Node osmNode) {
-        if (!nodesOnRoads.remove(osmNode.getId())) {
+        Long nodeID = osmNode.getId();
+        if (!nodesOnRoads.contains(nodeID)) {
             // continue if id was not present
             return;
         }
-        idMap.put(osmNode.getId(), mappedID);
+        idMap.put(nodeID, mappedID);
         Collection<Tag> tags = new ArrayList<>(1);
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
                 Pattern roadSignPattern = Pattern.compile("(DE:\\d+)|(city_limit)");
+//                Pattern roadSignPattern = Pattern.compile("(DE:\\d+)");
                 Matcher matcher = roadSignPattern.matcher(tag.getValue());
                 if (matcher.find()) {
-                    tags.add(new Tag("traffic_sign", matcher.group(0)));
+                    String type = matcher.group(0);
+                    // replace some city limits with fake classes for diversity
+                    if (type.equals("city_limit")) {
+                        // get a random number, between 0 and 90
+                        int randomInt = random.nextInt(91);
+                        if (randomInt >= 65) {  // A=65 to Z=90
+                            type = String.valueOf((char) randomInt);
+                        }
+                    }
+                    tags.add(new Tag("traffic_sign", type));
                 }
                 while (matcher.find()) {
                     // TODO do not ignore? extend regex?
                     logger.info("Ignoring additional sign: {}", matcher.group(0));
                 }
             }
+        }
+        if (nodesOnJunctions.contains(nodeID)) {
+            tags.add(new Tag("is_junction", "yes"));
         }
 
         sink.process(new NodeContainer(new Node(
@@ -154,7 +179,8 @@ public class OSMPreprocessor implements Sink, Source {
         }
 
         List<WayNode> newWayNodes = osmWay.getWayNodes().stream().map(
-                n -> new WayNode((long) idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
+                // TODO note that the library only stores WayNode IDs, not lon/lat...
+                n -> new WayNode(idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
         ).collect(Collectors.toList());
 
         Way newWay = new Way(new CommonEntityData(osmWay.getId(), 1, date, user, 0, newTags), newWayNodes);
@@ -162,9 +188,12 @@ public class OSMPreprocessor implements Sink, Source {
         sink.process(new WayContainer(newWay));
     }
 
+    /**
+     * This method is called, once the input file has been completely read.
+     */
     @Override
     public void complete() {
-        sink.complete();  // write out remaining sink buffer
+        sink.complete();  // write out remaining output buffer
     }
 
     @Override

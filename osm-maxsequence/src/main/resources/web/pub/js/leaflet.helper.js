@@ -43,6 +43,17 @@ const iconcity = L.icon({  // Ortstafel / 310
     iconAnchor: [6, 4],
 });
 
+// letter icons
+const letterIcons = new Array(26);
+for (let i=0; i < 26; i++){
+    letterIcons[i] = L.icon({
+        iconUrl: 'img/letters/' + String.fromCharCode(i+97) + '.png',  // a = 97
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+    });
+}
+
+
 function getMarker(name, latlon) {
     let icon;
     switch(name) {
@@ -68,6 +79,10 @@ function getMarker(name, latlon) {
             icon = icon449;
             break;
         default:
+            if (name.length === 1) {
+                icon = letterIcons[name.charCodeAt(0)-65];  // A = 65
+                break;
+            }
             return L.circleMarker(latlon, {
                 radius: 6,
                 fillColor: poiColors[name.charCodeAt(name.length - 1) % poiColors.length],
@@ -81,7 +96,7 @@ function getMarker(name, latlon) {
 }
 
 function isCommonName(name) {
-    return (name === "DE:205" || name === "DE:206" || name === "DE:274" || name === "city_limit");
+    return (name === "city_limit" || name === "DE:205" || name === "DE:206" || name === "DE:274" || name.length === 1);
 }
 
 function pathPopup(layer) {
