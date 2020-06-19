@@ -51,10 +51,7 @@ public class OSMReader implements Sink {
             if ("traffic_sign".equals(tag.getKey())) {
                 type = tag.getValue().intern();
                 break;  // don't override type later as junction
-            } else if ("is_junction".equals(tag.getKey())) {
-                type = "";  // this is not null, but the empty string shouldn't be counted as road sign
             }
-            // TODO add fake classes? Other type sources?
         }
         // TODO after preprocessing, IDs should be ordered. Implement a test to check, or check here.
         int id = -1;

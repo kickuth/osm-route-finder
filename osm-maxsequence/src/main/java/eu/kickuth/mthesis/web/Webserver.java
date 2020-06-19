@@ -17,6 +17,7 @@ import spark.Request;
 import spark.Response;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -54,15 +55,23 @@ public class Webserver {
         solvers.put("gr", new GASolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
         solvers.put("sp", new SPSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
-        // get POIs from nodes, filter common (later dynamically loaded) POIs
+        // get names of common POI classes. We will load these ad hoc close up, instead of transmitting them on page load
+        // this is to avoid transmitting too much data
+        String[] commonPOIClasses = g.poiClassesToCount.entrySet().stream().filter(
+                entry -> entry.getValue() < 100  // TODO hard coded
+        ).map(Map.Entry::getKey).toArray(String[]::new);
+
+        // POIs transmitted on page load
         poiJSON = GeoJSON.createPOIList(
                 graph.pois.stream().filter(
-                        node -> !StringUtils.isEmpty(node.type)
-                                && !node.type.equals("city_limit")
-                                && !node.type.equals("DE:205")
-                                && !node.type.equals("DE:206")
-                                && !node.type.equals("DE:274")
-                ).collect(Collectors.toList())
+                        node -> {
+                            for (String commonClass : commonPOIClasses) {
+                                if (node.type.equals(commonClass)) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }).collect(Collectors.toList())
         );
         start();
     }
