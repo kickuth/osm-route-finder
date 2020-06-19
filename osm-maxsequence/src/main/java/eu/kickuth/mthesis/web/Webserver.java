@@ -52,7 +52,7 @@ public class Webserver {
         currentSolver = new SmartSPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph);
         solvers.put("sspe", currentSolver);
         solvers.put("spe", new SPESolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
-        solvers.put("gr", new GASolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
+        solvers.put("ga", new GASolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
         solvers.put("sp", new SPSolver(defaultSource, defaultTarget, defaultMaxDistFactor, graph));
 
         // get names of common POI classes. We will load these ad hoc close up, instead of transmitting them on page load
