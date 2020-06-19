@@ -28,25 +28,16 @@ public class SmartSPESolver extends Solver {
         Set<Node> targets = new HashSet<>(reachablePois);
 
         // get POIs on shortest path
-        List<Node> initialPOIs = graph.getOrderedPoisOnPath(solutionPath);
-
-        // places for path insertions
-        Set<Node> sources = new HashSet<>(initialPOIs);
+        Set<Node> initialPOIs = graph.getPoisOnPath(solutionPath);
 
         // keep a map of included POI classes and their count
         Map<String, Integer> pathClassCount = new HashMap<>();
-        sources.forEach(node -> {
-            Integer count;
-            if ((count = pathClassCount.get(node.type)) != null) {
-                pathClassCount.put(node.type, count+1);
-            } else {
-                pathClassCount.put(node.type, 1);
+        initialPOIs.forEach(node -> {
+            if (node.type != null) {
+                // merge: if already present, increase by one; else store with value 1
+                pathClassCount.merge(node.type, 1, Integer::sum);
             }
         });
-
-        // allow path insertions starting or ending at start or end node
-        sources.add(getSource());
-        sources.add(getTarget());
 
         // remove targets with classes, that we have already visited
         for (String visitedClass : pathClassCount.keySet()) {
@@ -55,7 +46,8 @@ public class SmartSPESolver extends Solver {
 
         // keep adding shortest paths to new classes until we run out of targets or would go over the maximal distance
         while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty()) {
-            Graph.Path pathToNewPoi = dijkstra.shortestPath(sources, targets, false);
+            // get new POI closest to current path
+            Graph.Path pathToNewPoi = dijkstra.shortestPath(solutionPath.getNodes(), targets, false);
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
                 logger.trace("No new POI classes are reachable!");
@@ -65,37 +57,53 @@ public class SmartSPESolver extends Solver {
             LinkedList<Node> solutionNodes = solutionPath.getNodes();
             int insertStart = solutionNodes.indexOf(pathToNewPoi.getFirst());
 
-            ListIterator<Node> iter = solutionNodes.listIterator(insertStart+1);
+            ListIterator<Node> fwdIter = solutionNodes.listIterator(insertStart+1);
+            ListIterator<Node> bwdIter = solutionNodes.listIterator(insertStart);
+
             int insertEnd = insertStart;
 
-            Node current = getTarget();  // initialize as target, in case our insert start is the target
-            while (iter.hasNext()) {
-                current = iter.next();
+            Node insertEndNode = getTarget();  // initialize as target, in case our insert start is the target
+            while (fwdIter.hasNext()) {
+                insertEndNode = fwdIter.next();
                 insertEnd++;
-                if (current.type == null) {
+                if (insertEndNode.type == null) {
                     continue;
                 }
-                int currentCount = pathClassCount.get(current.type);
+                int currentCount = pathClassCount.get(insertEndNode.type);
                 if (currentCount != 1) {
                     // we will drop this POI by inserting a new path around it, so reduce class count
-                    pathClassCount.put(current.type, currentCount-1);
-                    sources.remove(current);
+                    pathClassCount.put(insertEndNode.type, currentCount-1);
                 } else {
                     // this is where we want our insertion path to end, to avoid losing already collected classes
                     break;
                 }
             }
-            Graph.Path backPath = dijkstra.shortestPath(newPOI, current, false);
 
-            // TODO edge case: we can't reconnect the path. Fix if occurs.
-            if (backPath.isEmpty()) {
-                logger.error("back path does not reconnect to current solution. Code is broken and needs fixing.");
+            Node insertStartNode = getSource();  // initialize as source, in case our insert start is the source
+            while (bwdIter.hasPrevious()) {
+                insertStartNode = bwdIter.previous();
+                insertStart--;
+                if (insertStartNode.type == null) {
+                    continue;
+                }
+                int currentCount = pathClassCount.get(insertStartNode.type);
+                if (currentCount != 1) {
+                    // we will drop this POI by inserting a new path around it, so reduce class count
+                    pathClassCount.put(insertStartNode.type, currentCount-1);
+                } else {
+                    // this is where we want our insertion path to end, to avoid losing already collected classes
+                    break;
+                }
+            }
+            Graph.Path newPath = dijkstra.shortestPath(insertStartNode, newPOI, false).append(
+                    dijkstra.shortestPath(newPOI, insertEndNode, false));
+
+            // TODO edge case: we can't establish the new path. Fix if occurs.
+            if (newPath.isEmpty()) {
+                logger.error("new path doesn't exist. Code is broken and needs fixing.");
                 return solutionPath;
             }
 
-
-            // insert the detour into the previous path
-            pathToNewPoi.append(backPath);  // combine paths away from and back to solution
 
             // check if the path will grow too large
 //            // TODO this check sucks. Fix.
@@ -108,7 +116,7 @@ public class SmartSPESolver extends Solver {
 
 
             // add newly encountered classes to our map or adjust their count, if already present
-            LinkedList<Node> newNodes = pathToNewPoi.getNodes();
+            LinkedList<Node> newNodes = newPath.getNodes();
             ListIterator<Node> newPathIter = newNodes.listIterator(1);
             for (int i = 1; i < newNodes.size()-1; i++) {
                 Node newPathNode = newPathIter.next();
@@ -122,7 +130,7 @@ public class SmartSPESolver extends Solver {
                 }
             }
 
-            solutionPath.insert(pathToNewPoi, insertStart, insertEnd);
+            solutionPath.insert(newPath, insertStart, insertEnd);
 
             // print estimated progress
             setStatus(solutionPath.getPathCost()/maxDistance);
