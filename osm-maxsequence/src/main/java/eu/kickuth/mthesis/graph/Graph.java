@@ -18,7 +18,7 @@ public class Graph {
     public final List<List<Edge>> adjListRev;
     public final List<Node> nodes;
     public final Set<Node> pois;
-    public final Map<String, Integer> poiTypes = new TreeMap<>(); // TODO private
+    public final Map<String, Integer> poiClassesToCount = new TreeMap<>(); // TODO private
     private final List<List<Node>> poiGrid;
 
     // bounds related variables
@@ -67,7 +67,7 @@ public class Graph {
             addToPoiGrid(toAdd);
 
             // count up respective POI type: increment by one, or set to 1 if not present
-            poiTypes.merge(toAdd.type, 1, Integer::sum);
+            poiClassesToCount.merge(toAdd.type, 1, Integer::sum);
         }
     }
 

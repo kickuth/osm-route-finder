@@ -89,11 +89,12 @@
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;
-            if (isCommonName(name)) {
-                return getMarker(feature.properties.name, latlon)
-            } else {
-                return null;
-            }
+            // if (isCommonName(name)) {
+            //     return getMarker(feature.properties.name, latlon)
+            // } else {
+            //     return null;
+            // }
+            return getMarker(name, latlon);
         }
     }).addTo(map);
 

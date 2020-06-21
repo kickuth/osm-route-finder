@@ -107,12 +107,15 @@ public class OSMPreprocessor implements Sink, Source {
                 Matcher matcher = roadSignPattern.matcher(tag.getValue());
                 if (matcher.find()) {
                     String type = matcher.group(0);
-                    // replace some city limits with fake classes for diversity
+                    // we use some of the city_limit POIs as fake classes and ignore the others.
                     if (type.equals("city_limit")) {
                         // get a random number, between 0 and 90
                         int randomInt = random.nextInt(91);
                         if (randomInt >= 65) {  // A=65 to Z=90
                             type = String.valueOf((char) randomInt);
+                        } else {
+                            // the dice have rolled and this is a sign we will not replace (and not keep)
+                            continue;
                         }
                     }
                     tags.add(new Tag("traffic_sign", type));

@@ -28,10 +28,10 @@ public class Main {
         // output some graph stats
         logger.info("Node count: {}", osmGraph.adjList.size());
         logger.info("POI count: {}", osmGraph.pois.size());
-        logger.info("Types of POIs: {}", osmGraph.poiTypes.size());
+        logger.info("Types of POIs: {}", osmGraph.poiClassesToCount.size());
 
         StringBuilder poiClassesDebug = new StringBuilder();
-        osmGraph.poiTypes.forEach((key, value) -> poiClassesDebug.append("\n").append(key).append(" - ").append(value));
+        osmGraph.poiClassesToCount.forEach((key, value) -> poiClassesDebug.append("\n").append(key).append(" - ").append(value));
         logger.trace("POI classes with counts: {}", poiClassesDebug);
 
 
