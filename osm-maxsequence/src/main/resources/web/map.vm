@@ -29,11 +29,11 @@
         <input id="max_dist_factor" onchange="updateMaxDist()" type="number" step="0.01" min="1" style="width: 35%;" name="max_dist" value="$solver.getMaxDistanceFactor()">
         <label for="max_dist"> SP factor</label><br><br>
         <label>
-            <input type="number" min="0" style="width: 35%;" name="source" value="$solver.getSource().getId()">
+            <input id="source" type="number" min="0" style="width: 35%;" name="source" value="$solver.getSource().getId()">
             Source ID
         </label>
         <label>
-            <input type="number" min="0" style="width: 35%;" name="sink" value="$solver.getTarget().getId()">
+            <input id="sink" type="number" min="0" style="width: 35%;" name="sink" value="$solver.getTarget().getId()">
             Sink ID
         </label><br><br>
         <button class="button" id="submitButton"><span>Go!</span></button><br><br><br> ## TODO fix awful layout
@@ -85,7 +85,7 @@
         minzoom:13,
         renderer: L.canvas({ padding: 0.5 }),
         onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.name + " - " + feature.properties.id);
+            layer.bindPopup(poiPopup(feature));
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;
@@ -103,7 +103,7 @@
     var poiLayer = L.geoJSON($poiGeoJSON, {
         renderer: canvasRenderer,
         onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.name + " - " + feature.properties.id);
+            layer.bindPopup(poiPopup(feature));
         },
         pointToLayer: function (feature, latlon) {
             let name = feature.properties.name;

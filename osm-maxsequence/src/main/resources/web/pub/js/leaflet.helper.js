@@ -95,14 +95,27 @@ function getMarker(name, latlon) {
     return L.marker(latlon, {icon: icon});
 }
 
-function isCommonName(name) {
+function isCommonName(name) {  // TODO
     return (name === "city_limit" || name === "DE:205" || name === "DE:206" || name === "DE:274" || name.length === 1);
 }
 
+// popup for computed paths
 function pathPopup(layer) {
     const res = layer.feature.geometry;
     return ('score: ' + res.score + ' (' + res.uBound + ' upper bound), length: ' + res.length
-        + '<br/>TODO common classes here.'); // ## TODO
+        + '<br>TODO common classes here.');  // TODO
+}
+
+// popup for POI markers
+function poiPopup(feature) {
+    const poiName = feature.properties.name;
+    const poiID = feature.properties.id;
+    const result = (poiName + " (id " + poiID + ")<br>" +
+        "<input type='button' value='set as source' onclick='document.getElementById(\x22source\x22).value=" + poiID + "'><br>" +
+        "<input type='button' value='set as sink' onclick='document.getElementById(\x22sink\x22).value=" + poiID + "'>");
+    const bla = 5;
+    return result;
+
 }
 
 function drawEllipse(feature, event) {
