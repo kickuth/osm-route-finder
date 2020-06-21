@@ -5,6 +5,7 @@ import eu.kickuth.mthesis.graph.Graph.Path;
 import eu.kickuth.mthesis.graph.Node;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class SPESolver extends Solver {
@@ -32,11 +33,6 @@ public class SPESolver extends Solver {
         // get POIs on shortest path
         Set<Node> initialVisitedPois = graph.getPoisOnPath(solutionPath);
 
-        // allow path insertions at visited POIs, start and end node
-        Set<Node> sources = new HashSet<>(initialVisitedPois);
-        sources.add(solutionPath.getFirst());
-        sources.add(solutionPath.getLast());
-
         // remove nodes with classes we have already visited
         for (Node visitedPoi : initialVisitedPois) {
             targets.removeIf(possibleTarget -> possibleTarget.type.equals(visitedPoi.type));
@@ -44,21 +40,21 @@ public class SPESolver extends Solver {
 
         // keep adding shortest paths to new classes until we would run over the maximal distance
         while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty()) {
-            Path pathToNewPoi = dijkstra.shortestPath(sources, targets, false);
+            // find a new node starting anywhere on our current path
+            Path pathToNewPoi = dijkstra.shortestPath(solutionPath.getNodes(), targets, false);
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
                 logger.trace("No new POI classes are reachable!");
                 break;
             }
             Node newPoi = pathToNewPoi.getLast();
-            // find shortest way back
-            Path backPath = dijkstra.shortestPath(newPoi, sources, false);
+            // find shortest way back to where our detour started
+            Path backPath = dijkstra.shortestPath(newPoi, pathToNewPoi.getFirst(), false);
             // remove target POI, if no path back exists
             if (backPath.isEmpty()) {
                 targets.remove(newPoi);
                 continue;
             }
-            sources.add(newPoi);
 
             // remove possible targets with the same class as the new node
             targets.removeIf(node -> node.type.equals(newPoi.type));
@@ -66,18 +62,15 @@ public class SPESolver extends Solver {
             // insert the detour into the previous path
             pathToNewPoi.append(backPath);
 
-            // check if the path might grow too large
+            // check if inserting the current detour would be too long
             if (pathToNewPoi.getPathCost() + solutionPath.getPathCost() > maxDistance) {
-                // TODO not a guarantee to stay below maxDistance (if pathToNewPoi is a back path)
-                // TODO fix losing pois/sources bug.
                 break;
             }
 
             // find index for insertion
-            int insertStart = solutionPath.getNodes().indexOf(pathToNewPoi.getFirst());
-            int insertEnd = solutionPath.getNodes().lastIndexOf(pathToNewPoi.getLast());
+            int insertPoint = solutionPath.getNodes().indexOf(pathToNewPoi.getFirst());
 
-            solutionPath.insert(pathToNewPoi, insertStart, insertEnd);
+            solutionPath.insert(pathToNewPoi, insertPoint, insertPoint);
 
             // print estimated progress
             setStatus(solutionPath.getPathCost()/maxDistance);
