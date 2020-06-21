@@ -108,3 +108,8 @@ body {
     background-color: #4CAF50;
     color: white;
 }
+
+/* Set the leaflet background color to white */
+.leaflet-container {
+     background-color:rgb(255,255,255);
+ }

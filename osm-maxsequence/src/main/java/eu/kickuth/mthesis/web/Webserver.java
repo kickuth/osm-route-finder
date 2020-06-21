@@ -58,7 +58,7 @@ public class Webserver {
         // get names of common POI classes. We will load these ad hoc close up, instead of transmitting them on page load
         // this is to avoid transmitting too much data
         String[] commonPOIClasses = g.poiClassesToCount.entrySet().stream().filter(
-                entry -> entry.getValue() < 100  // TODO hard coded
+                entry -> entry.getValue() < 40  // TODO hard coded
         ).map(Map.Entry::getKey).toArray(String[]::new);
 
         // POIs transmitted on page load
