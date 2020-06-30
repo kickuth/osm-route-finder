@@ -68,11 +68,16 @@
     L.control.scale({imperial: false, maxWidth: 250}).addTo(map);
 
     // Various tile layers
-    //const lightMap = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.5 });
-    const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OpenStreetMap', opacity: 0.7 });
-    //const googleMap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {subdomains:['mt0','mt1','mt2','mt3'], opacity: 0.7 });
+    // const lightMap = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap', opacity: 0.5 });
+    // const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OpenStreetMap', opacity: 0.7 });
+    const cornerBottomRight = L.latLng(47.26543, 15.05078);
+    const cornerTopLeft = L.latLng(55.14777, 5.864417);
+    const googleMap = L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        subdomains: ['mt0','mt1','mt2','mt3'],
+        bounds: L.latLngBounds(cornerBottomRight, cornerTopLeft),
+        opacity: 0.7 });
 
-    darkMap.addTo(map);
+    googleMap.addTo(map);
 
     // Path colours
     const colors = ['#f00', '#0f0', '#00f', '#ff0', '#f0f', '#0ff', '#000', '#fff', '#f70'];

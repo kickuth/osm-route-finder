@@ -110,12 +110,11 @@ function pathPopup(layer) {
 function poiPopup(feature) {
     const poiName = feature.properties.name;
     const poiID = feature.properties.id;
-    const result = (poiName + " (id " + poiID + ")<br>" +
-        "<input type='button' value='set as source' onclick='document.getElementById(\x22source\x22).value=" + poiID + "'><br>" +
-        "<input type='button' value='set as sink' onclick='document.getElementById(\x22sink\x22).value=" + poiID + "'>");
-    const bla = 5;
-    return result;
-
+    return (
+        poiName + " (id " + poiID + ")<br>" +
+        "<input type='button' value='set as source' onclick='document.getElementById(\x22source\x22).value=" + poiID +"'><br>" +
+        "<input type='button' value='set as sink' onclick='document.getElementById(\x22sink\x22).value=" + poiID + "'>"
+    );
 }
 
 function drawEllipse(feature, event) {
