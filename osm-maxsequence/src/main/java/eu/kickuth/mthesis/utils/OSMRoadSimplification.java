@@ -136,7 +136,7 @@ public class OSMRoadSimplification implements Sink, Source {
         }
 
         if (keepers.size() <= 1) {
-            logger.info("Way {} does not contain more than one sign or junction. Ignoring.", osmWay.getId());
+            logger.trace("Way {} does not contain more than one sign or junction. Ignoring.", osmWay.getId());
             return;
         }
 

@@ -32,7 +32,7 @@ public class Main {
 
         StringBuilder poiClassesDebug = new StringBuilder();
         osmGraph.poiClassesToCount.forEach((key, value) -> poiClassesDebug.append("\n").append(key).append(" - ").append(value));
-        logger.trace("POI classes with counts: {}", poiClassesDebug);
+        logger.debug("POI classes with counts: {}", poiClassesDebug);
 
 
         // set initial values
@@ -53,7 +53,7 @@ public class Main {
 
     public static void preprocess() {
         if (FORCE_PREPROCESS || !OSM_DUMP_PROCESSED.exists()) {
-            logger.trace("Preprocessing OSM file");
+            logger.info("Preprocessing OSM file");
             try {
                 final File temporary_dump = new File(OSM_DUMP.getPath() + "_TEMP");
                 processData(new OSMPreprocessor(temporary_dump), OSM_DUMP);
@@ -70,7 +70,7 @@ public class Main {
     }
 
     public static Graph loadGraph() {
-        logger.trace("Loading graph from preprocessed file");
+        logger.info("Loading graph from preprocessed file");
         OSMReader graphReader = new OSMReader();
         processData(graphReader, OSM_DUMP_PROCESSED);
         return graphReader.getOsmGraph();
@@ -82,7 +82,7 @@ public class Main {
      * @param dataFile Binary file
      */
     private static <T extends Sink> void processData(T sink, File dataFile) {
-        logger.trace("Reading File {}", dataFile);
+        logger.debug("Reading File {}", dataFile);
         try {
             OsmosisReader reader = new OsmosisReader(new FileInputStream(dataFile));
             reader.setSink(sink);

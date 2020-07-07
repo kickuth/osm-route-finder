@@ -9,7 +9,6 @@ import org.openstreetmap.osmosis.core.domain.v0_6.*;
 import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -47,20 +46,20 @@ public class OSMReader implements Sink {
 
     private void processNode(Node osmNode) {
         String type = null;
+        // set traffic sign and add to graph
         for (Tag tag : osmNode.getTags()) {
             if ("traffic_sign".equals(tag.getKey())) {
                 type = tag.getValue().intern();
-                break;  // don't override type later as junction
+                break;
             }
         }
-        // TODO after preprocessing, IDs should be ordered. Implement a test to check, or check here.
-        int id = -1;
+        int id;
         try {
             id = Math.toIntExact(osmNode.getId());
         } catch (ArithmeticException e) {
-            logger.error("ID is too large to fit in int!", e);
+            logger.error("ID is too large to fit in int! Ignoring node!", e);
+            return;
         }
-
         osmGraph.addNode(new eu.kickuth.mthesis.graph.Node(
                 id, osmNode.getLatitude(), osmNode.getLongitude(), type));
     }
