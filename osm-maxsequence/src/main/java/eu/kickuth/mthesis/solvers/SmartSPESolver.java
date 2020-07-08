@@ -24,6 +24,9 @@ public class SmartSPESolver extends Solver {
             return graph.new Path();
         }
 
+        // copy of solution that will be returned once the solutionPath overshoots the maximum distance
+        Graph.Path currentPath = solutionPath.copy();
+
         // get a shallow copy of all POIs
         Set<Node> targets = new HashSet<>(reachablePois);
 
@@ -45,7 +48,7 @@ public class SmartSPESolver extends Solver {
         }
 
         // keep adding shortest paths to new classes until we run out of targets or would go over the maximal distance
-        while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty()) {
+        do {
             // get new POI closest to current path
             Graph.Path pathToNewPoi = dijkstra.shortestPath(solutionPath.getNodes(), targets, false);
             // stop if we can't find new POIs
@@ -104,16 +107,7 @@ public class SmartSPESolver extends Solver {
                 return solutionPath;
             }
 
-
-            // check if the path will grow too large
-//            // TODO this check sucks. Fix.
-//            if (pathToNewPoi.getPathCost() + solutionPath.getPathCost() > maxDistance) {
-//                // TODO not a guarantee to stay below maxDistance (if pathToNewPoi is a back path)
-//                // TODO fix losing pois/sources bug.
-//                break;
-//            }
-
-
+            currentPath = solutionPath.copy();
 
             // add newly encountered classes to our map or adjust their count, if already present
             LinkedList<Node> newNodes = newPath.getNodes();
@@ -135,10 +129,10 @@ public class SmartSPESolver extends Solver {
             // print estimated progress
             setStatus(solutionPath.getPathCost()/maxDistance);
             logger.trace(String.format("solving: %.2f%%", getStatus()*100));
-        }
+        } while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty());
 
         setStatus(0.0);
-        return solutionPath;
+        return currentPath;
     }
 
     @Override
