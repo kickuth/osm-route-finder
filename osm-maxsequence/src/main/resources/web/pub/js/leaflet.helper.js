@@ -99,11 +99,34 @@ function isCommonName(name) {  // TODO
     return (name === "city_limit" || name === "DE:205" || name === "DE:206" || name === "DE:274" || name.length === 1);
 }
 
+// handler for dict (object) that returns 0 instead of undefined
+const dictHandler = {
+    get: function(target, name) {
+        return target.hasOwnProperty(name) ? target[name] : 0;
+    }
+};
+
 // popup for computed paths
 function pathPopup(layer) {
     const res = layer.feature.geometry;
+    const pois = JSON.parse(res.pathPois);
+    const poiCount = new Proxy({}, dictHandler); // dict that returns 0 instead of undefined
+    pois.forEach(poi => {
+        poiCount[poi.properties.name]++;
+    });
+
+    // Create items array
+    var items = Object.keys(poiCount).map(function(key) {
+        return [key, poiCount[key]];
+    });
+    // Sort the array based on the second element
+    items.sort(function(first, second) {
+        return second[1] - first[1];
+    });
+
     return ('score: ' + res.score + ' (' + res.uBound + ' upper bound), length: ' + res.length
-        + '<br>TODO common classes here.');  // TODO
+        + '<br>most common pois:'
+        + '<br>' + items.slice(0, 5));
 }
 
 // popup for POI markers
