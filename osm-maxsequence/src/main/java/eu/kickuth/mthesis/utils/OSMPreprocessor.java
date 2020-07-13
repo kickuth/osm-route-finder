@@ -184,23 +184,12 @@ public class OSMPreprocessor implements Sink, Source {
         ));
     }
 
-    /**
-     * Potentially generate a traffic sign, according to the distribution given by the local node density.
-     * @param osmNode node to process
-     * @param tags tag collection to add any traffic sign data to using key "traffic_sign"
-     */
-    private void generateTrafficSign(Node osmNode, Collection<Tag> tags) {
-
-    }
-
     private boolean isFirstWay = true;
     private void processWay(Way osmWay) {
         // generate fake traffic signs (and write nodes to sink) before ways are processed.
         if (isFirstWay) {
             isFirstWay = false;
-            if (GENERATE_FAKE_SIGNS) {
-                writeNodes();
-            }
+            writeNodes();
         }
 
         boolean isHighway = false;  // is road drivable?
@@ -277,9 +266,13 @@ public class OSMPreprocessor implements Sink, Source {
 
     }
 
+    /**
+     * Potentially generate a traffic sign.
+     * Either uniformly or according to the distribution given by the local node density.
+     * @param osmNode node to process
+     */
     private Tag generateFakeSign(Node osmNode) {
         int nodeCount = processQueue.size();
-        int cellCount = nodesDistribution.length * nodesDistribution[0].length;
         int numClasses = POSSIBLE_DISTINCT_CLASSES;
         int expectedCount = EXPECTED_TOTAL_POIS;
 
@@ -322,6 +315,12 @@ public class OSMPreprocessor implements Sink, Source {
     public void complete() {
         sink.complete();  // write out remaining output buffer
 
+        // log POI distribution grid
+//        if (GENERATE_FAKE_SIGNS) {
+//            logger.debug("Distribution of POI class generation grid:\n" +
+//                    Arrays.deepToString(nodesDistribution)
+//                    );
+//        }
     }
 
     @Override

@@ -20,7 +20,7 @@ public final class Settings {
 
 
     // PREPROCESSING
-    public static final boolean FORCE_PREPROCESS = false;  // preprocess the .pbf file, even if preprocessed version exists?
+    public static final boolean FORCE_PREPROCESS = true;  // preprocess the .pbf file, even if preprocessed version exists?
 
     // FAKE CLASSES
     // use (augmented) traffic signs from file, or generate completely fake ones?
