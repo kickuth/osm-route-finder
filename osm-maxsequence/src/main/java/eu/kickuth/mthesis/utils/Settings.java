@@ -28,9 +28,12 @@ public final class Settings {
     // do nodes in dense regions get higher chances for POIs, or does each node have the same chance?
     static final boolean CLUSTERED_DISTRIBUTION = true;
     // from how many classes do we sample?
-    static final int POSSIBLE_DISTINCT_CLASSES = 200;
+    static final int EXPECTED_DISTINCT_CLASSES = 500;
     // expected value for the total number of POIs
-    static final int EXPECTED_TOTAL_POIS = 30_000;
+    static final int EXPECTED_TOTAL_POIS = 200_000;
+    // distribution of POIs among classes
+    static final String POI_DISTRIBUTION = "gaussian"; // "gaussian", "exp high", "exp low", "uniform"
+
     /*
      size (lat/lon) of a cell for node distribution.
      Given Bound(top=55.14777, bottom=47.26543, left=5.864417, right=15.050780000000001) [Germany]:

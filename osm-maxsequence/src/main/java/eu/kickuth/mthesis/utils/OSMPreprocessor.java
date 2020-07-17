@@ -61,6 +61,7 @@ public class OSMPreprocessor implements Sink, Source {
         idMap = new HashMap<>((nodesOnRoads.size() * 4) / 3);
     }
 
+
     @Override
     public void setSink(Sink sink) {
         this.sink = sink;
@@ -186,9 +187,10 @@ public class OSMPreprocessor implements Sink, Source {
 
     private boolean isFirstWay = true;
     private void processWay(Way osmWay) {
-        // generate fake traffic signs (and write nodes to sink) before ways are processed.
-        if (isFirstWay) {
+        if (isFirstWay) {  // true: we have just finished reading nodes
             isFirstWay = false;
+
+            // generate fake traffic signs (and write nodes to sink) before ways are processed.
             writeNodes();
         }
 
@@ -248,54 +250,98 @@ public class OSMPreprocessor implements Sink, Source {
 
     private void writeNodes() {
         if (GENERATE_FAKE_SIGNS) {
+            // log POI distribution grid
+            logger.debug("Road distribution for POI class generation grid:\n" +
+                    Arrays.deepToString(nodesDistribution)
+            );
             logger.info("Generating fake classes:\n" +
                     "{}x{} node cells\n" +
                     "{} nodes total\n" +
                     "{} possible fake classes\n" +
-                    "{} expected POIs", nodesDistribution.length, nodesDistribution[0].length, processQueue.size(), POSSIBLE_DISTINCT_CLASSES, EXPECTED_TOTAL_POIS);
-            for (Node osmNode : processQueue) {
-                Tag sign = generateFakeSign(osmNode);
-                if (sign != null) {
-                    osmNode.getTags().add(sign);
-                }
-                sink.process(new NodeContainer(osmNode));
+                    "{} expected POIs", nodesDistribution.length, nodesDistribution[0].length, processQueue.size(), EXPECTED_DISTINCT_CLASSES, EXPECTED_TOTAL_POIS);
+
+            // determine and process nodes that will not get a traffic sign
+            int nodeCount = processQueue.size();
+            if (CLUSTERED_DISTRIBUTION) {
+                processQueue.removeIf(osmNode -> {
+                    // nodes in dense regions are more likely to be a POI
+                    if (random.nextDouble() > ((double) EXPECTED_TOTAL_POIS) * getCellCount(osmNode) / nodesWeightedTotal) {
+                        sink.process(new NodeContainer(osmNode));
+                        return true;
+                    }
+                    return false;
+                });
+            } else {
+                processQueue.removeIf(osmNode -> {
+                    // uniformly distributed POI chance per node
+                    if (random.nextDouble() > EXPECTED_TOTAL_POIS / (double) nodeCount) {
+                        sink.process(new NodeContainer(osmNode));
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            // TODO instead of filtering nodes, it would be nice to shuffle them here, accounting for their clustered distribution property
+//            // determine nodes that will get a traffic sign by shuffling and then picking nodes from the front.
+//            if (CLUSTERED_DISTRIBUTION) {  // road segments in dense areas are more likely to move to the front
+//                // include a bias for shuffling
+//                processQueue.sort(Comparator.comparingDouble(n -> random.nextDouble() + EXPECTED_TOTAL_POIS * getCellCount(n) / (double) nodesWeightedTotal));
+//            }
+
+            int actualTotalPois = processQueue.size();
+            logger.info("Actual number of POIs: {}", actualTotalPois);
+
+            // shuffle list, so that we can just pick the first n elements as a random, unique subset
+            Collections.shuffle(processQueue);//, new SecureRandom());  // secure random for more possible permutations
+
+            // generate traffic signs for the remaining nodes
+            switch (POI_DISTRIBUTION) {
+                case "gaussian":
+                    ListIterator<Node> queueIterator = processQueue.listIterator();
+                    // sample classes until we would go over the number of expected POIs or classes
+                    double mu = actualTotalPois / (double) EXPECTED_DISTINCT_CLASSES;
+                    double sigma = mu / 3; // most samples are > 0.
+                    logger.debug("Generating normally distributed signs: mu={}, sigma={}", mu, sigma);
+                    int remainingPois = actualTotalPois;
+                    int currentclass = 1;
+                    do {
+                        int poisNextClass;
+                        do {  // loop to avoid negative and extreme results
+                            poisNextClass = (int) Math.round(random.nextGaussian() * sigma + mu);
+                        } while (poisNextClass < 0 || poisNextClass > mu * 3);
+                        remainingPois -= poisNextClass;
+
+                        if (remainingPois < 0) {  // ensure we don't use too many POIs (queIterator would run out)
+                            poisNextClass += remainingPois;
+                        }
+
+                        for (int i = 0; i < poisNextClass; i++) {
+                            Node current = queueIterator.next();
+
+                            current.getTags().add(new Tag("traffic_sign", "FC " + String.format("%03d", currentclass)));
+                            sink.process(new NodeContainer(current));
+                        }
+                        currentclass++;
+                    } while (remainingPois > 0);
+                    break;
+                case "exp high":
+                    // TODO
+                    break;
+                case "exp low":
+                    // TODO
+                    break;
+                case "uniform":
+                    // TODO
+                    break;
+                default:
+                    logger.error("Unknown POI distribution: {}. Not generating signs.", POI_DISTRIBUTION);
+                    processQueue.forEach(osmNode -> sink.process(new NodeContainer(osmNode)));
             }
         } else {
             processQueue.forEach(osmNode -> sink.process(new NodeContainer(osmNode)));
         }
 
-    }
-
-    /**
-     * Potentially generate a traffic sign.
-     * Either uniformly or according to the distribution given by the local node density.
-     * @param osmNode node to process
-     */
-    private Tag generateFakeSign(Node osmNode) {
-        int nodeCount = processQueue.size();
-        int numClasses = POSSIBLE_DISTINCT_CLASSES;
-        int expectedCount = EXPECTED_TOTAL_POIS;
-
-        boolean generatePOI = false;
-        if (CLUSTERED_DISTRIBUTION) {
-            // nodes in dense regions are more likely to be a POI
-            if (random.nextDouble() < expectedCount * getCellCount(osmNode) / (double) nodesWeightedTotal) {
-                generatePOI = true;
-            }
-        } else {
-            // uniformly distributed POI chance per node
-            if (random.nextDouble() < expectedCount / (double) nodeCount) {
-                generatePOI = true;
-            }
-        }
-        if (generatePOI) {
-            // TODO change non-uniform class distribution? uniform option in settings?
-            double rand = random.nextDouble();
-            int classNum = (int) (rand * rand * numClasses);
-            return new Tag("traffic_sign", "FC " + String.format("%03d", classNum));
-        } else {
-            return null;
-        }
     }
 
     private int getCellCount(Node osmNode) {
@@ -314,13 +360,6 @@ public class OSMPreprocessor implements Sink, Source {
     @Override
     public void complete() {
         sink.complete();  // write out remaining output buffer
-
-        // log POI distribution grid
-//        if (GENERATE_FAKE_SIGNS) {
-//            logger.debug("Distribution of POI class generation grid:\n" +
-//                    Arrays.deepToString(nodesDistribution)
-//                    );
-//        }
     }
 
     @Override
