@@ -13,6 +13,7 @@ import org.openstreetmap.osmosis.osmbinary.file.BlockOutputStream;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -239,7 +240,7 @@ public class OSMPreprocessor implements Sink, Source {
         }
 
         List<WayNode> newWayNodes = osmWay.getWayNodes().stream().map(
-                // TODO note that the library only stores WayNode IDs, not lon/lat...
+                // note that the library only stores WayNode IDs and getLatitude, getLongitude will always return 0...
                 n -> new WayNode(idMap.get(n.getNodeId()), n.getLatitude(), n.getLongitude())
         ).collect(Collectors.toList());
 
@@ -295,49 +296,62 @@ public class OSMPreprocessor implements Sink, Source {
             // shuffle list, so that we can just pick the first n elements as a random, unique subset
             Collections.shuffle(processQueue);//, new SecureRandom());  // secure random for more possible permutations
 
-            // generate traffic signs for the remaining nodes
+            // set correct sampling function
+            Function<Void, Integer> randDist = null;
+            double mean = actualTotalPois / (double) EXPECTED_DISTINCT_CLASSES;
             switch (POI_DISTRIBUTION) {
                 case "gaussian":
-                    ListIterator<Node> queueIterator = processQueue.listIterator();
-                    // sample classes until we would go over the number of expected POIs or classes
-                    double mu = actualTotalPois / (double) EXPECTED_DISTINCT_CLASSES;
-                    double sigma = mu / 3; // most samples are > 0.
-                    logger.debug("Generating normally distributed signs: mu={}, sigma={}", mu, sigma);
-                    int remainingPois = actualTotalPois;
-                    int currentclass = 1;
-                    do {
-                        int poisNextClass;
+                    // normal distribution with mean (mu) and standard deviation sigma
+                    double sigma = mean / 3; // most samples are > 0.
+                    randDist = (v) -> {
+                        int result;
                         do {  // loop to avoid negative and extreme results
-                            poisNextClass = (int) Math.round(random.nextGaussian() * sigma + mu);
-                        } while (poisNextClass < 0 || poisNextClass > mu * 3);
-                        remainingPois -= poisNextClass;
-
-                        if (remainingPois < 0) {  // ensure we don't use too many POIs (queIterator would run out)
-                            poisNextClass += remainingPois;
-                        }
-
-                        for (int i = 0; i < poisNextClass; i++) {
-                            Node current = queueIterator.next();
-
-                            current.getTags().add(new Tag("traffic_sign", "FC " + String.format("%03d", currentclass)));
-                            sink.process(new NodeContainer(current));
-                        }
-                        currentclass++;
-                    } while (remainingPois > 0);
+                            result = (int) Math.round(random.nextGaussian() * sigma + mean);
+                        } while (result < 0 || result > mean * 3);
+                        return result;
+                    };
+                    logger.debug("Generating normally distributed sign counts per class: mean={}, sigma={}", mean, sigma);
                     break;
                 case "exp high":
-                    // TODO
+                    // exponential distribution (mostly low, few extremely high)
+                    randDist = (v) -> (int) Math.round(-Math.log(1-random.nextDouble())*mean);
+                    logger.debug("Generating exponentially distributed sign counts per class (few very common classes): lambda={}", mean);
                     break;
                 case "exp low":
-                    // TODO
+                    // TODO exponential distribution?
+                    randDist = (v) -> (int) Math.round(-(mean/Math.log(2))/Math.log(1-random.nextDouble()));
+                    logger.debug("Generating exponentially distributed sign counts per class (few very rare classes): lambda={}", mean);
                     break;
                 case "uniform":
-                    // TODO
+                    // uniform distribution
+                    randDist = (v) -> (int) Math.round(random.nextDouble() * mean * 2);
+                    logger.debug("Generating uniformly distributed sign counts per class: mean={}", mean);
                     break;
                 default:
                     logger.error("Unknown POI distribution: {}. Not generating signs.", POI_DISTRIBUTION);
                     processQueue.forEach(osmNode -> sink.process(new NodeContainer(osmNode)));
             }
+
+            // assign POIs until none are left
+            ListIterator<Node> queueIterator = processQueue.listIterator();
+            int remainingPois = actualTotalPois;
+            int currentclass = 1;
+            do {
+                int poisNextClass = randDist.apply(null);  // get the next random number
+                remainingPois -= poisNextClass;
+
+                if (remainingPois < 0) {  // ensure we don't use too many POIs (queIterator would run out)
+                    poisNextClass += remainingPois;
+                }
+
+                for (int i = 0; i < poisNextClass; i++) {
+                    Node current = queueIterator.next();
+
+                    current.getTags().add(new Tag("traffic_sign", "FC " + String.format("%03d", currentclass)));
+                    sink.process(new NodeContainer(current));
+                }
+                currentclass++;
+            } while (remainingPois > 0);
         } else {
             processQueue.forEach(osmNode -> sink.process(new NodeContainer(osmNode)));
         }
