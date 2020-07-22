@@ -72,7 +72,7 @@
     const cornerTopLeft = L.latLng(55.14777, 5.864417);
     // light map
     const tileLayer = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: 'OpenStreetMap',
-        bounds: L.latLngBounds(cornerBottomRight, cornerTopLeft), opacity: 1 });
+        bounds: L.latLngBounds(cornerBottomRight, cornerTopLeft), opacity: 0.5 });
     // dark map
     // const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: 'OpenStreetMap', opacity: 0.7 });
     // google map

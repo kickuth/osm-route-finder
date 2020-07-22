@@ -11,12 +11,19 @@ import org.openstreetmap.osmosis.core.task.v0_6.Sink;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static eu.kickuth.mthesis.utils.Settings.LIMIT_FAKE_CLASSES;
+
 
 public class OSMReader implements Sink {
 
     private static final Logger logger = LogManager.getLogger(OSMReader.class);
 
-    private Graph osmGraph;
+    private Graph osmGraph;  // the resulting graph after import
+
+    // since our fake classes are sampled, the order of the classes does not correlate with the number of their
+    // occurrences. They are also written to file in order. Hence, once we encounter a sign we no longer want to
+    // process (FC number > LIMIT_FAKE_CLASSES), we can ignore all further signs all together.
+    private boolean acceptFurtherSigns = true;  // only import road signs while this is true
 
     @Override
     public void initialize(Map<String, Object> metaData) {
@@ -47,10 +54,23 @@ public class OSMReader implements Sink {
     private void processNode(Node osmNode) {
         String type = null;
         // set traffic sign and add to graph
-        for (Tag tag : osmNode.getTags()) {
-            if ("traffic_sign".equals(tag.getKey())) {
-                type = tag.getValue().intern();
-                break;
+        if (acceptFurtherSigns) {
+            for (Tag tag : osmNode.getTags()) {
+                if ("traffic_sign".equals(tag.getKey())) {
+                    String sign = tag.getValue();
+
+                    // stop reading signs if we reach our predefined limit
+                    if (LIMIT_FAKE_CLASSES >= 0 && sign.startsWith("FC ")) {
+                        int currentClassNumber = Integer.parseInt(sign.substring(3));
+                        if (currentClassNumber > LIMIT_FAKE_CLASSES) {
+                            acceptFurtherSigns = false;
+                            break;
+                        }
+                    }
+
+                    type = sign.intern();
+                    break;
+                }
             }
         }
         int id;
@@ -78,8 +98,9 @@ public class OSMReader implements Sink {
                 case "oneway":  // is it explicitly one directional?
                     isOneWay = "yes".equalsIgnoreCase(wayTag.getValue());
                     break;
-                case "distance_list": // is this a pruned way, with distances given rather than computed using lat/lon?
+                case "distance_list":  // is this a pruned way, with distances given rather than computed using lat/lon?
                     distanceList = Arrays.stream(wayTag.getValue().split(";")).map(Double::parseDouble).collect(Collectors.toCollection(ArrayList::new));
+                    break;
                 default:
                     // ignore all other tags
                     // TODO include maxspeed? (see also preprocessing)

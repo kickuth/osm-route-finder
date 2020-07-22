@@ -31,6 +31,7 @@ public class GASolver extends Solver {
         // TODO do continuous dijkstra growing instead and remove retries
         int retries = 25;
 
+        StringBuilder stuck = new StringBuilder();
         while (!poiCandidates.isEmpty()) {
             Path fromNewPoi = dijkstra.shortestPath(poiCandidates, latestPoi, true);
             Node newPoi = fromNewPoi.getFirst();
@@ -45,11 +46,11 @@ public class GASolver extends Solver {
                 logger.trace(String.format("solving: %.2f%%, %d possible POIs left.", solutionPath.getPathCost()*100/maxDistance, poiCandidates.size()));
             } else {
                 poiCandidates.remove(newPoi);
+                stuck.append(poiCandidates.size()).append(" ");
                 if (--retries < 1) {
-                    System.out.println("giving up");
+                    logger.trace("Stuck and out of retries: {}giving up.", stuck.toString());
                     break;
                 }
-                System.out.print(poiCandidates.size() + " ");
             }
         }
 

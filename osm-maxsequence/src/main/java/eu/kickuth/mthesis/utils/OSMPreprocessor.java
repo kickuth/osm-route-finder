@@ -24,6 +24,9 @@ public class OSMPreprocessor implements Sink, Source {
 
     private static final Logger logger = LogManager.getLogger(OSMPreprocessor.class);
 
+    // pattern to recognize real road signs
+    private final Pattern roadSignPattern = Pattern.compile("(DE:\\d+)|(city_limit)");
+
     // default user and date for processed OSM file
     private static final OsmUser user = new OsmUser(0, "");
     private static final Date date = new Date(0L);
@@ -148,7 +151,6 @@ public class OSMPreprocessor implements Sink, Source {
             // process real (but augmented) traffic sign
             for (Tag tag : osmNode.getTags()) {
                 if ("traffic_sign".equalsIgnoreCase(tag.getKey())) {
-                    Pattern roadSignPattern = Pattern.compile("(DE:\\d+)|(city_limit)");
 //                    Pattern roadSignPattern = Pattern.compile("(DE:\\d+)");
                     Matcher matcher = roadSignPattern.matcher(tag.getValue());
                     if (matcher.find()) {
@@ -297,13 +299,14 @@ public class OSMPreprocessor implements Sink, Source {
             Collections.shuffle(processQueue);//, new SecureRandom());  // secure random for more possible permutations
 
             // set correct sampling function
-            Function<Void, Integer> randDist = null;
+            Function<Void, Integer> randDistr = null;
             double mean = actualTotalPois / (double) EXPECTED_DISTINCT_CLASSES;
             switch (POI_DISTRIBUTION) {
                 case "gaussian":
+                case "normal":
                     // normal distribution with mean (mu) and standard deviation sigma
                     double sigma = mean / 3; // most samples are > 0.
-                    randDist = (v) -> {
+                    randDistr = (v) -> {
                         int result;
                         do {  // loop to avoid negative and extreme results
                             result = (int) Math.round(random.nextGaussian() * sigma + mean);
@@ -314,18 +317,28 @@ public class OSMPreprocessor implements Sink, Source {
                     break;
                 case "exp high":
                     // exponential distribution (mostly low, few extremely high)
-                    randDist = (v) -> (int) Math.round(-Math.log(1-random.nextDouble())*mean);
+                    randDistr = (v) -> {
+                        int result;
+                        do {  // loop to avoid too extreme results (slightly increases number of expected classes)
+                            result = (int) Math.round(-Math.log(1-random.nextDouble())*mean);
+                        } while (result > mean * 4);
+                        return result;
+                    };
                     logger.debug("Generating exponentially distributed sign counts per class (few very common classes): lambda={}", mean);
                     break;
                 case "exp low":
-                    // TODO exponential distribution?
-                    randDist = (v) -> (int) Math.round(-(mean/Math.log(2))/Math.log(1-random.nextDouble()));
+                    // TODO what distribution? Change log output wording
+                    final double log2 = Math.log(2);
+                    randDistr = (v) -> {
+                        double rand = random.nextDouble();
+                        return (int) Math.round(-rand*mean/(log2*Math.log(1-rand)));
+                    };
                     logger.debug("Generating exponentially distributed sign counts per class (few very rare classes): lambda={}", mean);
                     break;
-                case "uniform":
-                    // uniform distribution
-                    randDist = (v) -> (int) Math.round(random.nextDouble() * mean * 2);
-                    logger.debug("Generating uniformly distributed sign counts per class: mean={}", mean);
+                case "linear":
+                    // linear distribution
+                    randDistr = (v) -> (int) Math.round(random.nextDouble() * mean * 2);
+                    logger.debug("Generating linearly distributed sign counts per class: mean={}", mean);
                     break;
                 default:
                     logger.error("Unknown POI distribution: {}. Not generating signs.", POI_DISTRIBUTION);
@@ -337,7 +350,7 @@ public class OSMPreprocessor implements Sink, Source {
             int remainingPois = actualTotalPois;
             int currentclass = 1;
             do {
-                int poisNextClass = randDist.apply(null);  // get the next random number
+                int poisNextClass = randDistr.apply(null);  // get the next random number
                 remainingPois -= poisNextClass;
 
                 if (remainingPois < 0) {  // ensure we don't use too many POIs (queIterator would run out)
