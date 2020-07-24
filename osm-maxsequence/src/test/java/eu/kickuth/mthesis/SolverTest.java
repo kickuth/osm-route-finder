@@ -100,7 +100,7 @@ class SolverTest {
 
         // ==================== SETTINGS ====================
         // ==================================================
-        int testCount = 3;
+        int testCount = 1000;
         double maxDistFactor = 1.25;
 
         Solver[] solvers = {
@@ -134,14 +134,16 @@ class SolverTest {
                 // solve for all solvers
                 for (int i = 0; i < solvers.length; i++) {
                     solvers[i].update(source, target, maxDistFactor);
-                    if (solvers[i].getMaxDistance() == 0) {
+                    double maxDist = solvers[i].getMaxDistance();
+                    long startTime = System.currentTimeMillis();
+                    Graph.Path solution = solvers[i].solve();
+                    double endTime = (System.currentTimeMillis() - startTime) / 1000.0;
+                    if (solution.isEmpty()) {
                         System.out.println("no s-t-path exists!");
                         System.err.println("no s-t-path exists!");
                         throw new IllegalArgumentException();
                     }
-                    long startTime = System.currentTimeMillis();
-                    Graph.Path solution = solvers[i].solve();
-                    durations[i] = (System.currentTimeMillis() - startTime) / 1000.0;
+                    durations[i] = endTime;
                     LBs[i] = solvers[i].uniqueClassScore(solution);
                 }
             } catch (IllegalArgumentException e) {
