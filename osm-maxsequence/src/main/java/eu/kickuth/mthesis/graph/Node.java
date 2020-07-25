@@ -6,7 +6,7 @@ public class Node {
     public final double lat;
     public final double lon;
     public final String type;
-    private String roadType;
+//    private String roadType;
 
     public Node(int id, double lat, double lon, String type) {
         this.id = id;
@@ -23,13 +23,13 @@ public class Node {
         return id;
     }
 
-    public String getRoadType() {
-        return roadType;
-    }
-
-    public void setRoadType(String rt) {
-        roadType = rt.intern();
-    }
+//    public String getRoadType() {
+//        return roadType;
+//    }
+//
+//    public void setRoadType(String rt) {
+//        roadType = rt.intern();
+//    }
 
     /**
      * Computes the correct distance between two nodes.

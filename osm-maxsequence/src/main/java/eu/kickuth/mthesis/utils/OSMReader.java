@@ -118,12 +118,12 @@ public class OSMReader implements Sink {
         ListIterator<WayNode> wayNodes = osmWay.getWayNodes().listIterator();
         WayNode wn = wayNodes.next();
         var currentNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
-        currentNode.setRoadType(roadType);
+//        currentNode.setRoadType(roadType);
         eu.kickuth.mthesis.graph.Node nextNode;
         while (wayNodes.hasNext()) {
             wn = wayNodes.next();
             nextNode = osmGraph.getNode(Math.toIntExact(wn.getNodeId()));
-            nextNode.setRoadType(roadType);
+//            nextNode.setRoadType(roadType);
 
             if (distanceListIterator.hasNext()) {
                 double nextDistance = distanceListIterator.next();

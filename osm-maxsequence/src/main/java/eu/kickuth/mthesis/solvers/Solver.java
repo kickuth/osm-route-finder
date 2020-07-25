@@ -76,11 +76,11 @@ public abstract class Solver {
      * @return number of unique classes on path
      */
     public int uniqueClassScore(Graph.Path path) {
-        int roadTypesCount = Math.toIntExact(path.getNodes().stream().map(Node::getRoadType).distinct().count());
+//        int roadTypesCount = Math.toIntExact(path.getNodes().stream().map(Node::getRoadType).distinct().count());
         int poiTypesCount = Math.toIntExact(graph.getPoisOnPath(path).stream().map(node -> node.type).distinct().count());
-        int totalCount = roadTypesCount + poiTypesCount;
-        logger.info("Unique class score: {}", totalCount);
-        return totalCount;
+//        int totalCount = roadTypesCount + poiTypesCount;
+        logger.info("Unique class score: {}", poiTypesCount);
+        return poiTypesCount;
     }
 
     public void setSource(int id) {
@@ -107,10 +107,10 @@ public abstract class Solver {
 
     public int getUpperBound() {
         int distinctPoiCount = Math.toIntExact(reachablePois.stream().map(n -> n.type).distinct().count());
-        int distinctRoadCount = Math.max(Math.toIntExact(dijkstra.getPathCandidates().stream().map(Node::getRoadType).distinct().count()), 12);
-        int totalCount = distinctPoiCount + distinctRoadCount;
-        logger.info("Upper bound is: {}", totalCount);
-        return totalCount;
+//        int distinctRoadCount = Math.max(Math.toIntExact(dijkstra.getPathCandidates().stream().map(Node::getRoadType).distinct().count()), 12);
+//        int totalCount = distinctPoiCount + distinctRoadCount;
+        logger.info("Upper bound is: {}", distinctPoiCount);
+        return distinctPoiCount;
     }
 
     /**
