@@ -53,17 +53,17 @@ public class SmartSPESolver extends Solver {
             Graph.Path pathToNewPoi = dijkstra.shortestPath(solutionPath.getNodes(), targets, false);
             // stop if we can't find new POIs
             if (pathToNewPoi.isEmpty()) {
-                logger.trace("No new POI classes are reachable!");
+                logger.debug("No new POI classes are reachable!");
                 break;
             }
             Node newPOI = pathToNewPoi.getLast();
             LinkedList<Node> solutionNodes = solutionPath.getNodes();
             int insertStart = solutionNodes.indexOf(pathToNewPoi.getFirst());
 
-            ListIterator<Node> fwdIter = solutionNodes.listIterator(insertStart+1);
+            ListIterator<Node> fwdIter = solutionNodes.listIterator(insertStart);
             ListIterator<Node> bwdIter = solutionNodes.listIterator(insertStart);
 
-            int insertEnd = insertStart;
+            int insertEnd = insertStart-1;
 
             Node insertEndNode = getTarget();  // initialize as target, in case our insert start is the target
             while (fwdIter.hasNext()) {
@@ -129,10 +129,12 @@ public class SmartSPESolver extends Solver {
             // print estimated progress
             setStatus(solutionPath.getPathCost()/maxDistance);
             logger.trace(String.format("solving: %.2f%%", getStatus()*100));
-        } while (solutionPath.getPathCost() < maxDistance && !targets.isEmpty());
+        } while (solutionPath.getPathCost() <= maxDistance && !targets.isEmpty());
+
+
 
         setStatus(0.0);
-        return currentPath;
+        return solutionPath.getPathCost() <= maxDistance ? solutionPath : currentPath;
     }
 
     @Override
