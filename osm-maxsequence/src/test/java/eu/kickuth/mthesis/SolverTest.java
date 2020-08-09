@@ -116,7 +116,9 @@ class SolverTest {
 
         double[] totalDurations = new double[solvers.length];
         int totalUB = 0;
+        double totalMinDist = 0;
         int[] totalLBs = new int[solvers.length];
+        double[] totalSolDist = new double[solvers.length];
 
         int successfullTests = 0;
         Random r = new Random();
@@ -129,12 +131,12 @@ class SolverTest {
 
             double[] durations = new double[solvers.length];
             int[] LBs = new int[solvers.length];
+            double[] solDist = new double[solvers.length];
 
             try {
                 // solve for all solvers
                 for (int i = 0; i < solvers.length; i++) {
                     solvers[i].update(source, target, maxDistFactor);
-                    double maxDist = solvers[i].getMaxDistance();
                     long startTime = System.currentTimeMillis();
                     Graph.Path solution = solvers[i].solve();
                     double endTime = (System.currentTimeMillis() - startTime) / 1000.0;
@@ -145,6 +147,7 @@ class SolverTest {
                     }
                     durations[i] = endTime;
                     LBs[i] = solvers[i].uniqueClassScore(solution);
+                    solDist[i] = solution.getPathCost();
                 }
             } catch (IllegalArgumentException e) {
                 System.out.println("Solver bug. Trying new setting.");
@@ -154,18 +157,21 @@ class SolverTest {
             successfullTests++;
 
             double maxDistance = solvers[0].getMaxDistance();
+            double minDistance = maxDistance / maxDistFactor;
             double shortestPathLength = maxDistance / maxDistFactor;
             int UB = solvers[0].getUpperBound();
 
             totalUB += UB;
+            totalMinDist += minDistance;
 
             String current = String.format("run %d: s: %s; t: %s; min st: %.3f; UB: %d", successfullTests, source, target, shortestPathLength, UB);
             System.out.println(current);
             logger.info(current);
 
             for (int i = 0; i < solvers.length; i++) {
-                System.out.println(String.format("%s: Score: %d; duration: %.2f", solvers[i].toString(), LBs[i], durations[i]));
+                System.out.println(String.format("%s: Score: %d; duration: %.2f; distance %.2f; min distance %.2f", solvers[i].toString(), LBs[i], durations[i], solDist[i], minDistance));
                 totalDurations[i] += durations[i];
+                totalSolDist[i] += solDist[i];
                 totalLBs[i] += LBs[i];
             }
         }
@@ -174,7 +180,7 @@ class SolverTest {
         logger.info(overall);
         System.out.println(overall);
         for (int i = 0; i < solvers.length; i++) {
-            overall = String.format("%s: Avg runtime: %.3f; avg LB: %.3f", solvers[i].toString(), totalDurations[i]/testCount, totalLBs[i]/(double)testCount);
+            overall = String.format("%s: Avg runtime: %.3f; avg LB: %.3f; avg sol distance %.2f; avg min distance %.2f", solvers[i].toString(), totalDurations[i]/testCount, totalLBs[i]/(double)testCount, totalSolDist[i]/testCount, totalMinDist/testCount);
             logger.info(overall);
             System.out.println(overall);
         }
