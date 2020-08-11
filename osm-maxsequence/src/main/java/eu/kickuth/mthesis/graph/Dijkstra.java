@@ -289,7 +289,7 @@ public class Dijkstra {
             int currentId = currentMin.node.id;
 
             // check whether an updated node has already been processed
-            if (settledNodes[currentId] || maxDistance < currentMin.distanceFromSource + updateForwardCosts[currentId]) {
+            if (settledNodes[currentId] || 10e-4 + maxDistance < currentMin.distanceFromSource + updateForwardCosts[currentId]) {
                 continue;
             } else {
                 settledNodes[currentId] = true;
