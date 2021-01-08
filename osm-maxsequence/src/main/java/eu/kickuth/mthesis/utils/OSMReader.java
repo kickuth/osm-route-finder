@@ -162,6 +162,17 @@ public class OSMReader implements Sink {
     }
 
     public Graph getOsmGraph() {
+//        long edges = 0;
+//        long nodes = osmGraph.adjList.size();
+//        for (var list : osmGraph.adjList) {
+//            edges += list.size();
+//        }
+//        System.out.println("+++++++++++++++++++++++++++++++");
+//        System.out.println("Nodes: " + nodes);
+//        System.out.println("Edges: " + edges);
+//        System.out.println("Avg degree: " + edges / (double) nodes);
+//        System.out.println("+++++++++++++++++++++++++++++++");
+//        System.exit(0);
         return osmGraph;
     }
 }

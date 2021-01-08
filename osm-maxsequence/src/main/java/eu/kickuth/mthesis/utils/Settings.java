@@ -11,11 +11,11 @@ public final class Settings {
 
 
     // FILE NAMES
-    //    public static final File OSM_DUMP = new File("src/main/resources/osm_data/tue.osm.pbf");  // TUE OSM data file
-//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/bw.osm.pbf");  // BW OSM data file
 //    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de.osm.pbf");  // DE data file
-//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_proc_real.osm.pbf");  // DE (preprocessed) data file
-    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_proc.osm.pbf");  // DE (preprocessed) data file
+//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_augmented.osm.pbf");  // DE (preprocessed) augmented
+//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_exp.osm.pbf");  // DE (preprocessed) exponential
+    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_gaussian.osm.pbf");  // DE (preprocessed) gaussian
+//    public static final File OSM_DUMP = new File("src/main/resources/osm_data/de_linear.osm.pbf");  // DE (preprocessed) linear/uniform
 
     public static final File OSM_DUMP_PROCESSED = new File(OSM_DUMP.getPath().replace(".osm.pbf", "_processed.osm.pbf"));  // preprocessed OSM data file
 
@@ -33,7 +33,7 @@ public final class Settings {
     // expected value for the total number of POIs
     static final int EXPECTED_TOTAL_POIS = 100_000;
     // distribution of POIs among classes
-    static final String POI_DISTRIBUTION = "gaussian";  // "gaussian", "exp high", "exp low", "linear"
+    static final String POI_DISTRIBUTION = "gaussian";  // "gaussian", "exp high", "linear"
 
     static final int LIMIT_FAKE_CLASSES = 150;  // max number of fake classes (FC) to add to graph
 

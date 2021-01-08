@@ -254,7 +254,7 @@ public class OSMPreprocessor implements Sink, Source {
     private void writeNodes() {
         if (GENERATE_FAKE_SIGNS) {
             // log POI distribution grid
-            logger.debug("Road distribution for POI class generation grid:\n" +
+            logger.trace("Road distribution for POI class generation grid:\n" +
                     Arrays.deepToString(nodesDistribution)
             );
             logger.info("Generating fake classes:\n" +
@@ -326,15 +326,15 @@ public class OSMPreprocessor implements Sink, Source {
                     };
                     logger.debug("Generating exponentially distributed sign counts per class (few very common classes): lambda={}", mean);
                     break;
-                case "exp low":
-                    // TODO what distribution? Change log output wording
-                    final double log2 = Math.log(2);
-                    randDistr = (v) -> {
-                        double rand = random.nextDouble();
-                        return (int) Math.round(-rand*mean/(log2*Math.log(1-rand)));
-                    };
-                    logger.debug("Generating exponentially distributed sign counts per class (few very rare classes): lambda={}", mean);
-                    break;
+//                case "exp low":
+//                    // TODO what distribution? Change log output wording
+//                    final double log2 = Math.log(2);
+//                    randDistr = (v) -> {
+//                        double rand = random.nextDouble();
+//                        return (int) Math.round(-rand*mean/(log2*Math.log(1-rand)));
+//                    };
+//                    logger.debug("Generating exponentially distributed sign counts per class (few very rare classes): lambda={}", mean);
+//                    break;
                 case "linear":
                     // linear distribution
                     randDistr = (v) -> (int) Math.round(random.nextDouble() * mean * 2);
